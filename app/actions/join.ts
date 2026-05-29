@@ -109,7 +109,7 @@ export async function registerWithInvite(
   });
 
   if (redeemError) {
-    await supabase.auth.signOut();
+    await supabase.auth.signOut({ scope: "global" });
     return { error: mapRedeemError(redeemError.message) };
   }
 

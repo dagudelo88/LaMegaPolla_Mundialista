@@ -11,8 +11,10 @@ export default async function JoinPage() {
   } = await supabase.auth.getUser();
 
   let needsRedeemOnly = false;
+  let userEmail: string | null = null;
 
   if (user) {
+    userEmail = user.email ?? null;
     const { data: profile } = await supabase
       .from("profiles")
       .select("invite_redeemed_at")
@@ -34,6 +36,14 @@ export default async function JoinPage() {
         <p className="mt-2 text-[var(--color-muted-foreground)]">
           {needsRedeemOnly ? es.join.redeemSubtitle : es.join.subtitle}
         </p>
+        {needsRedeemOnly && userEmail && (
+          <p className="mx-auto mt-4 max-w-md rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+            {es.join.redeemLoggedInAs}{" "}
+            <strong className="text-white">{userEmail}</strong>
+            <br />
+            {es.join.redeemLoggedInNote}
+          </p>
+        )}
       </div>
       {needsRedeemOnly ? <RedeemForm /> : <RegisterForm />}
     </section>

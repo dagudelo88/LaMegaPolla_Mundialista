@@ -15,7 +15,7 @@
    - `https://la-mega-polla-mundialista.vercel.app/auth/callback`
 4. Primer admin (tras crear tu cuenta en `/join` con un código de invitación):
    ```bash
-   npm run make-admin -- tu-email@gmail.com
+   npm run make-admin -- dagudelo88@gmail.com
    ```
 
 ## Vercel

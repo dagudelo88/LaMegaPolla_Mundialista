@@ -27,6 +27,24 @@ export async function signInWithPassword(
     return { error: mapAuthError(error.message) };
   }
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: es.errors.generic };
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("invite_redeemed_at")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (!profile?.invite_redeemed_at) {
+    redirect("/join");
+  }
+
   const next = String(formData.get("next") ?? "").trim();
   const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
   redirect(safeNext);

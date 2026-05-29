@@ -33,8 +33,14 @@ export async function middleware(request: NextRequest) {
   }
 
   if (user && isAuthRoute) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("invite_redeemed_at")
+      .eq("id", user.id)
+      .maybeSingle();
+
     const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
+    url.pathname = profile?.invite_redeemed_at ? "/dashboard" : "/join";
     return NextResponse.redirect(url);
   }
 

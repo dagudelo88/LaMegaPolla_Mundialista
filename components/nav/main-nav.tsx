@@ -6,13 +6,21 @@ import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import { es } from "@/lib/i18n/es";
 import { cn } from "@/lib/utils";
+import { LogoutButton } from "@/components/nav/logout-button";
+
 type NavProps = {
   isAuthenticated: boolean;
+  inviteComplete: boolean;
   isAdmin: boolean;
   username?: string | null;
 };
 
-export function MainNav({ isAuthenticated, isAdmin, username }: NavProps) {
+export function MainNav({
+  isAuthenticated,
+  inviteComplete,
+  isAdmin,
+  username,
+}: NavProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -21,13 +29,15 @@ export function MainNav({ isAuthenticated, isAdmin, username }: NavProps) {
     { href: "/reglas", label: es.nav.rules },
   ];
 
-  if (isAuthenticated) {
+  if (isAuthenticated && inviteComplete) {
     links.push({ href: "/dashboard", label: es.nav.dashboard });
     links.push({ href: "/pronosticos", label: es.nav.predictions });
     links.push({ href: "/leaderboard", label: es.nav.leaderboard });
     if (isAdmin) {
       links.push({ href: "/admin", label: es.nav.admin });
     }
+  } else if (isAuthenticated) {
+    links.push({ href: "/join", label: es.nav.completeRegistration });
   } else {
     links.push({ href: "/join", label: es.nav.join });
     links.push({ href: "/login", label: es.nav.login });
@@ -35,18 +45,18 @@ export function MainNav({ isAuthenticated, isAdmin, username }: NavProps) {
 
   return (
     <header className="sticky top-0 z-50 border-b border-[var(--color-border)] bg-[var(--color-background)]/95 backdrop-blur">
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-        <Link href="/" className="font-bold text-[var(--color-accent)]">
+      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4">
+        <Link href="/" className="shrink-0 font-bold text-[var(--color-accent)]">
           {es.appName}
         </Link>
 
-        <nav className="hidden items-center gap-6 md:flex">
+        <nav className="hidden min-w-0 flex-1 items-center justify-end gap-4 md:flex">
           {links.map((l) => (
             <Link
               key={l.href}
               href={l.href}
               className={cn(
-                "text-sm font-medium transition-colors hover:text-[var(--color-accent)]",
+                "shrink-0 text-sm font-medium transition-colors hover:text-[var(--color-accent)]",
                 pathname === l.href && "text-[var(--color-accent)]"
               )}
             >
@@ -54,20 +64,23 @@ export function MainNav({ isAuthenticated, isAdmin, username }: NavProps) {
             </Link>
           ))}
           {username && (
-            <span className="text-sm text-[var(--color-muted-foreground)]">
+            <span className="shrink-0 text-sm text-[var(--color-muted-foreground)]">
               @{username}
             </span>
           )}
+          {isAuthenticated && <LogoutButton />}
         </nav>
 
-        <button
-          type="button"
-          className="md:hidden"
-          aria-label={open ? "Cerrar menú" : "Abrir menú"}
-          onClick={() => setOpen(!open)}
-        >
-          {open ? <X size={24} /> : <Menu size={24} />}
-        </button>
+        <div className="flex items-center gap-2 md:hidden">
+          {isAuthenticated && <LogoutButton />}
+          <button
+            type="button"
+            aria-label={open ? "Cerrar menú" : "Abrir menú"}
+            onClick={() => setOpen(!open)}
+          >
+            {open ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
       </div>
 
       {open && (
@@ -84,6 +97,9 @@ export function MainNav({ isAuthenticated, isAdmin, username }: NavProps) {
                 </Link>
               </li>
             ))}
+            {username && (
+              <li className="text-sm text-[var(--color-muted-foreground)]">@{username}</li>
+            )}
           </ul>
         </nav>
       )}

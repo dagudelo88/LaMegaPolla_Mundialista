@@ -26,10 +26,12 @@ export default async function RootLayout({
 
   let isAdmin = false;
   let username: string | null = null;
+  let inviteComplete = false;
   if (user) {
     const profile = await getProfile(user.id);
     isAdmin = profile?.role === "admin";
     username = profile?.username ?? null;
+    inviteComplete = Boolean(profile?.invite_redeemed_at);
   }
 
   return (
@@ -37,6 +39,7 @@ export default async function RootLayout({
       <body className={`${geistSans.variable} antialiased`}>
         <MainNav
           isAuthenticated={Boolean(user)}
+          inviteComplete={inviteComplete}
           isAdmin={isAdmin}
           username={username}
         />

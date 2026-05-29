@@ -9,6 +9,7 @@ export const es = {
     predictions: "Pronósticos",
     leaderboard: "Posiciones",
     join: "Crear cuenta",
+    completeRegistration: "Completar registro",
     logout: "Cerrar sesión",
     admin: "Administración",
   },
@@ -39,12 +40,15 @@ export const es = {
     redeemTitle: "Completar registro",
     redeemSubtitle:
       "Canjea tu código y elige el nickname que verán todos en la tabla de posiciones.",
+    redeemLoggedInAs: "Sesión activa:",
+    redeemLoggedInNote:
+      "Falta canjear tu invitación. Como admin usa el código MEGA-DANIEL y elige tu nickname; otros participantes usan su MEGA-XXXXXX.",
     codeLabel: "Código de invitación",
     nicknameSection: "Nickname en la polla",
     nicknameLabel: "Nickname (tabla de posiciones)",
     nicknameHint:
       "Obligatorio. 3–24 caracteres (letras, números y _). Así te verán en posiciones y pronósticos — no uses tu correo.",
-    nicknamePlaceholder: "ej. dagudelo",
+    nicknamePlaceholder: "ej. batman",
     emailLabel: "Correo electrónico",
     passwordLabel: "Contraseña",
     passwordConfirmLabel: "Confirmar contraseña",
