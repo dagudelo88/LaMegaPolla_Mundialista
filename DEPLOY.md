@@ -10,17 +10,22 @@
 2. **Authentication → Providers → Google**: habilitado.
 3. **Authentication → URL Configuration** — Redirect URLs:
    - `http://localhost:3000/auth/callback`
-   - `https://TU_DOMINIO.vercel.app/auth/callback`
+   - `https://la-mega-polla-mundialista.vercel.app/auth/callback`
+   - `https://la-mega-polla-mundialista-*.vercel.app/auth/callback` (previews; o añade cada preview manualmente)
 4. Primer admin (tras registrarte con Google):
    ```bash
    npm run make-admin -- tu-email@gmail.com
    ```
 
-## Vercel (crear proyecto nuevo)
+## Vercel
 
-1. Importa el repositorio en [vercel.com/new](https://vercel.com/new).
+**Proyecto:** `la-mega-polla-mundialista`  
+**Producción:** https://la-mega-polla-mundialista.vercel.app  
+**Dashboard:** https://vercel.com/daniel-agudelos-projects/la-mega-polla-mundialista
+
+1. Repo ya importado desde `dagudelo88/LaMegaPolla_Mundialista` (rama `main`).
 2. Framework: **Next.js** (detectado automáticamente).
-3. Variables de entorno (Production y Preview):
+3. Variables de entorno (Production **y** Preview — sin esto verás `MIDDLEWARE_INVOCATION_FAILED`):
 
    | Variable | Entorno |
    |----------|---------|

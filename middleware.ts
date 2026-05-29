@@ -5,8 +5,22 @@ const PROTECTED_PREFIXES = ["/dashboard", "/join", "/admin"];
 const AUTH_ROUTES = ["/login"];
 
 export async function middleware(request: NextRequest) {
-  const { user, supabase, supabaseResponse } = await updateSession(request);
   const path = request.nextUrl.pathname;
+
+  let user;
+  let supabase: Awaited<ReturnType<typeof updateSession>>["supabase"];
+  let supabaseResponse: Awaited<ReturnType<typeof updateSession>>["supabaseResponse"];
+
+  try {
+    ({ user, supabase, supabaseResponse } = await updateSession(request));
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Error de configuración Supabase";
+    return new NextResponse(message, {
+      status: 503,
+      headers: { "content-type": "text/plain; charset=utf-8" },
+    });
+  }
 
   const isProtected = PROTECTED_PREFIXES.some((p) => path.startsWith(p));
   const isAuthRoute = AUTH_ROUTES.some((p) => path.startsWith(p));
