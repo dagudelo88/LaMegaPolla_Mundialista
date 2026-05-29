@@ -29,6 +29,7 @@ export function MainNav({ isAuthenticated, isAdmin, username }: NavProps) {
       links.push({ href: "/admin", label: es.nav.admin });
     }
   } else {
+    links.push({ href: "/join", label: es.nav.join });
     links.push({ href: "/login", label: es.nav.login });
   }
 

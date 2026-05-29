@@ -16,22 +16,44 @@ export const es = {
     heroTitle: "La Mega Polla Mundialista 2026",
     heroSubtitle:
       "Predice el Mundial, gana puntos y corrige con la mecánica de cambios pagos.",
-    ctaLogin: "Iniciar sesión con Google",
+    ctaLogin: "Iniciar sesión",
+    ctaRegister: "Crear cuenta",
     ctaRules: "Leer reglamento",
-    inviteNote: "Necesitas un código de invitación del administrador.",
+    inviteNote: "Necesitas un código de invitación del administrador para registrarte.",
   },
   login: {
     title: "Iniciar sesión",
-    subtitle: "Usa tu cuenta de Google para entrar.",
-    button: "Continuar con Google",
+    subtitle: "Entra con el correo y la contraseña que creaste al registrarte.",
+    emailLabel: "Correo electrónico",
+    passwordLabel: "Contraseña",
+    button: "Entrar",
+    noAccount: "¿Primera vez?",
+    createAccount: "Crear cuenta con invitación",
   },
   join: {
-    title: "Unirte a la polla",
-    subtitle: "Introduce tu código de invitación y elige tu apodo público.",
+    title: "Crear cuenta",
+    subtitle:
+      "Código de invitación, nickname para posiciones, correo y contraseña. El nickname es obligatorio y no se puede dejar vacío.",
+    redeemTitle: "Completar registro",
+    redeemSubtitle:
+      "Canjea tu código y elige el nickname que verán todos en la tabla de posiciones.",
     codeLabel: "Código de invitación",
-    usernameLabel: "Apodo (nickname)",
-    usernameHint: "Mínimo 3 caracteres. Visible en la tabla de posiciones.",
+    nicknameSection: "Nickname en la polla",
+    nicknameLabel: "Nickname (tabla de posiciones)",
+    nicknameHint:
+      "Obligatorio. 3–24 caracteres (letras, números y _). Así te verán en posiciones y pronósticos — no uses tu correo.",
+    nicknamePlaceholder: "ej. dagudelo",
+    emailLabel: "Correo electrónico",
+    passwordLabel: "Contraseña",
+    passwordConfirmLabel: "Confirmar contraseña",
+    passwordHint: "Mínimo 8 caracteres.",
+    usernameLabel: "Nickname (tabla de posiciones)",
+    usernameHint:
+      "Obligatorio. 3–24 caracteres (letras, números y _). Visible en posiciones y pronósticos.",
+    registerSubmit: "Crear cuenta y entrar",
     submit: "Canjear e ingresar",
+    hasAccount: "¿Ya tienes cuenta?",
+    goLogin: "Iniciar sesión",
     success: "¡Bienvenido! Ya puedes acceder a tu panel.",
   },
   dashboard: {
@@ -51,8 +73,18 @@ export const es = {
   errors: {
     generic: "Algo salió mal. Inténtalo de nuevo.",
     notAuthenticated: "Debes iniciar sesión.",
+    invalidCredentials: "Correo o contraseña incorrectos.",
     invalidCode: "Código inválido o agotado.",
-    usernameTaken: "Ese apodo ya está en uso.",
-    usernameTooShort: "El apodo debe tener al menos 3 caracteres.",
+    usernameTaken: "Ese nickname ya está en uso. Prueba otro.",
+    usernameTooShort: "El nickname debe tener al menos 3 caracteres.",
+    usernameInvalid:
+      "El nickname solo puede tener letras, números y guión bajo (_), sin espacios.",
+    nicknameRequired: "Debes elegir un nickname para aparecer en la tabla de posiciones.",
+    emailTaken: "Ese correo ya está registrado. Inicia sesión.",
+    weakPassword: "La contraseña debe tener al menos 8 caracteres.",
+    passwordMismatch: "Las contraseñas no coinciden.",
+    emailNotConfirmed: "Confirma tu correo antes de entrar (revisa tu bandeja).",
+    emailConfirmationRequired:
+      "Debes confirmar el correo antes de continuar. Pide al administrador desactivar la confirmación por correo en Supabase, o revisa tu email.",
   },
 } as const;

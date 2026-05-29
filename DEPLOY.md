@@ -7,12 +7,13 @@
    supabase link --project-ref TU_PROJECT_REF
    supabase db push
    ```
-2. **Authentication → Providers → Google**: habilitado.
-3. **Authentication → URL Configuration** — Redirect URLs:
+2. **Authentication → Providers → Email**: habilitado (correo + contraseña).
+   - Desactiva **Confirm email** para que el registro en `/join` funcione al instante (sin esperar enlace de confirmación).
+   - Google u otros OAuth: no son necesarios.
+3. **Authentication → URL Configuration** — Redirect URLs (solo si activas confirmación por correo o magic links):
    - `http://localhost:3000/auth/callback`
    - `https://la-mega-polla-mundialista.vercel.app/auth/callback`
-   - `https://la-mega-polla-mundialista-*.vercel.app/auth/callback` (previews; o añade cada preview manualmente)
-4. Primer admin (tras registrarte con Google):
+4. Primer admin (tras crear tu cuenta en `/join` con un código de invitación):
    ```bash
    npm run make-admin -- tu-email@gmail.com
    ```
@@ -34,7 +35,7 @@
    | `SUPABASE_SERVICE_ROLE_KEY` | Production, Preview (no marcar "Expose to browser") |
 
 4. Deploy. Copia la URL preview y añádela en Supabase Auth redirect URLs.
-5. Prueba: landing → Google OAuth → `/join` → dashboard → `/admin` (solo admin, 404 para otros).
+5. Prueba: admin genera código → usuario en `/join` (código + correo + contraseña + apodo) → `/login` → dashboard → `/admin` (solo admin, 404 para otros).
 
 ## Local
 
@@ -49,7 +50,7 @@ npm run dev
 
 - [ ] `npm run build` sin errores
 - [ ] `npm test` — tests de scoring REGLAS §4
-- [ ] OAuth crea fila en `profiles`
+- [ ] Registro con email crea fila en `profiles` y canjea invitación
 - [ ] Admin genera código; usuario canjea en `/join`
 - [ ] `/admin` → 404 para participantes
 - [ ] `/reglas` muestra `REGLAS.md`

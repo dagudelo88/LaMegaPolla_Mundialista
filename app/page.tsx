@@ -30,9 +30,14 @@ export default async function HomePage() {
             <Link href="/dashboard">{es.nav.dashboard}</Link>
           </Button>
         ) : (
-          <Button asChild size="lg">
-            <Link href="/login">{es.landing.ctaLogin}</Link>
-          </Button>
+          <>
+            <Button asChild size="lg">
+              <Link href="/join">{es.landing.ctaRegister}</Link>
+            </Button>
+            <Button asChild variant="outline" size="lg">
+              <Link href="/login">{es.landing.ctaLogin}</Link>
+            </Button>
+          </>
         )}
         <Button asChild variant="outline" size="lg">
           <Link href="/reglas">{es.landing.ctaRules}</Link>

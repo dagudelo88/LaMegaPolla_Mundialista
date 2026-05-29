@@ -19,7 +19,7 @@ export default async function LeaderboardPage() {
         <thead>
           <tr className="border-b border-[var(--color-border)]">
             <th className="py-2">#</th>
-            <th className="py-2">Apodo</th>
+            <th className="py-2">Nickname</th>
             <th className="py-2">Puntos</th>
           </tr>
         </thead>

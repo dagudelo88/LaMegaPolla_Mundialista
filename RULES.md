@@ -38,7 +38,7 @@ If `PLAN.md` disagrees with `REGLAS.md` on points, changes, or mechanics, **impl
 
 ## Auth
 
-- **Supabase OAuth only** (Google primary). No custom auth.
+- **Supabase Auth** (email + contraseña). Registro solo con código de invitación del admin. No auth custom.
 - Session via `@supabase/ssr` cookies + `middleware.ts`.
 
 ---

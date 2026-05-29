@@ -2,21 +2,34 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { headers } from "next/headers";
+import { mapAuthError } from "@/lib/auth/map-auth-error";
+import { es } from "@/lib/i18n/es";
 
-export async function signInWithGoogle() {
+export type LoginState = {
+  error?: string;
+};
+
+export async function signInWithPassword(
+  _prev: LoginState,
+  formData: FormData
+): Promise<LoginState> {
+  const email = String(formData.get("email") ?? "").trim();
+  const password = String(formData.get("password") ?? "");
+
+  if (!email || !password) {
+    return { error: es.errors.generic };
+  }
+
   const supabase = await createClient();
-  const origin = (await headers()).get("origin") ?? "http://localhost:3000";
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
 
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
-    options: {
-      redirectTo: `${origin}/auth/callback`,
-    },
-  });
+  if (error) {
+    return { error: mapAuthError(error.message) };
+  }
 
-  if (error) throw error;
-  if (data.url) redirect(data.url);
+  const next = String(formData.get("next") ?? "").trim();
+  const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
+  redirect(safeNext);
 }
 
 export async function signOut() {

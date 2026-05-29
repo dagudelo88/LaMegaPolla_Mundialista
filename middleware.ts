@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
-const PROTECTED_PREFIXES = ["/dashboard", "/join", "/admin"];
+const PROTECTED_PREFIXES = ["/dashboard", "/admin"];
 const AUTH_ROUTES = ["/login"];
 
 export async function middleware(request: NextRequest) {
@@ -36,6 +36,20 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);
+  }
+
+  if (user && path.startsWith("/join")) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("invite_redeemed_at")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (profile?.invite_redeemed_at) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/dashboard";
+      return NextResponse.redirect(url);
+    }
   }
 
   if (path.startsWith("/admin")) {
