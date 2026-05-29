@@ -39,6 +39,7 @@ If `PLAN.md` disagrees with `REGLAS.md` on points, changes, or mechanics, **impl
 ## Auth
 
 - **Supabase Auth** (email + contraseña). Registro solo con código de invitación del admin. No auth custom.
+- **Roles**: `is_admin` (panel) y jugador (`invite_redeemed_at` + `role=participant`) pueden coexistir en el mismo usuario.
 - Session via `@supabase/ssr` cookies + `middleware.ts`.
 
 ---

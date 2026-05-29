@@ -2,7 +2,10 @@ import { redirect } from "next/navigation";
 import { RegisterForm } from "@/components/join/register-form";
 import { RedeemForm } from "@/components/join/redeem-form";
 import { createClient } from "@/lib/supabase/server";
+import { getProfile } from "@/lib/auth/get-profile";
 import { es } from "@/lib/i18n/es";
+
+export const dynamic = "force-dynamic";
 
 export default async function JoinPage() {
   const supabase = await createClient();
@@ -15,11 +18,7 @@ export default async function JoinPage() {
 
   if (user) {
     userEmail = user.email ?? null;
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("invite_redeemed_at")
-      .eq("id", user.id)
-      .maybeSingle();
+    const profile = await getProfile(user.id);
 
     if (profile?.invite_redeemed_at) {
       redirect("/dashboard");

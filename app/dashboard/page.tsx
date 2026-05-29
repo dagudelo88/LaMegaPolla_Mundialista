@@ -1,5 +1,6 @@
 import { signOut } from "@/app/actions/auth";
 import { getProfile, requireUser } from "@/lib/auth/require-admin";
+import { formatProfileRoles } from "@/lib/auth/roles";
 import { es } from "@/lib/i18n/es";
 import { createClient } from "@/lib/supabase/server";
 import { BugReportForm } from "@/components/bugs/bug-report-form";
@@ -25,6 +26,9 @@ export default async function DashboardPage() {
           <span className="font-semibold text-[var(--color-accent)]">
             @{profile?.username ?? "..."}
           </span>
+        </p>
+        <p className="mt-1 text-sm text-[var(--color-accent)]">
+          {formatProfileRoles(profile)}
         </p>
       </div>
 

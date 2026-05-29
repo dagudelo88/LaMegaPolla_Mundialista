@@ -61,7 +61,10 @@ async function main() {
 
   const { error: upErr } = await supabase
     .from("profiles")
-    .upsert({ id: user.id, role: "admin" }, { onConflict: "id" });
+    .upsert(
+      { id: user.id, role: "participant", is_admin: true },
+      { onConflict: "id" }
+    );
 
   if (upErr) {
     console.error("profiles update:", upErr.message);

@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/auth/require-admin";
+import { formatProfileRoles } from "@/lib/auth/roles";
 import { InviteGenerator } from "@/components/admin/invite-generator";
 import { es } from "@/lib/i18n/es";
 
@@ -15,7 +16,7 @@ export default async function AdminPage() {
 
   const { data: users } = await admin
     .from("profiles")
-    .select("username, role, total_points, joined_at")
+    .select("username, role, is_admin, invite_redeemed_at, total_points, joined_at")
     .order("joined_at", { ascending: true });
 
   return (
@@ -53,7 +54,7 @@ export default async function AdminPage() {
               className="flex justify-between border-b border-[var(--color-border)] py-2"
             >
               <span>
-                @{u.username ?? "—"} ({u.role})
+                @{u.username ?? "—"} ({formatProfileRoles(u)})
               </span>
               <span>{u.total_points} pts</span>
             </li>

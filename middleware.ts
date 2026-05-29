@@ -33,11 +33,8 @@ export async function middleware(request: NextRequest) {
   }
 
   if (user && isAuthRoute) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("invite_redeemed_at")
-      .eq("id", user.id)
-      .maybeSingle();
+    const { data: profileRows } = await supabase.rpc("get_my_profile");
+    const profile = profileRows?.[0] as { invite_redeemed_at?: string | null } | undefined;
 
     const url = request.nextUrl.clone();
     url.pathname = profile?.invite_redeemed_at ? "/dashboard" : "/join";
@@ -45,11 +42,8 @@ export async function middleware(request: NextRequest) {
   }
 
   if (user && path.startsWith("/join")) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("invite_redeemed_at")
-      .eq("id", user.id)
-      .maybeSingle();
+    const { data: profileRows } = await supabase.rpc("get_my_profile");
+    const profile = profileRows?.[0] as { invite_redeemed_at?: string | null } | undefined;
 
     if (profile?.invite_redeemed_at) {
       const url = request.nextUrl.clone();
@@ -62,23 +56,21 @@ export async function middleware(request: NextRequest) {
     if (!user) {
       return new NextResponse(null, { status: 404 });
     }
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .maybeSingle();
+    const { data: profileRows } = await supabase.rpc("get_my_profile");
+    const profile = profileRows?.[0] as
+      | { is_admin?: boolean; role?: string }
+      | undefined;
+    const isAdmin =
+      profile?.is_admin === true || profile?.role === "admin";
 
-    if (profile?.role !== "admin") {
+    if (!isAdmin) {
       return new NextResponse(null, { status: 404 });
     }
   }
 
   if (user && path.startsWith("/dashboard")) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("invite_redeemed_at")
-      .eq("id", user.id)
-      .maybeSingle();
+    const { data: profileRows } = await supabase.rpc("get_my_profile");
+    const profile = profileRows?.[0] as { invite_redeemed_at?: string | null } | undefined;
 
     if (!profile?.invite_redeemed_at && !path.startsWith("/join")) {
       const url = request.nextUrl.clone();

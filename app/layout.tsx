@@ -4,7 +4,10 @@ import "./globals.css";
 import { MainNav } from "@/components/nav/main-nav";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/auth/require-admin";
+import { isAdminProfile } from "@/lib/auth/roles";
 import { es } from "@/lib/i18n/es";
+
+export const dynamic = "force-dynamic";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,7 +32,7 @@ export default async function RootLayout({
   let inviteComplete = false;
   if (user) {
     const profile = await getProfile(user.id);
-    isAdmin = profile?.role === "admin";
+    isAdmin = isAdminProfile(profile);
     username = profile?.username ?? null;
     inviteComplete = Boolean(profile?.invite_redeemed_at);
   }

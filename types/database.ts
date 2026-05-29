@@ -12,6 +12,8 @@ export type MatchPhase =
 export interface Profile {
   id: string;
   role: ProfileRole;
+  /** Panel de administración; compatible con role=admin legado. */
+  is_admin: boolean;
   username: string | null;
   display_name: string | null;
   avatar_url: string | null;

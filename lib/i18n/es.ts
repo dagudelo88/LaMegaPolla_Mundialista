@@ -81,6 +81,8 @@ export const es = {
     notAuthenticated: "Debes iniciar sesión.",
     invalidCredentials: "Correo o contraseña incorrectos.",
     invalidCode: "Código inválido o agotado.",
+    inviteAlreadyComplete:
+      "Ya completaste tu registro. Ve a «Mi polla» o cierra sesión y vuelve a entrar.",
     usernameTaken: "Ese nickname ya está en uso. Prueba otro.",
     usernameTooShort: "El nickname debe tener al menos 3 caracteres.",
     usernameInvalid:

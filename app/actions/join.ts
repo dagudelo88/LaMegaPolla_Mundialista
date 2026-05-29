@@ -1,7 +1,9 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { getProfile } from "@/lib/auth/get-profile";
 import { validateInviteCode } from "@/lib/auth/validate-invite-code";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { mapAuthError } from "@/lib/auth/map-auth-error";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -113,6 +115,7 @@ export async function registerWithInvite(
     return { error: mapRedeemError(redeemError.message) };
   }
 
+  revalidatePath("/", "layout");
   revalidatePath("/dashboard");
   redirect("/dashboard");
 }
@@ -142,15 +145,40 @@ export async function redeemInvite(
     return { error: es.errors.notAuthenticated };
   }
 
+  const existingProfile = await getProfile(user.id);
+
+  if (existingProfile?.invite_redeemed_at) {
+    revalidatePath("/", "layout");
+    revalidatePath("/dashboard");
+    redirect("/dashboard");
+  }
+
   const { error } = await supabase.rpc("redeem_invitation_code", {
     p_code: code,
     p_username: username,
   });
 
   if (error) {
-    return { error: mapRedeemError(error.message) };
+    const msg = error.message;
+    if (msg.includes("code_exhausted") || msg.includes("exhausted")) {
+      const admin = createAdminClient();
+      const normalized = code.trim().toUpperCase();
+      const { data: row } = await admin
+        .from("invitation_codes")
+        .select("redeemed_by")
+        .eq("code", normalized)
+        .maybeSingle();
+
+      if (row?.redeemed_by === user.id) {
+        revalidatePath("/", "layout");
+        revalidatePath("/dashboard");
+        redirect("/dashboard");
+      }
+    }
+    return { error: mapRedeemError(msg) };
   }
 
+  revalidatePath("/", "layout");
   revalidatePath("/dashboard");
   redirect("/dashboard");
 }
