@@ -8,7 +8,7 @@ export const es = {
     dashboard: "Mi polla",
     predictions: "Pronósticos",
     leaderboard: "Posiciones",
-    join: "Unirme",
+    join: "Crear cuenta",
     logout: "Cerrar sesión",
     admin: "Administración",
   },
@@ -16,10 +16,12 @@ export const es = {
     heroTitle: "La Mega Polla Mundialista 2026",
     heroSubtitle:
       "Predice el Mundial, gana puntos y corrige con la mecánica de cambios pagos.",
+    authNote:
+      "Acceso con correo y contraseña (sin Google). Al registrarte necesitas el código de invitación del administrador y tu nickname para la tabla de posiciones.",
     ctaLogin: "Iniciar sesión",
-    ctaRegister: "Crear cuenta",
+    ctaRegister: "Crear cuenta con invitación",
     ctaRules: "Leer reglamento",
-    inviteNote: "Necesitas un código de invitación del administrador para registrarte.",
+    inviteNote: "¿Primera vez? Pide tu código MEGA-XXXXXX al administrador.",
   },
   login: {
     title: "Iniciar sesión",
