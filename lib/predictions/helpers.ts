@@ -1,6 +1,6 @@
 import { computeAllGroupStandings } from "@/lib/bracket/group-standings";
 import { computeAdvancingThirdGroups } from "@/lib/bracket/third-place-advancement";
-import type { KnockoutPredictionScores } from "@/lib/bracket/types";
+import type { GroupMatchResult, KnockoutPredictionScores } from "@/lib/bracket/types";
 
 export interface DbMatchWithTeams {
   id: string;
@@ -18,11 +18,15 @@ export interface DbMatchWithTeams {
   away_team?: { id: number; fifa_code: string; name_es: string; flag_emoji: string | null } | null;
 }
 
-export interface DbPrediction {
-  id: string;
+export interface PredictionInput {
   match_id: string;
   predicted_home: number;
   predicted_away: number;
+  predicted_advances_team_id?: number | null;
+}
+
+export interface DbPrediction extends PredictionInput {
+  id: string;
   predicted_is_draw: boolean;
   predicted_advances_team_id: number | null;
   locked: boolean;
@@ -71,7 +75,7 @@ export function countProgress(
 
 export function buildKnockoutPredictionsMap(
   matches: { id: string; fifa_match_number: number | null; phase: string }[],
-  predictions: DbPrediction[]
+  predictions: PredictionInput[]
 ): Map<number, KnockoutPredictionScores> {
   const predByMatch = new Map(predictions.map((p) => [p.match_id, p]));
   const map = new Map<number, KnockoutPredictionScores>();
@@ -83,7 +87,7 @@ export function buildKnockoutPredictionsMap(
     map.set(match.fifa_match_number, {
       predictedHome: pred.predicted_home,
       predictedAway: pred.predicted_away,
-      predictedAdvancesTeamId: pred.predicted_advances_team_id,
+      predictedAdvancesTeamId: pred.predicted_advances_team_id ?? null,
     });
   }
 
@@ -105,7 +109,7 @@ export interface PredictionSummaryStats {
 
 export function computePredictionSummary(
   matches: { id: string; phase: string }[],
-  predictions: DbPrediction[]
+  predictions: PredictionInput[]
 ): PredictionSummaryStats {
   const matchById = new Map(matches.map((m) => [m.id, m]));
   let totalGoals = 0;

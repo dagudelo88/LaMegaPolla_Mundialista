@@ -26,15 +26,21 @@ export function BracketSimulatorPanel({
   groupResults,
   groupComplete,
 }: BracketSimulatorPanelProps) {
-  const teamRefs = teams.map((t) => ({
-    id: t.id,
-    fifaCode: t.fifa_code,
-    groupLetter: t.group_letter,
-  }));
+  const teamRefs = useMemo(
+    () =>
+      teams.map((t) => ({
+        id: t.id,
+        fifaCode: t.fifa_code,
+        groupLetter: t.group_letter,
+      })),
+    [teams]
+  );
 
-  const standings = groupComplete
-    ? computeAllGroupStandings(teamRefs, groupResults)
-    : [];
+  const standings = useMemo(
+    () =>
+      groupComplete ? computeAllGroupStandings(teamRefs, groupResults) : [],
+    [groupComplete, teamRefs, groupResults]
+  );
 
   const rankedThirds = useMemo(() => {
     if (!groupComplete) return [];

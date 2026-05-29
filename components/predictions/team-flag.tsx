@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { getFlagUrl } from "@/lib/teams/flag-url";
 
@@ -26,15 +27,15 @@ export function TeamFlag({ fifaCode, name, size = "sm", className = "" }: TeamFl
   const alt = name ? `Bandera de ${name}` : `Bandera ${fifaCode}`;
 
   if (flagUrl && !failed) {
+    const height = Math.round(display * 0.67);
     return (
-      <img
+      <Image
         src={flagUrl}
         width={display}
-        height={Math.round(display * 0.67)}
+        height={height}
         alt={alt}
         className={`inline-block shrink-0 rounded-sm border border-[var(--color-border)]/60 object-cover shadow-sm ${className}`}
         loading="lazy"
-        decoding="async"
         onError={() => setFailed(true)}
       />
     );
