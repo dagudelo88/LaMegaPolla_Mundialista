@@ -61,6 +61,9 @@ export function HomeLoggedIn({ username, leaderboard, pool }: HomeLoggedInProps)
         <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
           {es.landing.poolHint}
         </p>
+        <p className="mt-2 text-xs text-[var(--color-muted-foreground)]">
+          {es.landing.poolTieHint}
+        </p>
 
         <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
           <div className="flex justify-between gap-2 border-b border-[var(--color-border)] py-2">
@@ -102,16 +105,11 @@ export function HomeLoggedIn({ username, leaderboard, pool }: HomeLoggedInProps)
       </div>
 
       <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-6">
-        <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
-          <div>
-            <h2 className="text-lg font-semibold">{es.landing.leaderboardTitle}</h2>
-            <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
-              {es.landing.leaderboardHint}
-            </p>
-          </div>
-          <Button asChild variant="outline" size="sm">
-            <Link href="/leaderboard">{es.landing.leaderboardFull}</Link>
-          </Button>
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold">{es.landing.leaderboardTitle}</h2>
+          <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
+            {es.landing.leaderboardHint}
+          </p>
         </div>
         <LeaderboardTable rows={leaderboard} />
       </div>

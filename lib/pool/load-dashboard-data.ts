@@ -1,4 +1,5 @@
 import { loadHomeDashboardData } from "@/lib/pool/load-home-data";
+import { getLeaderboardRank } from "@/lib/pool/load-leaderboard";
 import { createClient } from "@/lib/supabase/server";
 
 export interface UserMatchPointRow {
@@ -29,9 +30,7 @@ export async function loadDashboardData(
 ): Promise<DashboardData> {
   const supabase = await createClient();
   const { leaderboard, pool } = await loadHomeDashboardData();
-
-  const rankIndex = username != null ? leaderboard.findIndex((r) => r.username === username) : -1;
-  const rank = rankIndex >= 0 ? rankIndex + 1 : null;
+  const rank = getLeaderboardRank(leaderboard, username);
 
   const { data: umpRows } = await supabase
     .from("user_match_points")

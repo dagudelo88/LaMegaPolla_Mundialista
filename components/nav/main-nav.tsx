@@ -34,7 +34,6 @@ export function MainNav({
   if (isAuthenticated && inviteComplete) {
     links.push({ href: "/dashboard", label: es.nav.dashboard });
     links.push({ href: "/pronosticos", label: es.nav.predictions });
-    links.push({ href: "/leaderboard", label: es.nav.leaderboard });
     if (isAdmin) {
       links.push({ href: "/admin", label: es.nav.admin });
     }

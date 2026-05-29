@@ -11,7 +11,6 @@ const REVALIDATE_PATHS = [
   "/admin",
   "/admin/resultados",
   "/resultados",
-  "/leaderboard",
   "/",
   "/dashboard",
   "/programacion",

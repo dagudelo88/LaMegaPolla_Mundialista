@@ -1,12 +1,8 @@
 import { es } from "@/lib/i18n/es";
-
-export interface LeaderboardTableRow {
-  username: string;
-  total_points: number;
-}
+import type { RankedLeaderboardRow } from "@/lib/pool/load-leaderboard";
 
 interface LeaderboardTableProps {
-  rows: LeaderboardTableRow[];
+  rows: RankedLeaderboardRow[];
   highlightTop?: number;
   highlightUsername?: string | null;
 }
@@ -29,13 +25,13 @@ export function LeaderboardTable({
           <tr className="border-b border-[var(--color-border)]">
             <th className="py-2 pr-4">#</th>
             <th className="py-2 pr-4">{es.landing.leaderboardNickname}</th>
-            <th className="py-2">{es.landing.leaderboardPoints}</th>
+            <th className="py-2 pr-4">{es.landing.leaderboardPoints}</th>
+            <th className="py-2">{es.landing.leaderboardPlenos}</th>
           </tr>
         </thead>
         <tbody>
-          {rows.map((row, index) => {
-            const rank = index + 1;
-            const isPodium = rank <= highlightTop;
+          {rows.map((row) => {
+            const isPodium = row.rank <= highlightTop;
             const isMe = highlightUsername != null && row.username === highlightUsername;
             return (
               <tr
@@ -48,9 +44,10 @@ export function LeaderboardTable({
                       : ""
                 }`}
               >
-                <td className="py-2 pr-4 font-medium tabular-nums">{rank}</td>
+                <td className="py-2 pr-4 font-medium tabular-nums">{row.rank}</td>
                 <td className="py-2 pr-4 font-medium">@{row.username}</td>
-                <td className="py-2 tabular-nums">{row.total_points}</td>
+                <td className="py-2 pr-4 tabular-nums">{row.total_points}</td>
+                <td className="py-2 tabular-nums">{row.plenos_count}</td>
               </tr>
             );
           })}

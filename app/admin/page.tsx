@@ -1,24 +1,35 @@
 import Link from "next/link";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { AdminPodiumTies } from "@/components/admin/admin-podium-ties";
+import { InviteGenerator } from "@/components/admin/invite-generator";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { formatProfileRoles } from "@/lib/auth/roles";
-import { InviteGenerator } from "@/components/admin/invite-generator";
+import { loadHomeDashboardData } from "@/lib/pool/load-home-data";
+import { getPodiumTies } from "@/lib/pool/load-leaderboard";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { es } from "@/lib/i18n/es";
 
 export default async function AdminPage() {
   await requireAdmin();
   const admin = createAdminClient();
 
-  const { data: codes } = await admin
-    .from("invitation_codes")
-    .select("code, uses_count, max_uses, created_at, expires_at")
-    .order("created_at", { ascending: false })
-    .limit(20);
+  const [{ data: codes }, { data: users }, homeData] = await Promise.all([
+    admin
+      .from("invitation_codes")
+      .select("code, uses_count, max_uses, created_at, expires_at")
+      .order("created_at", { ascending: false })
+      .limit(20),
+    admin
+      .from("profiles")
+      .select("username, role, is_admin, invite_redeemed_at, total_points, joined_at")
+      .order("joined_at", { ascending: true }),
+    loadHomeDashboardData(),
+  ]);
 
-  const { data: users } = await admin
-    .from("profiles")
-    .select("username, role, is_admin, invite_redeemed_at, total_points, joined_at")
-    .order("joined_at", { ascending: true });
+  const podiumTies = getPodiumTies(homeData.leaderboard, {
+    firstPlace: homeData.pool.firstPlace,
+    secondPlace: homeData.pool.secondPlace,
+    thirdPlace: homeData.pool.thirdPlace,
+  });
 
   return (
     <section className="space-y-8">
@@ -30,6 +41,8 @@ export default async function AdminPage() {
       >
         {es.admin.resultsLink} →
       </Link>
+
+      <AdminPodiumTies ties={podiumTies} currency={homeData.pool.currency} />
 
       <InviteGenerator />
 

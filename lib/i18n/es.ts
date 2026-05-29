@@ -7,7 +7,6 @@ export const es = {
     login: "Iniciar sesión",
     dashboard: "Mi polla",
     predictions: "Pronósticos",
-    leaderboard: "Posiciones",
     schedule: "Programación",
     results: "Resultados",
     join: "Crear cuenta",
@@ -32,7 +31,7 @@ export const es = {
       "Canjea tu código de invitación y elige tu nickname para entrar a la polla.",
     poolTitle: "Premios del pool",
     poolHint:
-      "Distribución según REGLAS §12. El pool = participantes activos × aporte configurado.",
+      "Distribución según REGLAS §12. El pool = participantes activos × aporte configurado. En empate en puntos en el podio, el admin reparte el premio.",
     poolParticipants: "Participantes activos",
     poolContribution: "Aporte por jugador",
     poolTotal: "Pool total",
@@ -40,11 +39,14 @@ export const es = {
     prizeSecond: "2do puesto",
     prizeThird: "3er puesto",
     leaderboardTitle: "Tabla de posiciones",
-    leaderboardHint: "Desempate: plenos (10/20), luego fecha de inscripción (REGLAS §8).",
-    leaderboardFull: "Ver tabla completa",
+    leaderboardHint:
+      "Desempate en la tabla: plenos (10/20), luego fecha de inscripción. El puesto (#) se comparte si hay empate en puntos (REGLAS §8).",
     leaderboardEmpty: "Aún no hay participantes activos.",
     leaderboardNickname: "Nickname",
     leaderboardPoints: "Puntos",
+    leaderboardPlenos: "Plenos",
+    poolTieHint:
+      "Si hay empate en puntos en el podio, los jugadores comparten puesto y el administrador reparte el premio entre ellos.",
   },
   login: {
     title: "Iniciar sesión",
@@ -91,7 +93,8 @@ export const es = {
     rank: "Tu posición",
     scoredMatches: "Partidos puntuados",
     poolTitle: "Premios del pool",
-    poolHint: "70% / 15% / 10% del total recaudado (REGLAS §8).",
+    poolHint:
+      "70% / 15% / 10% del total recaudado (REGLAS §12). En empate en puntos en el podio, el admin reparte el premio.",
     myResults: "Tus aciertos",
     myResultsHint: "Pronóstico vs resultado oficial (90 min) en partidos ya cargados.",
     match: "Partido",
@@ -226,6 +229,12 @@ export const es = {
     saved: "Resultado guardado. Puntos recalculados para {count} participantes.",
     errorGeneric: "No se pudo guardar el resultado.",
     noMatchesFilter: "No hay partidos en este filtro.",
+    podiumTiesTitle: "Empates en podio",
+    podiumTiesHint:
+      "Jugadores con los mismos puntos comparten puesto. Reparte el premio del puesto entre ellos a partes iguales.",
+    podiumTiesNone: "No hay empates en el podio (1.º, 2.º o 3.er puesto).",
+    podiumTiesPlace: "Puesto {rank}",
+    podiumTiesSuggested: "Sugerido por persona",
   },
   errors: {
     generic: "Algo salió mal. Inténtalo de nuevo.",

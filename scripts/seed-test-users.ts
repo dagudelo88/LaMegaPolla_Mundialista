@@ -223,7 +223,7 @@ async function main() {
   for (const p of TEST_PLAYERS) {
     console.log(`  ${p.email} → @${p.username}`);
   }
-  console.log("\nInicia sesión en /login y revisa / (home) o /leaderboard.");
+  console.log("\nInicia sesión en /login y revisa / (home) o /dashboard.");
 }
 
 main().catch((err) => {
