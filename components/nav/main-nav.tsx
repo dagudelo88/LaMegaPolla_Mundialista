@@ -27,6 +27,8 @@ export function MainNav({
   const links: { href: string; label: string }[] = [
     { href: "/", label: es.nav.home },
     { href: "/reglas", label: es.nav.rules },
+    { href: "/programacion", label: es.nav.schedule },
+    { href: "/resultados", label: es.nav.results },
   ];
 
   if (isAuthenticated && inviteComplete) {

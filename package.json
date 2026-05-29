@@ -11,6 +11,8 @@
     "test:watch": "vitest",
     "make-admin": "tsx scripts/make-first-admin.ts",
     "seed-fifa": "tsx scripts/seed-fifa-2026.ts",
+    "seed-test-users": "tsx scripts/seed-test-users.ts",
+    "recalculate-scores": "tsx scripts/recalculate-scores.ts",
     "generate-fifa-json": "tsx scripts/generate-fifa-json.ts"
   },
   "dependencies": {

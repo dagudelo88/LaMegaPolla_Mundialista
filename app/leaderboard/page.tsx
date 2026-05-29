@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { LeaderboardTable } from "@/components/leaderboard/leaderboard-table";
+import { es } from "@/lib/i18n/es";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function LeaderboardPage() {
@@ -6,33 +9,29 @@ export default async function LeaderboardPage() {
     .from("profiles")
     .select("username, total_points, joined_at")
     .not("username", "is", null)
+    .not("invite_redeemed_at", "is", null)
     .order("total_points", { ascending: false })
     .order("joined_at", { ascending: true });
 
+  const leaderboard = (rows ?? []).filter(
+    (r): r is { username: string; total_points: number; joined_at: string } =>
+      r.username != null
+  );
+
   return (
     <section className="space-y-4">
-      <h1 className="text-3xl font-bold">Tabla de posiciones</h1>
+      <h1 className="text-3xl font-bold">{es.nav.leaderboard}</h1>
       <p className="text-sm text-[var(--color-muted-foreground)]">
-        Desempate: plenos (10/20), luego fecha de inscripción (REGLAS §8).
+        {es.landing.leaderboardHint}
       </p>
-      <table className="w-full text-left text-sm">
-        <thead>
-          <tr className="border-b border-[var(--color-border)]">
-            <th className="py-2">#</th>
-            <th className="py-2">Nickname</th>
-            <th className="py-2">Puntos</th>
-          </tr>
-        </thead>
-        <tbody>
-          {(rows ?? []).map((r, i) => (
-            <tr key={r.username!} className="border-b border-[var(--color-border)]">
-              <td className="py-2">{i + 1}</td>
-              <td className="py-2 font-medium">@{r.username}</td>
-              <td className="py-2">{r.total_points}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-4">
+        <LeaderboardTable rows={leaderboard} />
+      </div>
+      <p className="text-sm">
+        <Link href="/" className="text-[var(--color-accent)] hover:underline">
+          {es.nav.home}
+        </Link>
+      </p>
     </section>
   );
 }

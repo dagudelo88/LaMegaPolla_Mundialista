@@ -1,0 +1,43 @@
+import { createClient } from "@/lib/supabase/server";
+import type { MatchPhase, MatchWithTeams } from "@/types/database";
+
+const MATCH_SELECT =
+  "id, fifa_match_number, phase, group_letter, home_team_id, away_team_id, home_source, away_source, kickoff_at, prediction_deadline, status, venue, matchday_key, home_score, away_score";
+
+export async function loadOfficialFixture(): Promise<{
+  teams: Array<{
+    id: number;
+    fifa_code: string;
+    name_es: string;
+    group_letter: string;
+    flag_emoji: string | null;
+  }>;
+  matches: MatchWithTeams[];
+}> {
+  const supabase = await createClient();
+
+  const { data: teams, error: teamsError } = await supabase
+    .from("teams")
+    .select("id, fifa_code, name_es, group_letter, flag_emoji")
+    .order("group_letter")
+    .order("fifa_code");
+
+  if (teamsError) throw new Error(teamsError.message);
+
+  const { data: matchesRaw, error: matchesError } = await supabase
+    .from("matches")
+    .select(MATCH_SELECT)
+    .order("fifa_match_number");
+
+  if (matchesError) throw new Error(matchesError.message);
+
+  const teamMap = new Map((teams ?? []).map((t) => [t.id, t]));
+  const matches: MatchWithTeams[] = (matchesRaw ?? []).map((m) => ({
+    ...m,
+    phase: m.phase as MatchPhase,
+    home_team: m.home_team_id ? teamMap.get(m.home_team_id) ?? null : null,
+    away_team: m.away_team_id ? teamMap.get(m.away_team_id) ?? null : null,
+  }));
+
+  return { teams: teams ?? [], matches };
+}

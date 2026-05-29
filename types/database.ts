@@ -53,6 +53,7 @@ export interface Match {
   status: string;
   home_score?: number | null;
   away_score?: number | null;
+  result_advances_team_id?: number | null;
 }
 
 export interface MatchWithTeams extends Match {

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { formatProfileRoles } from "@/lib/auth/roles";
@@ -22,6 +23,13 @@ export default async function AdminPage() {
   return (
     <section className="space-y-8">
       <h1 className="text-3xl font-bold">{es.admin.title}</h1>
+
+      <Link
+        href="/admin/resultados"
+        className="inline-flex rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-3 text-sm font-medium hover:border-[var(--color-accent)]"
+      >
+        {es.admin.resultsLink} →
+      </Link>
 
       <InviteGenerator />
 

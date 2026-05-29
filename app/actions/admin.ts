@@ -1,23 +1,45 @@
 "use server";
 
 import { requireAdmin } from "@/lib/auth/require-admin";
+import { resolveOfficialBracket } from "@/lib/bracket/resolve-official-bracket";
+import { processMatchResult } from "@/lib/scoring/process-match-result";
+import type { MatchPhase } from "@/lib/scoring/calculate-match-points";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 
-function randomCode(): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let s = "MEGA-";
-  for (let i = 0; i < 6; i++) {
-    s += chars[Math.floor(Math.random() * chars.length)];
+const REVALIDATE_PATHS = [
+  "/admin",
+  "/admin/resultados",
+  "/resultados",
+  "/leaderboard",
+  "/",
+  "/dashboard",
+  "/programacion",
+  "/pronosticos",
+] as const;
+
+function revalidatePublicPaths() {
+  for (const path of REVALIDATE_PATHS) {
+    revalidatePath(path);
   }
-  return s;
+}
+
+function clampScore(value: number): number {
+  if (!Number.isFinite(value) || value < 0) return 0;
+  if (value > 20) return 20;
+  return Math.round(value);
 }
 
 export async function generateInviteCode() {
   const { user } = await requireAdmin();
   const admin = createAdminClient();
 
-  const code = randomCode();
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "MEGA-";
+  for (let i = 0; i < 6; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+
   const { error } = await admin.from("invitation_codes").insert({
     code,
     created_by: user.id,
@@ -39,20 +61,22 @@ export async function generateInviteCode() {
   return { code };
 }
 
-export async function setMatchResult(
-  matchId: string,
-  homeScore: number,
-  awayScore: number
-) {
+export async function setMatchLive(matchId: string) {
   const { user } = await requireAdmin();
   const admin = createAdminClient();
+
+  const { data: existing, error: fetchErr } = await admin
+    .from("matches")
+    .select("status")
+    .eq("id", matchId)
+    .single();
+
+  if (fetchErr || !existing) throw new Error(fetchErr?.message ?? "Partido no encontrado");
 
   const { error } = await admin
     .from("matches")
     .update({
-      home_score: homeScore,
-      away_score: awayScore,
-      status: "finished",
+      status: "live",
       updated_at: new Date().toISOString(),
     })
     .eq("id", matchId);
@@ -61,11 +85,114 @@ export async function setMatchResult(
 
   await admin.from("admin_actions").insert({
     admin_id: user.id,
-    action: "set_match_result",
+    action: "set_match_live",
     target_type: "matches",
     target_id: matchId,
-    details: { homeScore, awayScore },
+    details: { previousStatus: existing.status },
   });
 
-  revalidatePath("/admin");
+  revalidatePublicPaths();
+}
+
+export async function setMatchResult(
+  matchId: string,
+  homeScore: number,
+  awayScore: number,
+  advancesTeamId?: number | null
+) {
+  const { user } = await requireAdmin();
+  const admin = createAdminClient();
+
+  const home = clampScore(homeScore);
+  const away = clampScore(awayScore);
+
+  const { data: existing, error: fetchErr } = await admin
+    .from("matches")
+    .select("phase, status, home_score, away_score, home_team_id, away_team_id, result_advances_team_id")
+    .eq("id", matchId)
+    .single();
+
+  if (fetchErr || !existing) throw new Error(fetchErr?.message ?? "Partido no encontrado");
+
+  const isKnockout = existing.phase !== "group_stage";
+  const isDraw = home === away;
+  let resultAdvancesTeamId: number | null = null;
+
+  if (isKnockout && isDraw) {
+    if (advancesTeamId == null) {
+      throw new Error(
+        "En eliminatorias con empate a 90 min debes indicar qué equipo avanza (penales / prórroga)."
+      );
+    }
+    if (
+      advancesTeamId !== existing.home_team_id &&
+      advancesTeamId !== existing.away_team_id
+    ) {
+      throw new Error("El equipo que avanza debe ser local o visitante del partido.");
+    }
+    resultAdvancesTeamId = advancesTeamId;
+  }
+
+  const { error: updateErr } = await admin
+    .from("matches")
+    .update({
+      home_score: home,
+      away_score: away,
+      status: "finished",
+      result_advances_team_id: resultAdvancesTeamId,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", matchId);
+
+  if (updateErr) throw new Error(updateErr.message);
+
+  const { usersScored } = await processMatchResult(admin, {
+    matchId,
+    phase: existing.phase as MatchPhase,
+    homeScore: home,
+    awayScore: away,
+  });
+
+  await admin.from("admin_actions").insert({
+    admin_id: user.id,
+    action: existing.status === "finished" ? "correct_match_result" : "set_match_result",
+    target_type: "matches",
+    target_id: matchId,
+    details: {
+      previous: {
+        homeScore: existing.home_score,
+        awayScore: existing.away_score,
+        status: existing.status,
+        resultAdvancesTeamId: existing.result_advances_team_id,
+      },
+      current: {
+        homeScore: home,
+        awayScore: away,
+        status: "finished",
+        resultAdvancesTeamId: resultAdvancesTeamId,
+      },
+      usersScored,
+    },
+  });
+
+  revalidatePublicPaths();
+  return { usersScored };
+}
+
+export async function resolveOfficialKnockoutBracket() {
+  const { user } = await requireAdmin();
+  const admin = createAdminClient();
+
+  const result = await resolveOfficialBracket(admin);
+
+  await admin.from("admin_actions").insert({
+    admin_id: user.id,
+    action: "resolve_official_knockout_bracket",
+    target_type: "matches",
+    target_id: "knockout",
+    details: result,
+  });
+
+  revalidatePublicPaths();
+  return result;
 }
