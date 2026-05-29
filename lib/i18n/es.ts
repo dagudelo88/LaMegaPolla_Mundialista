@@ -1,0 +1,58 @@
+export const es = {
+  appName: "La Mega Polla Mundialista",
+  tagline: "Pronósticos del Mundial 2026 entre amigos",
+  nav: {
+    home: "Inicio",
+    rules: "Reglas",
+    login: "Iniciar sesión",
+    dashboard: "Mi polla",
+    predictions: "Pronósticos",
+    leaderboard: "Posiciones",
+    join: "Unirme",
+    logout: "Cerrar sesión",
+    admin: "Administración",
+  },
+  landing: {
+    heroTitle: "La Mega Polla Mundialista 2026",
+    heroSubtitle:
+      "Predice el Mundial, gana puntos y corrige con la mecánica de cambios pagos.",
+    ctaLogin: "Iniciar sesión con Google",
+    ctaRules: "Leer reglamento",
+    inviteNote: "Necesitas un código de invitación del administrador.",
+  },
+  login: {
+    title: "Iniciar sesión",
+    subtitle: "Usa tu cuenta de Google para entrar.",
+    button: "Continuar con Google",
+  },
+  join: {
+    title: "Unirte a la polla",
+    subtitle: "Introduce tu código de invitación y elige tu apodo público.",
+    codeLabel: "Código de invitación",
+    usernameLabel: "Apodo (nickname)",
+    usernameHint: "Mínimo 3 caracteres. Visible en la tabla de posiciones.",
+    submit: "Canjear e ingresar",
+    success: "¡Bienvenido! Ya puedes acceder a tu panel.",
+  },
+  dashboard: {
+    title: "Mi polla",
+    welcome: "Hola",
+    points: "Puntos",
+    pendingJoin: "Debes canjear tu código de invitación para participar.",
+    goJoin: "Ir a unirme",
+  },
+  admin: {
+    title: "Panel de administración",
+    invites: "Códigos de invitación",
+    generate: "Generar código",
+    users: "Participantes",
+    noCodes: "Aún no hay códigos generados.",
+  },
+  errors: {
+    generic: "Algo salió mal. Inténtalo de nuevo.",
+    notAuthenticated: "Debes iniciar sesión.",
+    invalidCode: "Código inválido o agotado.",
+    usernameTaken: "Ese apodo ya está en uso.",
+    usernameTooShort: "El apodo debe tener al menos 3 caracteres.",
+  },
+} as const;

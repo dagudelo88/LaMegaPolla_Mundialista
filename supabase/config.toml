@@ -1,0 +1,10 @@
+# Supabase local dev (optional). Link remote: supabase link --project-ref <ref>
+
+[project]
+id = "la-mega-polla"
+
+[api]
+enabled = true
+
+[db]
+major_version = 15
