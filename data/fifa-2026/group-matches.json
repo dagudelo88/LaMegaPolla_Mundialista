@@ -1,0 +1,650 @@
+[
+  {
+    "fifa_match_number": 1,
+    "group_letter": "A",
+    "home_code": "MEX",
+    "away_code": "RSA",
+    "matchday_key": "group_A_r1",
+    "kickoff_at": "2026-06-11T19:00:00Z",
+    "venue": "Estadio Azteca, Ciudad de México"
+  },
+  {
+    "fifa_match_number": 2,
+    "group_letter": "A",
+    "home_code": "KOR",
+    "away_code": "CZE",
+    "matchday_key": "group_A_r1",
+    "kickoff_at": "2026-06-12T02:00:00Z",
+    "venue": "Estadio Akron, Guadalajara"
+  },
+  {
+    "fifa_match_number": 3,
+    "group_letter": "B",
+    "home_code": "CAN",
+    "away_code": "BIH",
+    "matchday_key": "group_B_r1",
+    "kickoff_at": "2026-06-12T19:00:00Z",
+    "venue": "BMO Field, Toronto"
+  },
+  {
+    "fifa_match_number": 4,
+    "group_letter": "D",
+    "home_code": "USA",
+    "away_code": "PAR",
+    "matchday_key": "group_D_r1",
+    "kickoff_at": "2026-06-13T01:00:00Z",
+    "venue": "SoFi Stadium, Los Ángeles"
+  },
+  {
+    "fifa_match_number": 5,
+    "group_letter": "C",
+    "home_code": "HAI",
+    "away_code": "SCO",
+    "matchday_key": "group_C_r1",
+    "kickoff_at": "2026-06-14T01:00:00Z",
+    "venue": "Gillette Stadium, Boston"
+  },
+  {
+    "fifa_match_number": 6,
+    "group_letter": "D",
+    "home_code": "AUS",
+    "away_code": "TUR",
+    "matchday_key": "group_D_r1",
+    "kickoff_at": "2026-06-13T04:00:00Z",
+    "venue": "BC Place, Vancouver"
+  },
+  {
+    "fifa_match_number": 7,
+    "group_letter": "C",
+    "home_code": "BRA",
+    "away_code": "MAR",
+    "matchday_key": "group_C_r1",
+    "kickoff_at": "2026-06-13T22:00:00Z",
+    "venue": "MetLife Stadium, Nueva York"
+  },
+  {
+    "fifa_match_number": 8,
+    "group_letter": "B",
+    "home_code": "QAT",
+    "away_code": "SUI",
+    "matchday_key": "group_B_r1",
+    "kickoff_at": "2026-06-13T19:00:00Z",
+    "venue": "Levi's Stadium, Santa Clara"
+  },
+  {
+    "fifa_match_number": 9,
+    "group_letter": "E",
+    "home_code": "CIV",
+    "away_code": "ECU",
+    "matchday_key": "group_E_r1",
+    "kickoff_at": "2026-06-14T23:00:00Z",
+    "venue": "Lincoln Financial Field, Filadelfia"
+  },
+  {
+    "fifa_match_number": 10,
+    "group_letter": "E",
+    "home_code": "GER",
+    "away_code": "CUW",
+    "matchday_key": "group_E_r1",
+    "kickoff_at": "2026-06-14T17:00:00Z",
+    "venue": "NRG Stadium, Houston"
+  },
+  {
+    "fifa_match_number": 11,
+    "group_letter": "F",
+    "home_code": "NED",
+    "away_code": "JPN",
+    "matchday_key": "group_F_r1",
+    "kickoff_at": "2026-06-14T20:00:00Z",
+    "venue": "AT&T Stadium, Dallas"
+  },
+  {
+    "fifa_match_number": 12,
+    "group_letter": "F",
+    "home_code": "SWE",
+    "away_code": "TUN",
+    "matchday_key": "group_F_r1",
+    "kickoff_at": "2026-06-15T02:00:00Z",
+    "venue": "Estadio BBVA, Monterrey"
+  },
+  {
+    "fifa_match_number": 13,
+    "group_letter": "H",
+    "home_code": "KSA",
+    "away_code": "URU",
+    "matchday_key": "group_H_r1",
+    "kickoff_at": "2026-06-15T22:00:00Z",
+    "venue": "Hard Rock Stadium, Miami"
+  },
+  {
+    "fifa_match_number": 14,
+    "group_letter": "H",
+    "home_code": "ESP",
+    "away_code": "CPV",
+    "matchday_key": "group_H_r1",
+    "kickoff_at": "2026-06-15T17:00:00Z",
+    "venue": "Mercedes-Benz Stadium, Atlanta"
+  },
+  {
+    "fifa_match_number": 15,
+    "group_letter": "G",
+    "home_code": "IRN",
+    "away_code": "NZL",
+    "matchday_key": "group_G_r1",
+    "kickoff_at": "2026-06-16T01:00:00Z",
+    "venue": "SoFi Stadium, Los Ángeles"
+  },
+  {
+    "fifa_match_number": 16,
+    "group_letter": "G",
+    "home_code": "BEL",
+    "away_code": "EGY",
+    "matchday_key": "group_G_r1",
+    "kickoff_at": "2026-06-15T20:00:00Z",
+    "venue": "Lumen Field, Seattle"
+  },
+  {
+    "fifa_match_number": 17,
+    "group_letter": "I",
+    "home_code": "FRA",
+    "away_code": "SEN",
+    "matchday_key": "group_I_r1",
+    "kickoff_at": "2026-06-16T20:00:00Z",
+    "venue": "MetLife Stadium, Nueva York"
+  },
+  {
+    "fifa_match_number": 18,
+    "group_letter": "I",
+    "home_code": "IRQ",
+    "away_code": "NOR",
+    "matchday_key": "group_I_r1",
+    "kickoff_at": "2026-06-16T23:00:00Z",
+    "venue": "Gillette Stadium, Boston"
+  },
+  {
+    "fifa_match_number": 19,
+    "group_letter": "J",
+    "home_code": "ARG",
+    "away_code": "ALG",
+    "matchday_key": "group_J_r1",
+    "kickoff_at": "2026-06-17T02:00:00Z",
+    "venue": "Arrowhead Stadium, Kansas City"
+  },
+  {
+    "fifa_match_number": 20,
+    "group_letter": "J",
+    "home_code": "AUT",
+    "away_code": "JOR",
+    "matchday_key": "group_J_r1",
+    "kickoff_at": "2026-06-17T04:00:00Z",
+    "venue": "Levi's Stadium, Santa Clara"
+  },
+  {
+    "fifa_match_number": 21,
+    "group_letter": "L",
+    "home_code": "GHA",
+    "away_code": "PAN",
+    "matchday_key": "group_L_r1",
+    "kickoff_at": "2026-06-18T00:00:00Z",
+    "venue": "BMO Field, Toronto"
+  },
+  {
+    "fifa_match_number": 22,
+    "group_letter": "L",
+    "home_code": "ENG",
+    "away_code": "CRO",
+    "matchday_key": "group_L_r1",
+    "kickoff_at": "2026-06-17T21:00:00Z",
+    "venue": "AT&T Stadium, Dallas"
+  },
+  {
+    "fifa_match_number": 23,
+    "group_letter": "K",
+    "home_code": "POR",
+    "away_code": "COD",
+    "matchday_key": "group_K_r1",
+    "kickoff_at": "2026-06-17T18:00:00Z",
+    "venue": "NRG Stadium, Houston"
+  },
+  {
+    "fifa_match_number": 24,
+    "group_letter": "K",
+    "home_code": "UZB",
+    "away_code": "COL",
+    "matchday_key": "group_K_r1",
+    "kickoff_at": "2026-06-18T02:00:00Z",
+    "venue": "Estadio Azteca, Ciudad de México"
+  },
+  {
+    "fifa_match_number": 25,
+    "group_letter": "A",
+    "home_code": "CZE",
+    "away_code": "RSA",
+    "matchday_key": "group_A_r2",
+    "kickoff_at": "2026-06-18T17:00:00Z",
+    "venue": "Mercedes-Benz Stadium, Atlanta"
+  },
+  {
+    "fifa_match_number": 26,
+    "group_letter": "B",
+    "home_code": "SUI",
+    "away_code": "BIH",
+    "matchday_key": "group_B_r2",
+    "kickoff_at": "2026-06-18T20:00:00Z",
+    "venue": "SoFi Stadium, Los Ángeles"
+  },
+  {
+    "fifa_match_number": 27,
+    "group_letter": "B",
+    "home_code": "CAN",
+    "away_code": "QAT",
+    "matchday_key": "group_B_r2",
+    "kickoff_at": "2026-06-18T23:00:00Z",
+    "venue": "BC Place, Vancouver"
+  },
+  {
+    "fifa_match_number": 28,
+    "group_letter": "A",
+    "home_code": "MEX",
+    "away_code": "KOR",
+    "matchday_key": "group_A_r2",
+    "kickoff_at": "2026-06-19T02:00:00Z",
+    "venue": "Estadio Akron, Guadalajara"
+  },
+  {
+    "fifa_match_number": 29,
+    "group_letter": "C",
+    "home_code": "BRA",
+    "away_code": "HAI",
+    "matchday_key": "group_C_r2",
+    "kickoff_at": "2026-06-20T02:00:00Z",
+    "venue": "Lincoln Financial Field, Filadelfia"
+  },
+  {
+    "fifa_match_number": 30,
+    "group_letter": "C",
+    "home_code": "SCO",
+    "away_code": "MAR",
+    "matchday_key": "group_C_r2",
+    "kickoff_at": "2026-06-19T23:00:00Z",
+    "venue": "Gillette Stadium, Boston"
+  },
+  {
+    "fifa_match_number": 31,
+    "group_letter": "D",
+    "home_code": "TUR",
+    "away_code": "PAR",
+    "matchday_key": "group_D_r2",
+    "kickoff_at": "2026-06-20T03:00:00Z",
+    "venue": "Levi's Stadium, Santa Clara"
+  },
+  {
+    "fifa_match_number": 32,
+    "group_letter": "D",
+    "home_code": "USA",
+    "away_code": "AUS",
+    "matchday_key": "group_D_r2",
+    "kickoff_at": "2026-06-19T20:00:00Z",
+    "venue": "Lumen Field, Seattle"
+  },
+  {
+    "fifa_match_number": 33,
+    "group_letter": "E",
+    "home_code": "GER",
+    "away_code": "CIV",
+    "matchday_key": "group_E_r2",
+    "kickoff_at": "2026-06-20T21:00:00Z",
+    "venue": "BMO Field, Toronto"
+  },
+  {
+    "fifa_match_number": 34,
+    "group_letter": "E",
+    "home_code": "ECU",
+    "away_code": "CUW",
+    "matchday_key": "group_E_r2",
+    "kickoff_at": "2026-06-21T01:00:00Z",
+    "venue": "Arrowhead Stadium, Kansas City"
+  },
+  {
+    "fifa_match_number": 35,
+    "group_letter": "F",
+    "home_code": "NED",
+    "away_code": "SWE",
+    "matchday_key": "group_F_r2",
+    "kickoff_at": "2026-06-20T18:00:00Z",
+    "venue": "NRG Stadium, Houston"
+  },
+  {
+    "fifa_match_number": 36,
+    "group_letter": "F",
+    "home_code": "TUN",
+    "away_code": "JPN",
+    "matchday_key": "group_F_r2",
+    "kickoff_at": "2026-06-21T05:00:00Z",
+    "venue": "Estadio BBVA, Monterrey"
+  },
+  {
+    "fifa_match_number": 37,
+    "group_letter": "H",
+    "home_code": "URU",
+    "away_code": "CPV",
+    "matchday_key": "group_H_r2",
+    "kickoff_at": "2026-06-21T23:00:00Z",
+    "venue": "Hard Rock Stadium, Miami"
+  },
+  {
+    "fifa_match_number": 38,
+    "group_letter": "H",
+    "home_code": "ESP",
+    "away_code": "KSA",
+    "matchday_key": "group_H_r2",
+    "kickoff_at": "2026-06-21T17:00:00Z",
+    "venue": "Mercedes-Benz Stadium, Atlanta"
+  },
+  {
+    "fifa_match_number": 39,
+    "group_letter": "G",
+    "home_code": "BEL",
+    "away_code": "IRN",
+    "matchday_key": "group_G_r2",
+    "kickoff_at": "2026-06-21T20:00:00Z",
+    "venue": "SoFi Stadium, Los Ángeles"
+  },
+  {
+    "fifa_match_number": 40,
+    "group_letter": "G",
+    "home_code": "NZL",
+    "away_code": "EGY",
+    "matchday_key": "group_G_r2",
+    "kickoff_at": "2026-06-22T02:00:00Z",
+    "venue": "BC Place, Vancouver"
+  },
+  {
+    "fifa_match_number": 41,
+    "group_letter": "I",
+    "home_code": "NOR",
+    "away_code": "SEN",
+    "matchday_key": "group_I_r2",
+    "kickoff_at": "2026-06-23T01:00:00Z",
+    "venue": "MetLife Stadium, Nueva York"
+  },
+  {
+    "fifa_match_number": 42,
+    "group_letter": "I",
+    "home_code": "FRA",
+    "away_code": "IRQ",
+    "matchday_key": "group_I_r2",
+    "kickoff_at": "2026-06-22T22:00:00Z",
+    "venue": "Lincoln Financial Field, Filadelfia"
+  },
+  {
+    "fifa_match_number": 43,
+    "group_letter": "J",
+    "home_code": "ARG",
+    "away_code": "AUT",
+    "matchday_key": "group_J_r2",
+    "kickoff_at": "2026-06-22T17:00:00Z",
+    "venue": "AT&T Stadium, Dallas"
+  },
+  {
+    "fifa_match_number": 44,
+    "group_letter": "J",
+    "home_code": "JOR",
+    "away_code": "ALG",
+    "matchday_key": "group_J_r2",
+    "kickoff_at": "2026-06-23T03:00:00Z",
+    "venue": "Levi's Stadium, Santa Clara"
+  },
+  {
+    "fifa_match_number": 45,
+    "group_letter": "L",
+    "home_code": "ENG",
+    "away_code": "GHA",
+    "matchday_key": "group_L_r2",
+    "kickoff_at": "2026-06-23T21:00:00Z",
+    "venue": "Gillette Stadium, Boston"
+  },
+  {
+    "fifa_match_number": 46,
+    "group_letter": "L",
+    "home_code": "PAN",
+    "away_code": "CRO",
+    "matchday_key": "group_L_r2",
+    "kickoff_at": "2026-06-24T00:00:00Z",
+    "venue": "BMO Field, Toronto"
+  },
+  {
+    "fifa_match_number": 47,
+    "group_letter": "K",
+    "home_code": "POR",
+    "away_code": "UZB",
+    "matchday_key": "group_K_r2",
+    "kickoff_at": "2026-06-23T18:00:00Z",
+    "venue": "NRG Stadium, Houston"
+  },
+  {
+    "fifa_match_number": 48,
+    "group_letter": "K",
+    "home_code": "COL",
+    "away_code": "COD",
+    "matchday_key": "group_K_r2",
+    "kickoff_at": "2026-06-24T03:00:00Z",
+    "venue": "Estadio Akron, Guadalajara"
+  },
+  {
+    "fifa_match_number": 49,
+    "group_letter": "C",
+    "home_code": "SCO",
+    "away_code": "BRA",
+    "matchday_key": "group_C_r3",
+    "kickoff_at": "2026-06-24T23:00:00Z",
+    "venue": "Hard Rock Stadium, Miami"
+  },
+  {
+    "fifa_match_number": 50,
+    "group_letter": "C",
+    "home_code": "MAR",
+    "away_code": "HAI",
+    "matchday_key": "group_C_r3",
+    "kickoff_at": "2026-06-24T23:00:00Z",
+    "venue": "Mercedes-Benz Stadium, Atlanta"
+  },
+  {
+    "fifa_match_number": 51,
+    "group_letter": "B",
+    "home_code": "SUI",
+    "away_code": "CAN",
+    "matchday_key": "group_B_r3",
+    "kickoff_at": "2026-06-24T20:00:00Z",
+    "venue": "BC Place, Vancouver"
+  },
+  {
+    "fifa_match_number": 52,
+    "group_letter": "B",
+    "home_code": "BIH",
+    "away_code": "QAT",
+    "matchday_key": "group_B_r3",
+    "kickoff_at": "2026-06-24T20:00:00Z",
+    "venue": "Lumen Field, Seattle"
+  },
+  {
+    "fifa_match_number": 53,
+    "group_letter": "A",
+    "home_code": "CZE",
+    "away_code": "MEX",
+    "matchday_key": "group_A_r3",
+    "kickoff_at": "2026-06-25T02:00:00Z",
+    "venue": "Estadio Azteca, Ciudad de México"
+  },
+  {
+    "fifa_match_number": 54,
+    "group_letter": "A",
+    "home_code": "RSA",
+    "away_code": "KOR",
+    "matchday_key": "group_A_r3",
+    "kickoff_at": "2026-06-25T02:00:00Z",
+    "venue": "Estadio BBVA, Monterrey"
+  },
+  {
+    "fifa_match_number": 55,
+    "group_letter": "E",
+    "home_code": "CUW",
+    "away_code": "CIV",
+    "matchday_key": "group_E_r3",
+    "kickoff_at": "2026-06-25T21:00:00Z",
+    "venue": "Lincoln Financial Field, Filadelfia"
+  },
+  {
+    "fifa_match_number": 56,
+    "group_letter": "E",
+    "home_code": "ECU",
+    "away_code": "GER",
+    "matchday_key": "group_E_r3",
+    "kickoff_at": "2026-06-25T21:00:00Z",
+    "venue": "MetLife Stadium, Nueva York"
+  },
+  {
+    "fifa_match_number": 57,
+    "group_letter": "F",
+    "home_code": "JPN",
+    "away_code": "SWE",
+    "matchday_key": "group_F_r3",
+    "kickoff_at": "2026-06-26T00:00:00Z",
+    "venue": "AT&T Stadium, Dallas"
+  },
+  {
+    "fifa_match_number": 58,
+    "group_letter": "F",
+    "home_code": "TUN",
+    "away_code": "NED",
+    "matchday_key": "group_F_r3",
+    "kickoff_at": "2026-06-26T00:00:00Z",
+    "venue": "Arrowhead Stadium, Kansas City"
+  },
+  {
+    "fifa_match_number": 59,
+    "group_letter": "D",
+    "home_code": "TUR",
+    "away_code": "USA",
+    "matchday_key": "group_D_r3",
+    "kickoff_at": "2026-06-26T03:00:00Z",
+    "venue": "SoFi Stadium, Los Ángeles"
+  },
+  {
+    "fifa_match_number": 60,
+    "group_letter": "D",
+    "home_code": "PAR",
+    "away_code": "AUS",
+    "matchday_key": "group_D_r3",
+    "kickoff_at": "2026-06-26T03:00:00Z",
+    "venue": "Levi's Stadium, Santa Clara"
+  },
+  {
+    "fifa_match_number": 61,
+    "group_letter": "I",
+    "home_code": "NOR",
+    "away_code": "FRA",
+    "matchday_key": "group_I_r3",
+    "kickoff_at": "2026-06-26T20:00:00Z",
+    "venue": "Gillette Stadium, Boston"
+  },
+  {
+    "fifa_match_number": 62,
+    "group_letter": "I",
+    "home_code": "SEN",
+    "away_code": "IRQ",
+    "matchday_key": "group_I_r3",
+    "kickoff_at": "2026-06-26T20:00:00Z",
+    "venue": "BMO Field, Toronto"
+  },
+  {
+    "fifa_match_number": 63,
+    "group_letter": "G",
+    "home_code": "EGY",
+    "away_code": "IRN",
+    "matchday_key": "group_G_r3",
+    "kickoff_at": "2026-06-27T04:00:00Z",
+    "venue": "Lumen Field, Seattle"
+  },
+  {
+    "fifa_match_number": 64,
+    "group_letter": "G",
+    "home_code": "NZL",
+    "away_code": "BEL",
+    "matchday_key": "group_G_r3",
+    "kickoff_at": "2026-06-27T04:00:00Z",
+    "venue": "BC Place, Vancouver"
+  },
+  {
+    "fifa_match_number": 65,
+    "group_letter": "H",
+    "home_code": "CPV",
+    "away_code": "KSA",
+    "matchday_key": "group_H_r3",
+    "kickoff_at": "2026-06-27T01:00:00Z",
+    "venue": "NRG Stadium, Houston"
+  },
+  {
+    "fifa_match_number": 66,
+    "group_letter": "H",
+    "home_code": "URU",
+    "away_code": "ESP",
+    "matchday_key": "group_H_r3",
+    "kickoff_at": "2026-06-27T01:00:00Z",
+    "venue": "Estadio Akron, Guadalajara"
+  },
+  {
+    "fifa_match_number": 67,
+    "group_letter": "L",
+    "home_code": "PAN",
+    "away_code": "ENG",
+    "matchday_key": "group_L_r3",
+    "kickoff_at": "2026-06-27T22:00:00Z",
+    "venue": "MetLife Stadium, Nueva York"
+  },
+  {
+    "fifa_match_number": 68,
+    "group_letter": "L",
+    "home_code": "CRO",
+    "away_code": "GHA",
+    "matchday_key": "group_L_r3",
+    "kickoff_at": "2026-06-27T22:00:00Z",
+    "venue": "Lincoln Financial Field, Filadelfia"
+  },
+  {
+    "fifa_match_number": 69,
+    "group_letter": "J",
+    "home_code": "ALG",
+    "away_code": "AUT",
+    "matchday_key": "group_J_r3",
+    "kickoff_at": "2026-06-28T03:00:00Z",
+    "venue": "Arrowhead Stadium, Kansas City"
+  },
+  {
+    "fifa_match_number": 70,
+    "group_letter": "J",
+    "home_code": "JOR",
+    "away_code": "ARG",
+    "matchday_key": "group_J_r3",
+    "kickoff_at": "2026-06-28T03:00:00Z",
+    "venue": "AT&T Stadium, Dallas"
+  },
+  {
+    "fifa_match_number": 71,
+    "group_letter": "K",
+    "home_code": "COL",
+    "away_code": "POR",
+    "matchday_key": "group_K_r3",
+    "kickoff_at": "2026-06-28T00:30:00Z",
+    "venue": "Hard Rock Stadium, Miami"
+  },
+  {
+    "fifa_match_number": 72,
+    "group_letter": "K",
+    "home_code": "COD",
+    "away_code": "UZB",
+    "matchday_key": "group_K_r3",
+    "kickoff_at": "2026-06-28T00:30:00Z",
+    "venue": "Mercedes-Benz Stadium, Atlanta"
+  }
+]

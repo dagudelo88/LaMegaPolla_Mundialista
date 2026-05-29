@@ -1,35 +1,42 @@
+import { loadPronosticosData } from "@/app/actions/predictions";
+import { PronosticosShell } from "@/components/predictions/pronosticos-shell";
 import { requireUser } from "@/lib/auth/require-admin";
-import { createClient } from "@/lib/supabase/server";
+import { getPaidChangeCost } from "@/lib/changes/paid-change-cost";
+import { getConfigNumber } from "@/lib/config/get-config";
+import { es } from "@/lib/i18n/es";
+import type { MatchPhase } from "@/types/database";
 
 export default async function PronosticosPage() {
-  await requireUser();
-  const supabase = await createClient();
-  const { data: matches } = await supabase
-    .from("matches")
-    .select("id, phase, kickoff_at, status")
-    .order("kickoff_at", { ascending: true })
-    .limit(20);
+  const user = await requireUser();
+  const data = await loadPronosticosData(user.id);
+  const maxChangesPerDay = await getConfigNumber("changes.max_per_day", 1);
+
+  const phases: MatchPhase[] = [
+    "group_stage",
+    "round_of_32",
+    "round_of_16",
+    "quarter_final",
+    "semi_final",
+    "third_place",
+    "final",
+  ];
+
+  const changeCosts: Partial<Record<MatchPhase, number>> = {};
+  for (const phase of phases) {
+    changeCosts[phase] = await getPaidChangeCost(phase);
+  }
 
   return (
     <section className="space-y-4">
-      <h1 className="text-3xl font-bold">Pronósticos</h1>
-      <p className="text-[var(--color-muted-foreground)]">
-        Envío completo del torneo (REGLAS §3). Los partidos aparecerán tras el seed FIFA.
-      </p>
-      {matches?.length ? (
-        <ul className="space-y-2 text-sm">
-          {matches.map((m) => (
-            <li
-              key={m.id}
-              className="rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2"
-            >
-              {m.phase} — {new Date(m.kickoff_at).toLocaleString("es")}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="text-sm">No hay partidos cargados. Ejecuta el script de seed.</p>
-      )}
+      <div>
+        <h1 className="text-3xl font-bold">{es.pronosticos.title}</h1>
+        <p className="mt-2 text-[var(--color-muted-foreground)]">{es.pronosticos.subtitle}</p>
+      </div>
+      <PronosticosShell
+        data={data}
+        maxChangesPerDay={maxChangesPerDay}
+        changeCosts={changeCosts}
+      />
     </section>
   );
 }
