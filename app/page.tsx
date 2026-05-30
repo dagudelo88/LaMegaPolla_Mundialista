@@ -1,9 +1,7 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { HomeGuestLanding } from "@/components/home/home-guest-landing";
 import { HomeLoggedIn } from "@/components/home/home-logged-in";
 import { Button } from "@/components/ui/button";
-import { getAuthenticatedLandingPath } from "@/lib/auth/landing-path";
 import { getProfile, getSessionUser } from "@/lib/auth/require-admin";
 import { createClient } from "@/lib/supabase/server";
 import { loadHomeDashboardData } from "@/lib/pool/load-home-data";
@@ -30,27 +28,22 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
     if (profile?.invite_redeemed_at) {
       const supabase = await createClient();
-      const { data: submission } = await supabase
-        .from("user_tournament_submissions")
-        .select("is_complete")
-        .eq("user_id", user.id)
-        .maybeSingle();
+      const [{ data: submission }, homeData] = await Promise.all([
+        supabase
+          .from("user_tournament_submissions")
+          .select("is_complete")
+          .eq("user_id", user.id)
+          .maybeSingle(),
+        loadHomeDashboardData(),
+      ]);
 
-      const landing = getAuthenticatedLandingPath({
-        invite_redeemed_at: profile.invite_redeemed_at,
-        predictions_submitted: submission?.is_complete ?? false,
-      });
-      if (landing !== "/") {
-        redirect(landing);
-      }
-
-      const homeData = await loadHomeDashboardData();
       return (
         <HomeLoggedIn
           username={profile.username}
           leaderboard={homeData.leaderboard}
           pool={homeData.pool}
           playerLinksEnabled={homeData.playerLinksEnabled}
+          predictionsSubmitted={submission?.is_complete ?? false}
         />
       );
     }

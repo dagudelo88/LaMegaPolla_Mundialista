@@ -47,6 +47,9 @@ export const es = {
     leaderboardHintWithLinks:
       "Haz clic en la posición o el nickname para ver los pronósticos de un jugador.",
     leaderboardEmpty: "Aún no hay participantes activos.",
+    predictionsPendingBanner:
+      "Aún no has enviado tu pronóstico completo. Puedes ver la tabla de posiciones y completarlo cuando quieras antes del plazo.",
+    predictionsPendingCta: "Ir a pronósticos",
     leaderboardNickname: "Nickname",
     leaderboardPoints: "Puntos",
     leaderboardPlenos: "Plenos",
@@ -356,6 +359,10 @@ export const es = {
     participantsHint:
       "Marca el aporte recibido para incluir al jugador en el pool y la tabla (plazo: 10 jun 2026, 23:59 hora Colombia). También verás cuentas creadas que aún no completaron el registro con código y nickname.",
     participantColumn: "Participante",
+    participantPredictionColumn: "Pronóstico",
+    participantPredictionYes: "Enviado",
+    participantPredictionNo: "Pendiente",
+    participantPredictionIncomplete: "Debe completar /join",
     participantPaidColumn: "Aporte pagado",
     participantActionsColumn: "Acciones",
     participantPaidYes: "Pagado",

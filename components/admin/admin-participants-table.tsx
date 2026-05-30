@@ -13,11 +13,31 @@ import {
 } from "@/lib/admin/load-participants";
 import { formatProfileRoles } from "@/lib/auth/roles";
 import { effectiveEntryFeePaid } from "@/lib/participants/is-active-participant";
+import { formatAppDateTime } from "@/lib/matches/format-datetime";
 import { es } from "@/lib/i18n/es";
 import { Button } from "@/components/ui/button";
 
 interface AdminParticipantsTableProps {
   participants: AdminParticipantRow[];
+}
+
+const CHECKMARK_STYLE = {
+  backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3E%3C/svg%3E")`,
+  backgroundSize: "0.85rem",
+} as const;
+
+function PredictionStatusIndicator({ submitted }: { submitted: boolean }) {
+  return (
+    <span
+      aria-hidden
+      className={`inline-block size-5 shrink-0 rounded border-2 bg-center bg-no-repeat ${
+        submitted
+          ? "border-green-600 bg-green-600"
+          : "border-red-500 bg-red-500/20"
+      }`}
+      style={submitted ? CHECKMARK_STYLE : undefined}
+    />
+  );
 }
 
 export function AdminParticipantsTable({ participants }: AdminParticipantsTableProps) {
@@ -79,6 +99,7 @@ export function AdminParticipantsTable({ participants }: AdminParticipantsTableP
               <tr className="border-b border-[var(--color-border)]">
                 <th className="py-2 pr-4">{es.admin.participantColumn}</th>
                 <th className="py-2 pr-4">{es.landing.leaderboardPoints}</th>
+                <th className="py-2 pr-4">{es.admin.participantPredictionColumn}</th>
                 <th className="py-2 pr-4">{es.admin.participantPaidColumn}</th>
                 <th className="py-2">{es.admin.participantActionsColumn}</th>
               </tr>
@@ -89,6 +110,7 @@ export function AdminParticipantsTable({ participants }: AdminParticipantsTableP
                 const isWithdrawn = p.withdrawn_at != null;
                 const isPendingAction = pendingId === p.id;
                 const paid = effectiveEntryFeePaid(p);
+                const submitted = p.predictions_submitted;
                 const canTogglePaid = registered && !p.is_admin && !isWithdrawn;
                 const canWithdraw = registered && !p.is_admin && !isWithdrawn && !paid;
                 const displayName = p.username
@@ -140,6 +162,35 @@ export function AdminParticipantsTable({ participants }: AdminParticipantsTableP
                     </td>
                     <td className="py-3 pr-4 tabular-nums">
                       {registered ? p.total_points : "—"}
+                    </td>
+                    <td className="py-3 pr-4">
+                      {!registered ? (
+                        <span className="text-xs text-[var(--color-muted-foreground)]">
+                          {es.admin.participantPredictionIncomplete}
+                        </span>
+                      ) : (
+                        <div className="inline-flex items-start gap-2.5">
+                          <PredictionStatusIndicator submitted={submitted} />
+                          <div>
+                            <span
+                              className={`font-medium ${
+                                submitted
+                                  ? "text-green-700 dark:text-green-400"
+                                  : "text-red-700 dark:text-red-400"
+                              }`}
+                            >
+                              {submitted
+                                ? es.admin.participantPredictionYes
+                                : es.admin.participantPredictionNo}
+                            </span>
+                            {submitted && p.predictions_submitted_at && (
+                              <p className="mt-0.5 text-xs text-[var(--color-muted-foreground)]">
+                                {formatAppDateTime(p.predictions_submitted_at)}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </td>
                     <td className="py-3 pr-4">
                       {!registered ? (

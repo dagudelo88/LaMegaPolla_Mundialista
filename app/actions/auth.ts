@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getAuthenticatedLandingPath } from "@/lib/auth/landing-path";
+import { resolveAuthenticatedLandingPath } from "@/lib/auth/landing-path";
 import { mapAuthError } from "@/lib/auth/map-auth-error";
 import { es } from "@/lib/i18n/es";
 
@@ -46,17 +46,8 @@ export async function signInWithPassword(
     redirect("/join");
   }
 
-  const { data: submission } = await supabase
-    .from("user_tournament_submissions")
-    .select("is_complete")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
   const next = String(formData.get("next") ?? "").trim();
-  const defaultPath = getAuthenticatedLandingPath({
-    invite_redeemed_at: profile.invite_redeemed_at,
-    predictions_submitted: submission?.is_complete ?? false,
-  });
+  const defaultPath = await resolveAuthenticatedLandingPath(supabase, user.id);
   const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : defaultPath;
   redirect(safeNext);
 }

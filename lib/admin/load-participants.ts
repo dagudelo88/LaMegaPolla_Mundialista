@@ -11,6 +11,8 @@ export interface AdminParticipantRow {
   entry_fee_paid: boolean;
   withdrawn_at: string | null;
   joined_at: string;
+  predictions_submitted: boolean;
+  predictions_submitted_at: string | null;
 }
 
 export function isRegisteredParticipant(row: AdminParticipantRow): boolean {
@@ -40,20 +42,38 @@ async function loadAuthEmails(admin: SupabaseClient): Promise<Map<string, string
 export async function loadAdminParticipants(
   admin: SupabaseClient
 ): Promise<AdminParticipantRow[]> {
-  const [{ data: profiles, error }, emailById] = await Promise.all([
-    admin
-      .from("profiles")
-      .select(
-        "id, username, role, is_admin, invite_redeemed_at, total_points, joined_at, entry_fee_paid, withdrawn_at"
-      )
-      .order("joined_at", { ascending: true }),
-    loadAuthEmails(admin),
-  ]);
+  const [{ data: profiles, error }, emailById, { data: submissions, error: submissionsError }] =
+    await Promise.all([
+      admin
+        .from("profiles")
+        .select(
+          "id, username, role, is_admin, invite_redeemed_at, total_points, joined_at, entry_fee_paid, withdrawn_at"
+        )
+        .order("joined_at", { ascending: true }),
+      loadAuthEmails(admin),
+      admin
+        .from("user_tournament_submissions")
+        .select("user_id, is_complete, submitted_at"),
+    ]);
 
   if (error) throw new Error(error.message);
+  if (submissionsError) throw new Error(submissionsError.message);
 
-  return (profiles ?? []).map((profile) => ({
-    ...profile,
-    email: emailById.get(profile.id) ?? null,
-  }));
+  const submissionByUserId = new Map(
+    (submissions ?? []).map((s) => [s.user_id, s] as const)
+  );
+
+  return (profiles ?? []).map((profile) => {
+    const submission = submissionByUserId.get(profile.id);
+    const predictionsSubmitted = submission?.is_complete ?? false;
+
+    return {
+      ...profile,
+      email: emailById.get(profile.id) ?? null,
+      predictions_submitted: predictionsSubmitted,
+      predictions_submitted_at: predictionsSubmitted
+        ? (submission?.submitted_at ?? null)
+        : null,
+    };
+  });
 }

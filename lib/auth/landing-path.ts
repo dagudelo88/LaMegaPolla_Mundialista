@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-/** Default route after login, join, or visiting home before submitting predictions. */
+/** Default route after login, join, or auth redirects. Does not block manual visits to `/`. */
 export function getAuthenticatedLandingPath(profile: {
   invite_redeemed_at?: string | null;
   predictions_submitted?: boolean;

@@ -1,10 +1,13 @@
+import Link from "next/link";
 import { LeaderboardTable } from "@/components/leaderboard/leaderboard-table";
+import { Button } from "@/components/ui/button";
 import { formatPoolAmount } from "@/lib/pool/calculate-pool";
 import type { HomeDashboardData } from "@/lib/pool/load-home-data";
 import { es } from "@/lib/i18n/es";
 
 interface HomeLoggedInProps extends HomeDashboardData {
   username: string | null;
+  predictionsSubmitted?: boolean;
 }
 
 function PrizeCard({
@@ -38,11 +41,26 @@ function PrizeCard({
   );
 }
 
-export function HomeLoggedIn({ username, leaderboard, pool, playerLinksEnabled }: HomeLoggedInProps) {
+export function HomeLoggedIn({
+  username,
+  leaderboard,
+  pool,
+  playerLinksEnabled,
+  predictionsSubmitted = true,
+}: HomeLoggedInProps) {
   const fmt = (n: number) => formatPoolAmount(n, pool.currency);
 
   return (
     <section className="mx-auto flex w-full max-w-3xl flex-col gap-8 py-8">
+      {!predictionsSubmitted && (
+        <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-4 text-sm text-amber-100">
+          <p>{es.landing.predictionsPendingBanner}</p>
+          <Button asChild size="sm" variant="outline" className="mt-3 border-amber-500/40">
+            <Link href="/pronosticos">{es.landing.predictionsPendingCta}</Link>
+          </Button>
+        </div>
+      )}
+
       <header className="text-center">
         <p className="text-sm uppercase tracking-widest text-[var(--color-accent)]">
           Mundial 2026

@@ -146,7 +146,7 @@ export async function registerWithInvite(
   revalidatePath("/", "layout");
   revalidatePath("/dashboard");
   revalidatePath("/pronosticos");
-  redirect("/pronosticos");
+  redirect(await resolveAuthenticatedLandingPath(supabase, userId));
 }
 
 export async function redeemInvite(
@@ -221,5 +221,5 @@ export async function redeemInvite(
   revalidatePath("/", "layout");
   revalidatePath("/dashboard");
   revalidatePath("/pronosticos");
-  redirect("/pronosticos");
+  redirect(await resolveAuthenticatedLandingPath(supabase, user.id));
 }

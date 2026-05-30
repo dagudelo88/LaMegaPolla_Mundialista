@@ -78,18 +78,6 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  if (
-    user &&
-    path === "/" &&
-    profile?.invite_redeemed_at &&
-    !profile.withdrawn_at &&
-    !profile.predictions_submitted
-  ) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/pronosticos";
-    return NextResponse.redirect(url);
-  }
-
   if (path.startsWith("/admin")) {
     if (!user) {
       return new NextResponse(null, { status: 404 });
