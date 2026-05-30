@@ -57,6 +57,7 @@ interface TeamWithFlagProps {
   fifaCode?: string;
   align?: "left" | "center" | "right";
   flagSize?: "sm" | "md" | "lg";
+  layout?: "stack" | "inline";
 }
 
 export function TeamWithFlag({
@@ -64,14 +65,39 @@ export function TeamWithFlag({
   fifaCode,
   align = "center",
   flagSize = "sm",
+  layout = "stack",
 }: TeamWithFlagProps) {
   const alignClass =
-    align === "right" ? "sm:items-end" : align === "left" ? "sm:items-start" : "items-center";
+    align === "right"
+      ? layout === "inline"
+        ? "justify-end text-right"
+        : "sm:items-end"
+      : align === "left"
+        ? layout === "inline"
+          ? "justify-start text-left"
+          : "sm:items-start"
+        : layout === "inline"
+          ? "justify-center text-center"
+          : "items-center";
+
+  const nameClass =
+    flagSize === "lg" ? "text-base" : flagSize === "md" ? "text-sm sm:text-base" : "text-sm";
+
+  if (layout === "inline") {
+    return (
+      <div className={`flex items-center gap-2 ${alignClass}`}>
+        <TeamFlag fifaCode={fifaCode} name={name} size={flagSize} />
+        <span className={`font-medium leading-tight ${nameClass}`}>{name}</span>
+      </div>
+    );
+  }
 
   return (
     <div className={`flex flex-col items-center gap-1.5 ${alignClass}`}>
       <TeamFlag fifaCode={fifaCode} name={name} size={flagSize} />
-      <p className="max-w-[9rem] text-center text-sm font-medium leading-tight">{name}</p>
+      <p className={`max-w-[9rem] text-center font-medium leading-tight ${nameClass}`}>
+        {name}
+      </p>
     </div>
   );
 }

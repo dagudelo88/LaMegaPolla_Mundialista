@@ -63,9 +63,6 @@ export default async function HomePage() {
         <Button asChild variant="outline" size="lg" className="w-full">
           <Link href="/login">{es.landing.ctaLogin}</Link>
         </Button>
-        <Button asChild variant="outline" size="lg" className="w-full">
-          <Link href="/reglas">{es.landing.ctaRules}</Link>
-        </Button>
       </div>
     </section>
   );

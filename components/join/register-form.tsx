@@ -25,7 +25,7 @@ export function RegisterForm() {
           name="code"
           required
           className={inputClass}
-          placeholder="MEGA-XXXXXX"
+          placeholder={es.join.codePlaceholder}
         />
       </div>
 

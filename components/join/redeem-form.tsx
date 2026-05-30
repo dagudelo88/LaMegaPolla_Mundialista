@@ -24,7 +24,7 @@ export function RedeemForm() {
           name="code"
           required
           className={inputClass}
-          placeholder="MEGA-XXXXXX"
+          placeholder={es.join.codePlaceholder}
         />
       </div>
       <fieldset className="space-y-3 rounded-lg border border-[var(--color-accent)]/30 bg-[var(--color-card)]/50 p-4">

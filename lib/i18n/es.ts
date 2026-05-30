@@ -20,11 +20,10 @@ export const es = {
     heroSubtitle:
       "Predice el Mundial, gana puntos y corrige con la mecánica de cambios pagos.",
     authNote:
-      "Acceso con correo y contraseña (sin Google). Al registrarte necesitas el código de invitación del administrador y tu nickname para la tabla de posiciones.",
+      "Acceso con correo y contraseña. Al registrarte necesitas el código de invitación del administrador y tu nickname para la tabla de posiciones.",
     ctaLogin: "Iniciar sesión",
     ctaRegister: "Crear cuenta con invitación",
-    ctaRules: "Leer reglamento",
-    inviteNote: "¿Primera vez? Pide tu código MEGA-XXXXXX al administrador.",
+    inviteNote: "¿Primera vez? Pide tu código de invitación al administrador.",
     loggedInTitle: "La Mega Polla Mundialista 2026",
     loggedInWelcome: "Hola,",
     completeRegistrationTitle: "Completa tu registro",
@@ -67,8 +66,9 @@ export const es = {
       "Canjea tu código y elige el nickname que verán todos en la tabla de posiciones.",
     redeemLoggedInAs: "Sesión activa:",
     redeemLoggedInNote:
-      "Falta canjear tu invitación. Como admin usa el código MEGA-DANIEL y elige tu nickname; otros participantes usan su MEGA-XXXXXX.",
+      "Falta canjear tu invitación. Ingresa el código que te dio el administrador y elige tu nickname.",
     codeLabel: "Código de invitación",
+    codePlaceholder: "Ingresa tu código",
     nicknameSection: "Nickname en la polla",
     nicknameLabel: "Nickname (tabla de posiciones)",
     nicknameHint:
@@ -93,6 +93,9 @@ export const es = {
     points: "Puntos totales",
     rank: "Tu posición",
     scoredMatches: "Partidos puntuados",
+    paidChangesCount: "Cambios pagos",
+    paidChangesSpent: "Puntos gastados",
+    paidChangesCountDetail: "cambios realizados",
     poolTitle: "Premios del pool",
     poolHint:
       "70% / 15% / 10% del total recaudado (REGLAS §12). En empate en puntos en el podio, el admin reparte el premio.",
@@ -104,6 +107,15 @@ export const es = {
     pointsCol: "Pts",
     noScoredYet:
       "Aún no hay puntos en partidos finalizados. Envía tu polla completa en Pronósticos y espera resultados oficiales.",
+    paidChangesTitle: "Cambios pagos de pronósticos",
+    paidChangesHint:
+      "Historial de correcciones que hiciste gastando puntos después de enviar tu polla (REGLAS §5).",
+    paidChangesTotal: "Total gastado",
+    paidChangesEmpty: "Aún no has usado cambios pagos.",
+    paidChangesDate: "Fecha",
+    paidChangesMatch: "Partido",
+    paidChangesChange: "Cambio",
+    paidChangesPoints: "Puntos",
     pendingJoin: "Debes canjear tu código de invitación para participar.",
     goJoin: "Ir a unirme",
   },

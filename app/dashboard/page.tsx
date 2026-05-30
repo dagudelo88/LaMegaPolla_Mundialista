@@ -28,7 +28,6 @@ export default async function DashboardPage() {
       </div>
 
       <MyPollSummary
-        username={profile?.username ?? null}
         totalPoints={profile?.total_points ?? 0}
         data={dashboardData}
       />

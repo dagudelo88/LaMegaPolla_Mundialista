@@ -1,9 +1,7 @@
-import Link from "next/link";
 import { LeaderboardTable } from "@/components/leaderboard/leaderboard-table";
 import { formatPoolAmount } from "@/lib/pool/calculate-pool";
 import type { HomeDashboardData } from "@/lib/pool/load-home-data";
 import { es } from "@/lib/i18n/es";
-import { Button } from "@/components/ui/button";
 
 interface HomeLoggedInProps extends HomeDashboardData {
   username: string | null;
@@ -112,15 +110,6 @@ export function HomeLoggedIn({ username, leaderboard, pool }: HomeLoggedInProps)
           </p>
         </div>
         <LeaderboardTable rows={leaderboard} />
-      </div>
-
-      <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-        <Button asChild size="lg">
-          <Link href="/dashboard">{es.nav.dashboard}</Link>
-        </Button>
-        <Button asChild variant="outline" size="lg">
-          <Link href="/pronosticos">{es.nav.predictions}</Link>
-        </Button>
       </div>
     </section>
   );

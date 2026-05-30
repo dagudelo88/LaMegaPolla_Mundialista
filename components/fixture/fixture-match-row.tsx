@@ -43,23 +43,21 @@ function statusClass(status: string): string {
   }
 }
 
-function TeamSide({ team, align }: { team: FixtureTeamSide; align: "left" | "right" }) {
+function TeamSide({ team }: { team: FixtureTeamSide }) {
   if (team.fifa_code) {
     return (
       <TeamWithFlag
         name={team.name_es}
         fifaCode={team.fifa_code}
-        align={align}
-        flagSize="sm"
+        align="center"
+        flagSize="md"
       />
     );
   }
 
   return (
-    <div
-      className={`flex flex-col gap-1 ${align === "right" ? "items-end text-right" : "items-start text-left"}`}
-    >
-      <p className="max-w-[9rem] text-sm font-medium leading-tight text-[var(--color-muted-foreground)]">
+    <div className="flex flex-col items-center gap-1 text-center">
+      <p className="max-w-[9rem] text-sm font-medium leading-tight text-[var(--color-muted-foreground)] sm:text-base">
         {team.placeholder ?? team.name_es}
       </p>
     </div>
@@ -86,41 +84,47 @@ export function FixtureMatchRow({
     awayScore != null;
 
   return (
-    <article className="rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] p-4">
-      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--color-muted-foreground)]">
+    <article className="rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2.5">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-[var(--color-muted-foreground)]">
         <span>
           {es.fixture.matchNumber} {matchNumber}
           {groupLetter ? ` · Grupo ${groupLetter}` : ` · ${PHASE_LABELS[phase]}`}
         </span>
         <span
-          className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${statusClass(status)}`}
+          className={`rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${statusClass(status)}`}
         >
           {statusLabel(status)}
         </span>
       </div>
 
-      <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-        <TeamSide team={home} align="left" />
+      <div className="mt-2 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+        <div className="flex justify-center">
+          <TeamSide team={home} />
+        </div>
 
-        <div className="text-center">
+        <div className="min-w-[4.5rem] text-center">
           {hasScore ? (
-            <p className="text-2xl font-bold tabular-nums">
+            <p className="text-2xl font-bold tabular-nums sm:text-3xl">
               {homeScore}
               <span className="mx-1 text-[var(--color-muted-foreground)]">-</span>
               {awayScore}
             </p>
           ) : (
-            <p className="text-sm font-semibold text-[var(--color-muted-foreground)]">
+            <p className="text-base font-bold tabular-nums text-[var(--color-foreground)]">
               {formatMatchTime(kickoffAt)}
             </p>
           )}
         </div>
 
-        <TeamSide team={away} align="right" />
+        <div className="flex justify-center">
+          <TeamSide team={away} />
+        </div>
       </div>
 
       {venue && (
-        <p className="mt-3 text-xs text-[var(--color-muted-foreground)]">{venue}</p>
+        <p className="mt-2 text-center text-xs text-[var(--color-muted-foreground)] sm:text-sm">
+          {venue}
+        </p>
       )}
     </article>
   );
