@@ -72,7 +72,9 @@ export function MyPollSummary({ totalPoints, data, changeAvailability }: MyPollS
                   <th className="py-2 pr-3">{es.dashboard.match}</th>
                   <th className="py-2 pr-3">{es.dashboard.prediction}</th>
                   <th className="py-2 pr-3">{es.dashboard.actual}</th>
-                  <th className="py-2">{es.dashboard.pointsCol}</th>
+                  <th className="py-2 pr-3 text-right">{es.dashboard.pointsCol}</th>
+                  <th className="py-2 pr-3 text-right">{es.dashboard.bonusCol}</th>
+                  <th className="py-2 text-right">{es.dashboard.totalCol}</th>
                 </tr>
               </thead>
               <tbody>
@@ -80,7 +82,11 @@ export function MyPollSummary({ totalPoints, data, changeAvailability }: MyPollS
                   <tr
                     key={row.matchNumber}
                     className={`border-b border-[var(--color-border)] ${
-                      row.points > 0 ? "bg-[var(--color-primary)]/5" : ""
+                      row.isJornadaTopScorerPick
+                        ? "bg-emerald-500/10"
+                        : row.matchPoints > 0
+                          ? "bg-[var(--color-primary)]/5"
+                          : ""
                     }`}
                   >
                     <td className="py-2 pr-3 tabular-nums">{row.matchNumber}</td>
@@ -103,6 +109,14 @@ export function MyPollSummary({ totalPoints, data, changeAvailability }: MyPollS
                           flagSize="sm"
                           layout="inline"
                         />
+                        {row.isJornadaTopScorerPick && row.jornadaTopScorerGoals != null ? (
+                          <span
+                            className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400"
+                            title={es.dashboard.jornadaTopScorerBadge}
+                          >
+                            ⚽ {row.jornadaTopScorerGoals}
+                          </span>
+                        ) : null}
                       </div>
                     </td>
                     <td className="py-2 pr-3 font-mono tabular-nums">
@@ -112,7 +126,27 @@ export function MyPollSummary({ totalPoints, data, changeAvailability }: MyPollS
                       {row.actualHome}-{row.actualAway}
                     </td>
                     <td
-                      className={`py-2 font-semibold tabular-nums ${
+                      className={`py-2 pr-3 text-right font-semibold tabular-nums ${
+                        row.matchPoints > 0 ? "text-[var(--color-primary)]" : ""
+                      }`}
+                    >
+                      {row.matchPoints}
+                    </td>
+                    <td
+                      className={`py-2 pr-3 text-right font-semibold tabular-nums ${
+                        row.jornadaBonusPoints > 0 ? "text-emerald-600 dark:text-emerald-400" : ""
+                      }`}
+                    >
+                      {row.jornadaBonusPoints > 0 ? (
+                        <span title={es.dashboard.jornadaTopScorerBadge}>
+                          +{row.jornadaBonusPoints}
+                        </span>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                    <td
+                      className={`py-2 text-right font-semibold tabular-nums ${
                         row.points > 0 ? "text-[var(--color-primary)]" : ""
                       }`}
                     >

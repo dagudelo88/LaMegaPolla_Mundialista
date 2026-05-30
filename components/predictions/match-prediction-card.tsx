@@ -5,9 +5,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { savePredictionDraft, applyPaidPredictionChange } from "@/app/actions/predictions";
 import { TeamWithFlag } from "@/components/predictions/team-flag";
 import { es } from "@/lib/i18n/es";
-import { formatAppDateTime } from "@/lib/matches/format-datetime";
+import { formatMatchTime } from "@/lib/matches/format-datetime";
 import type { PaidChangeBlockReason } from "@/lib/predictions/paid-change-eligibility";
 import type { MatchPhase } from "@/types/database";
+import { PHASE_LABELS } from "@/types/database";
 import { Button } from "@/components/ui/button";
 
 export interface MatchCardTeam {
@@ -21,6 +22,7 @@ export interface MatchCardProps {
   matchId: string;
   matchNumber: number;
   phase: MatchPhase;
+  groupLetter?: string | null;
   kickoffAt: string;
   venue: string | null;
   home: MatchCardTeam | null;
@@ -38,6 +40,8 @@ export interface MatchCardProps {
   changesExhausted?: boolean;
   changeCost?: number;
   adminOverridden?: boolean;
+  /** Highlight as jornada's predicted top-scorer (schedule tab) */
+  jornadaTopScorerGoals?: number | null;
   onSaved?: () => void;
 }
 
@@ -46,6 +50,36 @@ function paidChangeBlockMessage(reason: PaidChangeBlockReason): string {
   if (reason === "match_locked") return es.pronosticos.paidChangeLocked;
   return es.pronosticos.paidChangeNotScheduled;
 }
+
+function PredictionTeamSide({
+  team,
+  label,
+}: {
+  team: MatchCardTeam | null;
+  label: string;
+}) {
+  if (team?.fifa_code) {
+    return (
+      <TeamWithFlag
+        name={team.name_es}
+        fifaCode={team.fifa_code}
+        align="center"
+        flagSize="md"
+      />
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-1 text-center">
+      <p className="max-w-[9rem] text-sm font-medium leading-tight text-[var(--color-muted-foreground)] sm:text-base">
+        {label}
+      </p>
+    </div>
+  );
+}
+
+const scoreInputClass =
+  "w-[2.5ch] min-w-[2rem] border-0 border-b-2 border-transparent bg-transparent p-0 text-center text-2xl font-bold tabular-nums focus:border-[var(--color-primary)] focus:outline-none disabled:opacity-70 sm:text-3xl";
 
 function scoresMatchInitial(
   h: string,
@@ -66,6 +100,7 @@ export function MatchPredictionCard({
   matchId,
   matchNumber,
   phase,
+  groupLetter,
   kickoffAt,
   venue,
   home,
@@ -83,6 +118,7 @@ export function MatchPredictionCard({
   changesExhausted,
   changeCost,
   adminOverridden,
+  jornadaTopScorerGoals,
   onSaved,
 }: MatchCardProps) {
   const [homeScore, setHomeScore] = useState<string>(
@@ -251,63 +287,88 @@ export function MatchPredictionCard({
       initialAdvancesTeamId
     );
 
+  const isJornadaTopScorer = jornadaTopScorerGoals != null;
+
   return (
-    <article className="rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] p-4">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--color-muted-foreground)]">
-        <span>
-          {es.pronosticos.matchNumber} #{matchNumber}
+    <article
+      className={`rounded-lg border px-3 py-2.5 ${
+        isJornadaTopScorer
+          ? "border-emerald-500/45 bg-emerald-500/[0.08] shadow-sm shadow-emerald-500/10"
+          : "border-[var(--color-border)] bg-[var(--color-card)]"
+      }`}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-[var(--color-muted-foreground)]">
+        <span className="flex flex-wrap items-center gap-2">
+          <span>
+            {es.fixture.matchNumber} {matchNumber}
+            {groupLetter ? ` · Grupo ${groupLetter}` : ` · ${PHASE_LABELS[phase]}`}
+          </span>
+          {isJornadaTopScorer && (
+            <span
+              className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[11px] font-semibold text-emerald-800 dark:text-emerald-200"
+              title={es.pronosticos.jornadaTopScorerBadge}
+            >
+              <span aria-hidden className="text-sm leading-none">
+                ⚽
+              </span>
+              <span className="tabular-nums">{jornadaTopScorerGoals}</span>
+            </span>
+          )}
+          {adminOverridden && (
+            <Link
+              href="/transparencia?filter=admin"
+              className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-900 dark:bg-amber-950 dark:text-amber-200"
+            >
+              {es.pronosticos.adminOverriddenBadge}
+            </Link>
+          )}
         </span>
-        <span>{formatAppDateTime(kickoffAt)}</span>
-        {adminOverridden && (
-          <Link
-            href="/transparencia?filter=admin"
-            className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900 dark:bg-amber-950 dark:text-amber-200"
-          >
-            {es.pronosticos.adminOverriddenBadge}
-          </Link>
-        )}
-        {venue && <span className="w-full sm:w-auto">{venue}</span>}
+        <span className="rounded-full bg-[var(--color-muted)] px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-muted-foreground)]">
+          {formatMatchTime(kickoffAt)}
+        </span>
       </div>
 
-      <div className="grid items-center gap-3 sm:grid-cols-[1fr_auto_1fr]">
-        <div className="flex flex-col items-center sm:items-end">
-          {home ? (
-            <TeamWithFlag name={home.name_es} fifaCode={home.fifa_code} align="right" />
-          ) : (
-            <p className="text-center text-sm font-medium sm:text-right">{homeName}</p>
-          )}
-          <label className="sr-only">{es.pronosticos.home}</label>
-          <input
-            type="number"
-            min={0}
-            max={20}
-            value={homeScore}
-            disabled={inputsDisabled}
-            onChange={(e) => onHomeChange(e.target.value)}
-            className="mt-2 w-16 rounded-md border border-[var(--color-border)] bg-[var(--color-background)] px-2 py-1 text-center text-lg font-bold disabled:opacity-70"
-          />
+      <div className="mt-2 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+        <div className="flex justify-center">
+          <PredictionTeamSide team={home} label={homeName} />
         </div>
-        <span className="text-center text-sm font-semibold text-[var(--color-muted-foreground)]">
-          {es.pronosticos.vs}
-        </span>
-        <div className="flex flex-col items-center sm:items-start">
-          {away ? (
-            <TeamWithFlag name={away.name_es} fifaCode={away.fifa_code} align="left" />
-          ) : (
-            <p className="text-center text-sm font-medium sm:text-left">{awayName}</p>
-          )}
-          <label className="sr-only">{es.pronosticos.away}</label>
-          <input
-            type="number"
-            min={0}
-            max={20}
-            value={awayScore}
-            disabled={inputsDisabled}
-            onChange={(e) => onAwayChange(e.target.value)}
-            className="mt-2 w-16 rounded-md border border-[var(--color-border)] bg-[var(--color-background)] px-2 py-1 text-center text-lg font-bold disabled:opacity-70"
-          />
+
+        <div className="min-w-[5.5rem] text-center">
+          <div className="flex items-baseline justify-center">
+            <label className="sr-only">{es.pronosticos.home}</label>
+            <input
+              type="number"
+              min={0}
+              max={20}
+              value={homeScore}
+              disabled={inputsDisabled}
+              onChange={(e) => onHomeChange(e.target.value)}
+              className={scoreInputClass}
+            />
+            <span className="mx-1 text-[var(--color-muted-foreground)]">-</span>
+            <label className="sr-only">{es.pronosticos.away}</label>
+            <input
+              type="number"
+              min={0}
+              max={20}
+              value={awayScore}
+              disabled={inputsDisabled}
+              onChange={(e) => onAwayChange(e.target.value)}
+              className={scoreInputClass}
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-center">
+          <PredictionTeamSide team={away} label={awayName} />
         </div>
       </div>
+
+      {venue && (
+        <p className="mt-2 text-center text-xs text-[var(--color-muted-foreground)] sm:text-sm">
+          {venue}
+        </p>
+      )}
 
       {isKnockout && isDraw && home && away && (
         <div className="mt-3 space-y-1">

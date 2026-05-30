@@ -75,6 +75,7 @@ export function GroupStagePanel({
                     matchId={m.id}
                     matchNumber={m.fifa_match_number ?? 0}
                     phase={m.phase}
+                    groupLetter={m.group_letter}
                     kickoffAt={m.kickoff_at}
                     venue={m.venue}
                     home={m.home_team ?? null}

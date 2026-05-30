@@ -18,6 +18,8 @@ import { validateFullSubmission } from "@/lib/predictions/submission-validator";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { MatchPhase } from "@/lib/scoring/calculate-match-points";
+import { recalculateUserMatchPoints } from "@/lib/scoring/process-user-match-points";
+import { recalculateUserTotalPoints } from "@/lib/scoring/recalculate-total-points";
 import { revalidatePath } from "next/cache";
 
 function clampScore(n: number): number {
@@ -239,7 +241,7 @@ export async function applyPaidPredictionChange(
 
   const { data: match } = await supabase
     .from("matches")
-    .select("prediction_deadline, status, phase, kickoff_at")
+    .select("prediction_deadline, status, phase, kickoff_at, home_score, away_score")
     .eq("id", prediction.match_id)
     .maybeSingle();
 
@@ -302,12 +304,21 @@ export async function applyPaidPredictionChange(
 
   if (predErr) throw new Error(predErr.message);
 
-  const { error: ptsErr } = await admin
-    .from("profiles")
-    .update({ total_points: (profile?.total_points ?? 0) - cost })
-    .eq("id", user.id);
-
-  if (ptsErr) throw new Error(ptsErr.message);
+  if (
+    match.status === "finished" &&
+    match.home_score != null &&
+    match.away_score != null
+  ) {
+    await recalculateUserMatchPoints(admin, {
+      userId: user.id,
+      matchId: prediction.match_id,
+      phase: (match.phase ?? phase) as MatchPhase,
+      homeScore: match.home_score,
+      awayScore: match.away_score,
+    });
+  } else {
+    await recalculateUserTotalPoints(admin, user.id);
+  }
 
   revalidatePath("/dashboard");
   revalidatePath("/pronosticos");

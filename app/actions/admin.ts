@@ -3,6 +3,7 @@
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { resolveOfficialBracket } from "@/lib/bracket/resolve-official-bracket";
 import { processMatchResult } from "@/lib/scoring/process-match-result";
+import { processJornadaBonus } from "@/lib/scoring/process-jornada-bonus";
 import type { MatchPhase } from "@/lib/scoring/calculate-match-points";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
@@ -165,6 +166,8 @@ export async function setMatchResult(
     awayScore: away,
   });
 
+  const jornadaBonus = await processJornadaBonus(admin, matchId);
+
   const bracket = await resolveOfficialBracket(admin);
 
   await admin.from("admin_actions").insert({
@@ -186,12 +189,13 @@ export async function setMatchResult(
         resultAdvancesTeamId: resultAdvancesTeamId,
       },
       usersScored,
+      jornadaBonus,
       bracket,
     },
   });
 
   revalidatePublicPaths();
-  return { usersScored, isCorrection, bracket };
+  return { usersScored, isCorrection, bracket, jornadaBonus };
 }
 
 export async function resolveOfficialKnockoutBracket() {
@@ -313,6 +317,13 @@ export async function withdrawParticipant(userId: string) {
     .eq("user_id", userId);
 
   if (pointsErr) throw new Error(pointsErr.message);
+
+  const { error: bonusErr } = await admin
+    .from("user_jornada_bonus_points")
+    .delete()
+    .eq("user_id", userId);
+
+  if (bonusErr) throw new Error(bonusErr.message);
 
   await admin.from("admin_actions").insert({
     admin_id: user.id,

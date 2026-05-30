@@ -6,6 +6,7 @@ import type { PronosticosPayload } from "@/app/actions/predictions";
 import { BracketSimulatorPanel } from "@/components/predictions/bracket-simulator-panel";
 import { GroupStagePanel } from "@/components/predictions/group-stage-panel";
 import { KnockoutPanel } from "@/components/predictions/knockout-panel";
+import { SchedulePredictionsPanel } from "@/components/predictions/schedule-predictions-panel";
 import { LockedStateBanner } from "@/components/predictions/locked-state-banner";
 import { SubmittedEditableBanner } from "@/components/predictions/submitted-editable-banner";
 import { SubmissionSummary } from "@/components/predictions/submission-summary";
@@ -15,7 +16,7 @@ import { formatAppDateTime } from "@/lib/matches/format-datetime";
 import { Button } from "@/components/ui/button";
 import type { MatchPhase } from "@/types/database";
 
-type Tab = "groups" | "bracket" | "knockout" | "summary";
+type Tab = "schedule" | "groups" | "bracket" | "knockout" | "summary";
 
 interface PronosticosShellProps {
   data: PronosticosPayload;
@@ -60,11 +61,13 @@ export function PronosticosShell({
 
   const tabs: { id: Tab; label: string }[] = isViewMode
     ? [
+        { id: "schedule", label: es.pronosticos.tabSchedule },
         { id: "groups", label: es.pronosticos.tabGroups },
         { id: "bracket", label: es.pronosticos.tabBracket },
         { id: "knockout", label: es.pronosticos.tabKnockout },
       ]
     : [
+        { id: "schedule", label: es.pronosticos.tabSchedule },
         { id: "groups", label: es.pronosticos.tabGroups },
         { id: "bracket", label: es.pronosticos.tabBracket },
         { id: "knockout", label: es.pronosticos.tabKnockout },
@@ -153,6 +156,9 @@ export function PronosticosShell({
         <div className="rounded-lg border border-[var(--color-accent)]/30 bg-[var(--color-accent)]/5 p-4">
           <p className="text-sm">{es.pronosticos.paidChangeTabHint}</p>
           <div className="mt-3 flex flex-wrap gap-2">
+            <Button type="button" size="sm" variant="outline" onClick={() => setTab("schedule")}>
+              {es.pronosticos.tabSchedule}
+            </Button>
             <Button type="button" size="sm" variant="outline" onClick={() => setTab("groups")}>
               {es.pronosticos.tabGroups}
             </Button>
@@ -161,6 +167,26 @@ export function PronosticosShell({
             </Button>
           </div>
         </div>
+      )}
+
+      {tab === "schedule" && (
+        <SchedulePredictionsPanel
+          matches={data.matches}
+          teams={data.teams}
+          predictions={data.predictions}
+          groupResults={data.groupResults}
+          advancingThirdGroups={data.advancingThirdGroups}
+          knockoutDefs={data.knockoutDefs}
+          jornadaMetaByKey={data.jornadaMetaByKey}
+          disabled={freeEditBlocked}
+          knockoutUnlocked={knockoutUnlocked || data.isSubmitted}
+          paidChangeMode={paidChangeMode}
+          paidChangeEligibleByMatchId={data.paidChangeEligibleByMatchId}
+          paidChangeBlockReasonByMatchId={data.paidChangeBlockReasonByMatchId}
+          changeCosts={changeCosts}
+          changesExhausted={changesExhausted}
+          onSaved={isViewMode ? undefined : handleSaved}
+        />
       )}
 
       {tab === "groups" && (

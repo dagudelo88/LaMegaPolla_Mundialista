@@ -1,5 +1,16 @@
+import {
+  collectJornadaKeysFromMatches,
+  computeJornadaBonusByMatchId,
+} from "@/lib/jornada/compute-user-jornada-bonus";
+import { getJornadaKey } from "@/lib/jornada/helpers";
 import { loadHomeDashboardData } from "@/lib/pool/load-home-data";
 import { getLeaderboardRank } from "@/lib/pool/load-leaderboard";
+import { DEFAULT_JORNADA_BONUS_CONFIG } from "@/lib/scoring/calculate-jornada-bonus";
+import {
+  calculateMatchPoints,
+  type MatchPhase,
+} from "@/lib/scoring/calculate-match-points";
+import { loadScoringConfig } from "@/lib/scoring/load-scoring-config";
 import { createClient } from "@/lib/supabase/server";
 import { PHASE_LABELS } from "@/types/database";
 
@@ -14,7 +25,11 @@ export interface UserMatchPointRow {
   predictedAway: number;
   actualHome: number;
   actualAway: number;
+  matchPoints: number;
+  jornadaBonusPoints: number;
   points: number;
+  isJornadaTopScorerPick: boolean;
+  jornadaTopScorerGoals: number | null;
 }
 
 export interface PaidChangeRow {
@@ -31,6 +46,7 @@ export interface DashboardData {
   rank: number | null;
   matchPoints: UserMatchPointRow[];
   earnedTotal: number;
+  netTotal: number;
   paidChanges: PaidChangeRow[];
   totalPointsSpent: number;
 }
@@ -153,31 +169,92 @@ export async function loadDashboardData(
       rank,
       matchPoints: [],
       earnedTotal: 0,
+      netTotal: -totalPointsSpent,
       paidChanges,
       totalPointsSpent,
     };
   }
 
   const matchIds = umpRows.map((r) => r.match_id);
-  const pointsByMatch = new Map(umpRows.map((r) => [r.match_id, r.points]));
 
-  const [{ data: matches }, { data: predictions }] = await Promise.all([
+  const [{ data: scoredMatches }, { data: allPredictions }] = await Promise.all([
     supabase
       .from("matches")
       .select(
-        "id, fifa_match_number, phase, home_score, away_score, home_team_id, away_team_id"
+        "id, fifa_match_number, phase, kickoff_at, home_score, away_score, home_team_id, away_team_id"
       )
       .in("id", matchIds),
     supabase
       .from("predictions")
       .select("match_id, predicted_home, predicted_away")
-      .eq("user_id", userId)
-      .in("match_id", matchIds),
+      .eq("user_id", userId),
   ]);
+
+  const jornadaKeys = collectJornadaKeysFromMatches(scoredMatches ?? []);
+
+  const { data: jornadaMatchesRaw } = jornadaKeys.length
+    ? await supabase
+        .from("matches")
+        .select(
+          "id, fifa_match_number, kickoff_at, status, home_score, away_score"
+        )
+    : { data: [] };
+
+  const jornadaMatches = (jornadaMatchesRaw ?? []).filter((m) =>
+    jornadaKeys.includes(getJornadaKey(m.kickoff_at))
+  );
+
+  const { data: jornadaResults, error: jornadaResultsErr } = jornadaKeys.length
+    ? await supabase
+        .from("jornada_results")
+        .select("jornada_key, max_total_goals, winning_match_ids, is_tie")
+        .in("jornada_key", jornadaKeys)
+    : { data: [], error: null };
+
+  if (jornadaResultsErr) {
+    console.warn("jornada_results unavailable:", jornadaResultsErr.message);
+  }
+
+  const [scoringConfig, { data: jornadaBonusConfigRows }] = await Promise.all([
+    loadScoringConfig(supabase),
+    supabase
+      .from("app_config")
+      .select("key, value")
+      .in("key", ["scoring.jornada_bonus.match", "scoring.jornada_bonus.exact"]),
+  ]);
+
+  const jornadaConfigByKey = new Map(
+    (jornadaBonusConfigRows ?? []).map((r) => [r.key, r.value])
+  );
+  const readBonusConfig = (key: string, fallback: number) => {
+    const raw = jornadaConfigByKey.get(key);
+    if (raw == null) return fallback;
+    if (typeof raw === "number") return raw;
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : fallback;
+  };
+
+  const jornadaBonusByMatch = computeJornadaBonusByMatchId({
+    matches: jornadaMatches,
+    predictions: allPredictions ?? [],
+    jornadaResults: jornadaResults ?? [],
+    config: {
+      match: readBonusConfig(
+        "scoring.jornada_bonus.match",
+        DEFAULT_JORNADA_BONUS_CONFIG.match
+      ),
+      exact: readBonusConfig(
+        "scoring.jornada_bonus.exact",
+        DEFAULT_JORNADA_BONUS_CONFIG.exact
+      ),
+    },
+  });
+
+  const predictions = (allPredictions ?? []).filter((p) => matchIds.includes(p.match_id));
 
   const teamIds = [
     ...new Set(
-      (matches ?? []).flatMap((m) => [m.home_team_id, m.away_team_id].filter(Boolean))
+      (scoredMatches ?? []).flatMap((m) => [m.home_team_id, m.away_team_id].filter(Boolean))
     ),
   ] as number[];
 
@@ -187,11 +264,9 @@ export async function loadDashboardData(
 
   const teamById = new Map((teams ?? []).map((t) => [t.id, t]));
 
-  const predByMatch = new Map(
-    (predictions ?? []).map((p) => [p.match_id, p])
-  );
+  const predByMatch = new Map(predictions.map((p) => [p.match_id, p]));
 
-  const matchPoints: UserMatchPointRow[] = (matches ?? [])
+  const matchPoints: UserMatchPointRow[] = (scoredMatches ?? [])
     .map((m) => {
       const pred = predByMatch.get(m.id);
       const homeTeam = m.home_team_id ? teamById.get(m.home_team_id) : undefined;
@@ -206,6 +281,14 @@ export async function loadDashboardData(
       ) {
         return null;
       }
+      const baseMatchPoints = calculateMatchPoints(
+        m.phase as MatchPhase,
+        { home: m.home_score, away: m.away_score },
+        { home: pred.predicted_home, away: pred.predicted_away },
+        scoringConfig
+      );
+      const jornadaInfo = jornadaBonusByMatch.get(m.id);
+      const jornadaBonusPoints = jornadaInfo?.bonus ?? 0;
       return {
         matchNumber: m.fifa_match_number,
         phase: m.phase,
@@ -217,18 +300,24 @@ export async function loadDashboardData(
         predictedAway: pred.predicted_away,
         actualHome: m.home_score,
         actualAway: m.away_score,
-        points: pointsByMatch.get(m.id) ?? 0,
+        matchPoints: baseMatchPoints,
+        jornadaBonusPoints,
+        points: baseMatchPoints + jornadaBonusPoints,
+        isJornadaTopScorerPick: jornadaInfo?.isTopScorerPick ?? false,
+        jornadaTopScorerGoals: jornadaInfo?.predictedTotalGoals ?? null,
       };
     })
     .filter((row): row is UserMatchPointRow => row != null)
     .sort((a, b) => a.matchNumber - b.matchNumber);
 
   const earnedTotal = matchPoints.reduce((sum, row) => sum + row.points, 0);
+  const netTotal = earnedTotal - totalPointsSpent;
 
   return {
     rank,
     matchPoints,
     earnedTotal,
+    netTotal,
     paidChanges,
     totalPointsSpent,
   };

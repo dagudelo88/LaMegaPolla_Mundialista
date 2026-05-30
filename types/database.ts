@@ -161,6 +161,32 @@ export interface UserTournamentSubmission {
   is_complete: boolean;
 }
 
+export interface MatchdayBonus {
+  id: string;
+  user_id: string;
+  matchday_key: string;
+  match_id: string;
+  predicted_total_goals: number | null;
+  created_at: string;
+}
+
+export interface JornadaResult {
+  jornada_key: string;
+  max_total_goals: number;
+  winning_match_ids: string[];
+  is_tie: boolean;
+  settled_at: string;
+}
+
+export interface UserJornadaBonusPoints {
+  id: number;
+  user_id: string;
+  jornada_key: string;
+  points: number;
+  breakdown: Record<string, unknown> | null;
+  created_at: string;
+}
+
 export const GROUP_LETTERS = [
   "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L",
 ] as const;

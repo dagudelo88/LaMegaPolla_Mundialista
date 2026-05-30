@@ -92,12 +92,14 @@ Esta mecánica te permite corregir errores, pero te penaliza por hacerlo (especi
 
 ## 6. Bonus por Jornada: Partido Más Goleador
 
-Por cada jornada puedes seleccionar **un solo partido** como "el que más goles va a tener sumados los dos equipos".
+Por cada jornada (día con **2 o más partidos**, hora Colombia) se compara tu pronóstico con el resultado real:
 
-- Si aciertas **qué partido** será el más goleador de la jornada → **+3 puntos**.
+- Tu **partido más goleador** de la jornada es el que tiene **más goles totales** en tu pronóstico (`local + visitante`). Si empatas en el máximo, se usa el de **menor número de partido FIFA**.
+- Si aciertas **qué partido** fue el más goleador real de la jornada → **+3 puntos**.
 - Si además aciertas la **cantidad exacta de goles totales** de ese partido → **+5 puntos** (en lugar de 3).
+- Si **varios partidos reales** empatan en el máximo de goles de la jornada → **nadie** recibe bonus ese día.
 
-Debes realizar esta selección antes de que empiece el primer partido de la jornada.
+No hay selección aparte: se usa tu pronóstico ya enviado (incluye cambios pagos válidos antes de cada partido).
 
 ---
 

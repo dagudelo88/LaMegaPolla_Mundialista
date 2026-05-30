@@ -93,8 +93,8 @@ export function TeamWithFlag({
   }
 
   return (
-    <div className={`flex flex-col items-center gap-1.5 ${alignClass}`}>
-      <TeamFlag fifaCode={fifaCode} name={name} size={flagSize} />
+    <div className="flex flex-col items-center gap-1.5">
+      <TeamFlag fifaCode={fifaCode} name={name} size={flagSize} className="mx-auto" />
       <p className={`max-w-[9rem] text-center font-medium leading-tight ${nameClass}`}>
         {name}
       </p>

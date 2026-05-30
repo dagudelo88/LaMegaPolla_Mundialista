@@ -2,6 +2,7 @@ import type { BracketSlot } from "@/lib/bracket/types";
 import { countPaidChangesToday } from "@/lib/changes/count-paid-changes-today";
 import { DEFAULT_GLOBAL_DEADLINE } from "@/lib/config/tournament-deadline";
 import { getConfig } from "@/lib/config/get-config";
+import { buildJornadaMetaByKey } from "@/lib/jornada/build-jornada-meta";
 import { isGlobalDeadlinePassed } from "@/lib/predictions/global-deadline";
 import { buildGroupResultsFromPredictions, resolveAdvancingThirdGroups } from "@/lib/predictions/helpers";
 import { canPaidChangeMatch } from "@/lib/predictions/paid-change-eligibility";
@@ -65,6 +66,22 @@ export async function fetchPronosticosPayload(supabase: SupabaseClient, userId: 
 
   const changesToday = await countPaidChangesToday(supabase, userId);
 
+  const { data: jornadaResults } = await supabase
+    .from("jornada_results")
+    .select("jornada_key, max_total_goals, winning_match_ids, is_tie, settled_at");
+
+  const { data: userJornadaBonusPoints } = await supabase
+    .from("user_jornada_bonus_points")
+    .select("jornada_key, points")
+    .eq("user_id", userId);
+
+  const jornadaMetaByKey = buildJornadaMetaByKey({
+    matches: matches ?? [],
+    predictions: predictions ?? [],
+    jornadaResults: jornadaResults ?? [],
+    userJornadaBonusPoints: userJornadaBonusPoints ?? [],
+  });
+
   const groupResults = buildGroupResultsFromPredictions(
     (matches ?? []) as Parameters<typeof buildGroupResultsFromPredictions>[0],
     (predictions ?? []) as Parameters<typeof buildGroupResultsFromPredictions>[1]
@@ -94,6 +111,9 @@ export async function fetchPronosticosPayload(supabase: SupabaseClient, userId: 
     changesUsedToday: changesToday,
     paidChangeEligibleByMatchId,
     paidChangeBlockReasonByMatchId,
+    jornadaResults: jornadaResults ?? [],
+    userJornadaBonusPoints: userJornadaBonusPoints ?? [],
+    jornadaMetaByKey,
     groupResults,
     knockoutDefs: (matches ?? [])
       .filter((m) => m.phase !== "group_stage")

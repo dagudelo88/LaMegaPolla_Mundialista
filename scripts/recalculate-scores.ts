@@ -11,6 +11,7 @@ import {
   backfillLockedSubmissions,
   recalculateAllFinishedMatches,
 } from "@/lib/scoring/recalculate-all-finished-matches";
+import { recalculateAllJornadaBonuses } from "@/lib/scoring/recalculate-all-jornada-bonuses";
 
 function loadEnvLocal() {
   const path = resolve(process.cwd(), ".env.local");
@@ -46,6 +47,11 @@ async function main() {
   const result = await recalculateAllFinishedMatches(admin);
   console.log(
     `Recalculated ${result.matchesProcessed} finished match(es), ${result.scoringPasses} scoring pass(es).`
+  );
+
+  const jornadaResult = await recalculateAllJornadaBonuses(admin);
+  console.log(
+    `Jornada bonuses: ${jornadaResult.jornadasProcessed} jornada(s), ${jornadaResult.usersScored} user score(s).`
   );
 
   const { data: top } = await admin

@@ -35,7 +35,7 @@ export default async function DashboardPage() {
       </div>
 
       <MyPollSummary
-        totalPoints={profile?.total_points ?? 0}
+        totalPoints={dashboardData.netTotal}
         data={dashboardData}
         changeAvailability={changeAvailability}
       />
