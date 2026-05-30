@@ -1,9 +1,12 @@
 import { getConfigNumber } from "@/lib/config/get-config";
 import { countPaidChangesToday } from "@/lib/changes/count-paid-changes-today";
+import { getGlobalDeadlineIso, isGlobalDeadlinePassed } from "@/lib/predictions/global-deadline";
 import { createClient } from "@/lib/supabase/server";
 
 export interface ChangeAvailability {
   isSubmitted: boolean;
+  deadlinePassed: boolean;
+  paidChangesEnabled: boolean;
   maxChangesPerDay: number;
   changesUsedToday: number;
   changesRemaining: number;
@@ -13,6 +16,8 @@ export interface ChangeAvailability {
 export async function loadChangeAvailability(userId: string): Promise<ChangeAvailability> {
   const supabase = await createClient();
   const maxChangesPerDay = await getConfigNumber("changes.max_per_day", 1);
+  const globalDeadline = await getGlobalDeadlineIso();
+  const deadlinePassed = isGlobalDeadlinePassed(globalDeadline);
 
   const [{ data: submission }, changesUsedToday] = await Promise.all([
     supabase
@@ -23,13 +28,19 @@ export async function loadChangeAvailability(userId: string): Promise<ChangeAvai
     countPaidChangesToday(supabase, userId),
   ]);
 
-  const changesRemaining = Math.max(0, maxChangesPerDay - changesUsedToday);
+  const isSubmitted = submission?.is_complete ?? false;
+  const paidChangesEnabled = isSubmitted && deadlinePassed;
+  const changesRemaining = paidChangesEnabled
+    ? Math.max(0, maxChangesPerDay - changesUsedToday)
+    : 0;
 
   return {
-    isSubmitted: submission?.is_complete ?? false,
+    isSubmitted,
+    deadlinePassed,
+    paidChangesEnabled,
     maxChangesPerDay,
     changesUsedToday,
     changesRemaining,
-    changesExhausted: changesUsedToday >= maxChangesPerDay,
+    changesExhausted: paidChangesEnabled && changesUsedToday >= maxChangesPerDay,
   };
 }

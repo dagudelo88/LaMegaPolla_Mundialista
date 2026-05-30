@@ -7,6 +7,7 @@ import { BracketSimulatorPanel } from "@/components/predictions/bracket-simulato
 import { GroupStagePanel } from "@/components/predictions/group-stage-panel";
 import { KnockoutPanel } from "@/components/predictions/knockout-panel";
 import { LockedStateBanner } from "@/components/predictions/locked-state-banner";
+import { SubmittedEditableBanner } from "@/components/predictions/submitted-editable-banner";
 import { SubmissionSummary } from "@/components/predictions/submission-summary";
 import { countProgress } from "@/lib/predictions/helpers";
 import { es } from "@/lib/i18n/es";
@@ -48,7 +49,9 @@ export function PronosticosShell({
 
   const progress = countProgress(groupMatchIds, knockoutMatchIds, data.predictions);
 
-  const deadlinePassed = new Date() >= new Date(data.globalDeadline);
+  const deadlinePassed = data.deadlinePassed;
+  const paidChangeMode = !isViewMode && data.isSubmitted && deadlinePassed;
+  const freeEditBlocked = isViewMode || paidChangeMode;
   const groupComplete = progress.groupDone >= progress.groupTotal && progress.groupTotal > 0;
   const knockoutUnlocked = groupComplete || isViewMode;
   const changesExhausted = data.changesUsedToday >= maxChangesPerDay;
@@ -113,12 +116,19 @@ export function PronosticosShell({
         </div>
       )}
 
-      {!isViewMode && data.isSubmitted && (
+      {!isViewMode && data.isSubmitted && deadlinePassed && (
         <LockedStateBanner
           submittedAt={data.submittedAt}
           totalPoints={data.totalPoints}
           changesUsedToday={data.changesUsedToday}
           maxChangesPerDay={maxChangesPerDay}
+        />
+      )}
+
+      {!isViewMode && data.isSubmitted && !deadlinePassed && (
+        <SubmittedEditableBanner
+          submittedAt={data.submittedAt}
+          globalDeadline={data.globalDeadline}
         />
       )}
 
@@ -139,7 +149,7 @@ export function PronosticosShell({
         ))}
       </nav>
 
-      {!isViewMode && data.isSubmitted && (tab === "bracket" || tab === "summary") && (
+      {!isViewMode && paidChangeMode && (tab === "bracket" || tab === "summary") && (
         <div className="rounded-lg border border-[var(--color-accent)]/30 bg-[var(--color-accent)]/5 p-4">
           <p className="text-sm">{es.pronosticos.paidChangeTabHint}</p>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -157,8 +167,8 @@ export function PronosticosShell({
         <GroupStagePanel
           matches={data.matches}
           predictions={data.predictions}
-          disabled={isViewMode || data.isSubmitted}
-          paidChangeMode={!isViewMode && data.isSubmitted}
+          disabled={freeEditBlocked}
+          paidChangeMode={paidChangeMode}
           paidChangeEligibleByMatchId={data.paidChangeEligibleByMatchId}
           paidChangeBlockReasonByMatchId={data.paidChangeBlockReasonByMatchId}
           changeCost={changeCosts.group_stage}
@@ -185,7 +195,7 @@ export function PronosticosShell({
           knockoutDefs={data.knockoutDefs}
           disabled={isViewMode}
           unlocked={knockoutUnlocked || data.isSubmitted}
-          paidChangeMode={!isViewMode && data.isSubmitted}
+          paidChangeMode={paidChangeMode}
           paidChangeEligibleByMatchId={data.paidChangeEligibleByMatchId}
           paidChangeBlockReasonByMatchId={data.paidChangeBlockReasonByMatchId}
           changeCosts={changeCosts}
@@ -201,7 +211,7 @@ export function PronosticosShell({
           knockoutDone={progress.knockoutDone}
           knockoutTotal={progress.knockoutTotal}
           thirdDone={progress.thirdPlaceDone}
-          disabled={data.isSubmitted}
+          disabled={data.isSubmitted && deadlinePassed}
           deadlinePassed={deadlinePassed}
           knockoutUnlocked={knockoutUnlocked || data.isSubmitted}
           teams={data.teams}

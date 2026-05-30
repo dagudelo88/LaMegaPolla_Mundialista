@@ -20,6 +20,14 @@ export function ChangeAvailabilityBanner({
     );
   }
 
+  if (!availability.paidChangesEnabled) {
+    return (
+      <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-100">
+        {es.pronosticos.submittedBeforeDeadline}
+      </div>
+    );
+  }
+
   const available = !availability.changesExhausted;
 
   return (

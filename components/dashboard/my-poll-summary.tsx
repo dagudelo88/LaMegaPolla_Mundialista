@@ -143,7 +143,7 @@ export function MyPollSummary({ totalPoints, data, changeAvailability }: MyPollS
                 −{data.totalPointsSpent} pts
               </p>
             </div>
-            {changeAvailability.isSubmitted && !changeAvailability.changesExhausted && (
+            {changeAvailability.paidChangesEnabled && !changeAvailability.changesExhausted && (
               <Button asChild size="sm" variant="outline">
                 <Link href="/pronosticos">{es.dashboard.paidChangeGoToPredictions}</Link>
               </Button>

@@ -2,6 +2,7 @@ import type { BracketSlot } from "@/lib/bracket/types";
 import { countPaidChangesToday } from "@/lib/changes/count-paid-changes-today";
 import { DEFAULT_GLOBAL_DEADLINE } from "@/lib/config/tournament-deadline";
 import { getConfig } from "@/lib/config/get-config";
+import { isGlobalDeadlinePassed } from "@/lib/predictions/global-deadline";
 import { buildGroupResultsFromPredictions, resolveAdvancingThirdGroups } from "@/lib/predictions/helpers";
 import { canPaidChangeMatch } from "@/lib/predictions/paid-change-eligibility";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -82,6 +83,7 @@ export async function fetchPronosticosPayload(supabase: SupabaseClient, userId: 
 
   return {
     globalDeadline,
+    deadlinePassed: isGlobalDeadlinePassed(globalDeadline),
     teams: teams ?? [],
     matches: matches ?? [],
     predictions: predictions ?? [],

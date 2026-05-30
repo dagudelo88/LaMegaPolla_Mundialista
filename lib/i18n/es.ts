@@ -153,7 +153,8 @@ export const es = {
     standingsPreview: "Tabla simulada",
     knockoutLocked: "Completa todos los partidos de grupos para desbloquear eliminatorias.",
     submitTitle: "Enviar pronóstico completo",
-    submitHint: "Una vez enviado, quedará bloqueado. Podrás usar cambios pagos cuando empiece el torneo (REGLAS §5).",
+    submitHint:
+      "Tras enviar podrás seguir editando hasta la fecha límite. Después del 10 de junio solo cambios pagos (REGLAS §5).",
     summaryPodiumTitle: "Tu podio predicho",
     summaryPodiumHint: "Campeón, subcampeón y tercer puesto según tu simulación de eliminatorias.",
     summaryPodiumPending: "Completa la fase de grupos y las eliminatorias para ver tu podio.",
@@ -171,10 +172,14 @@ export const es = {
     summaryGroupGoals: "Goles en grupos",
     summaryKnockoutGoals: "Goles en eliminatorias",
     submitButton: "Enviar pronóstico completo",
-    submitConfirm: "¿Confirmas el envío? No podrás editar libremente después.",
+    submitConfirm:
+      "¿Confirmas el envío? Podrás seguir editando hasta el 10 de junio, 23:59 (hora Colombia).",
     submitted: "Pronóstico enviado",
     submittedAt: "Enviado el",
-    lockedBanner: "Tus pronósticos están bloqueados. Puedes gastar puntos para 1 cambio por día (REGLAS §5).",
+    submittedEditableBanner:
+      "Tu polla ya está enviada, pero puedes seguir editando libremente hasta {deadline}.",
+    lockedBanner:
+      "Pasó la fecha límite: tus pronósticos están bloqueados. Puedes gastar puntos para 1 cambio por día (REGLAS §5).",
     viewChangeHistory: "Ver historial de cambios",
     paidChange: "Cambio pagado",
     paidChangeCost: "Costo",
@@ -198,6 +203,8 @@ export const es = {
     adminOverriddenBadge: "Ajustado por administrador",
     insufficientPoints: "Puntos insuficientes",
     notSubmittedYet: "Debes enviar tu pronóstico completo antes del inicio del torneo.",
+    submittedBeforeDeadline:
+      "Polla enviada. Puedes seguir editando libremente hasta la fecha límite del pronóstico inicial.",
     groupProgress: "Grupos",
     knockoutProgress: "Eliminatorias",
     thirdProgress: "Terceros",

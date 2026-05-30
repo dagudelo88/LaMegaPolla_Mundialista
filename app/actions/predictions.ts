@@ -6,6 +6,11 @@ import { countPaidChangesToday } from "@/lib/changes/count-paid-changes-today";
 import { getTournamentTodayKey } from "@/lib/changes/tournament-today";
 import { getConfig, getConfigNumber } from "@/lib/config/get-config";
 import { DEFAULT_GLOBAL_DEADLINE } from "@/lib/config/tournament-deadline";
+import {
+  getGlobalDeadlineIso,
+  isGlobalDeadlinePassed,
+} from "@/lib/predictions/global-deadline";
+import { syncUserPredictionLockState } from "@/lib/predictions/sync-submission-lock-state";
 import { buildGroupResultsFromPredictions, resolveAdvancingThirdGroups } from "@/lib/predictions/helpers";
 import { fetchPronosticosPayload } from "@/lib/predictions/fetch-pronosticos-payload";
 import { canPaidChangeMatch } from "@/lib/predictions/paid-change-eligibility";
@@ -45,10 +50,12 @@ export async function savePredictionDraft(
   const user = await requireUser();
   const supabase = await createClient();
 
-  const submitted = await getSubmissionState(user.id);
-  if (submitted) {
-    throw new Error("already_submitted");
+  const globalDeadline = await getGlobalDeadlineIso();
+  if (isGlobalDeadlinePassed(globalDeadline)) {
+    throw new Error("deadline_passed");
   }
+
+  await syncUserPredictionLockState(user.id);
 
   const home = clampScore(newHome);
   const away = clampScore(newAway);
@@ -61,14 +68,8 @@ export async function savePredictionDraft(
 
   if (!match) throw new Error("match_not_found");
 
-  const globalDeadline = await getConfig<string>("tournament.global_deadline");
-  if (globalDeadline && new Date() >= new Date(globalDeadline)) {
-    throw new Error("deadline_passed");
-  }
-
-  if (match.status !== "scheduled" || new Date() > new Date(match.prediction_deadline)) {
-    throw new Error("match_locked");
-  }
+  // Per-match lock (status / kickoff deadline) applies only to paid changes after the global deadline (REGLAS §5).
+  // During the initial poll window, players may edit any fixture freely until 10 Jun 23:59 Colombia.
 
   const isKnockout = match.phase !== "group_stage";
   const isDraw = home === away;
@@ -176,13 +177,6 @@ export async function submitFullTournament() {
 
   const now = new Date().toISOString();
 
-  const { error: lockErr } = await supabase
-    .from("predictions")
-    .update({ locked: true, updated_at: now })
-    .eq("user_id", user.id);
-
-  if (lockErr) throw new Error(lockErr.message);
-
   const { error: subErr } = await supabase.from("user_tournament_submissions").upsert(
     {
       user_id: user.id,
@@ -209,8 +203,15 @@ export async function applyPaidPredictionChange(
   const user = await requireUser();
   const supabase = await createClient();
 
+  const globalDeadline = await getGlobalDeadlineIso();
+  if (!isGlobalDeadlinePassed(globalDeadline)) {
+    throw new Error("before_global_deadline");
+  }
+
   const submitted = await getSubmissionState(user.id);
   if (!submitted) throw new Error("not_submitted_yet");
+
+  await syncUserPredictionLockState(user.id);
 
   const maxPerDay = await getConfigNumber("changes.max_per_day", 1);
   const today = getTournamentTodayKey();
@@ -318,5 +319,7 @@ export type PronosticosPayload = Awaited<ReturnType<typeof loadPronosticosData>>
 /** Server-side data loader for /pronosticos page */
 export async function loadPronosticosData(userId: string) {
   const supabase = await createClient();
-  return fetchPronosticosPayload(supabase, userId);
+  const lockState = await syncUserPredictionLockState(userId);
+  const payload = await fetchPronosticosPayload(supabase, userId);
+  return { ...payload, ...lockState };
 }
