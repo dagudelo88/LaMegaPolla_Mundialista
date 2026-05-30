@@ -8,6 +8,7 @@ import { mapAuthError } from "@/lib/auth/map-auth-error";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { es } from "@/lib/i18n/es";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type JoinState = {
   error?: string;
@@ -59,6 +60,19 @@ function mapRedeemError(message: string): string {
   return es.errors.generic;
 }
 
+async function isUsernameAvailable(admin: SupabaseClient, username: string): Promise<boolean> {
+  const { data } = await admin
+    .from("profiles")
+    .select("id")
+    .eq("username", username)
+    .maybeSingle();
+  return data == null;
+}
+
+async function deleteAuthUser(admin: SupabaseClient, userId: string) {
+  await admin.auth.admin.deleteUser(userId);
+}
+
 export async function registerWithInvite(
   _prev: JoinState,
   formData: FormData
@@ -91,18 +105,30 @@ export async function registerWithInvite(
     return { error: inviteError(inviteCheck.reason) };
   }
 
-  const supabase = await createClient();
-  const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-    email,
-    password,
-  });
+  const admin = createAdminClient();
 
-  if (signUpError) {
-    return { error: mapAuthError(signUpError.message) };
+  if (!(await isUsernameAvailable(admin, username))) {
+    return { error: es.errors.usernameTaken };
   }
 
-  if (!signUpData.session) {
-    return { error: es.errors.emailConfirmationRequired };
+  const { data: created, error: createError } = await admin.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+  });
+
+  if (createError || !created.user) {
+    return { error: mapAuthError(createError?.message ?? "create_user_failed") };
+  }
+
+  const userId = created.user.id;
+  const supabase = await createClient();
+
+  const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+
+  if (signInError) {
+    await deleteAuthUser(admin, userId);
+    return { error: mapAuthError(signInError.message) };
   }
 
   const { error: redeemError } = await supabase.rpc("redeem_invitation_code", {
@@ -112,6 +138,7 @@ export async function registerWithInvite(
 
   if (redeemError) {
     await supabase.auth.signOut({ scope: "global" });
+    await deleteAuthUser(admin, userId);
     return { error: mapRedeemError(redeemError.message) };
   }
 
@@ -134,6 +161,16 @@ export async function redeemInvite(
   const nicknameError = validateNickname(username);
   if (nicknameError) {
     return { error: nicknameError };
+  }
+
+  const inviteCheck = await validateInviteCode(code);
+  if (!inviteCheck.ok) {
+    return { error: inviteError(inviteCheck.reason) };
+  }
+
+  const admin = createAdminClient();
+  if (!(await isUsernameAvailable(admin, username))) {
+    return { error: es.errors.usernameTaken };
   }
 
   const supabase = await createClient();
@@ -161,7 +198,6 @@ export async function redeemInvite(
   if (error) {
     const msg = error.message;
     if (msg.includes("code_exhausted") || msg.includes("exhausted")) {
-      const admin = createAdminClient();
       const normalized = code.trim().toUpperCase();
       const { data: row } = await admin
         .from("invitation_codes")

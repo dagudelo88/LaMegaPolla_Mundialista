@@ -5,6 +5,7 @@ import { AdminPublicPredictionsToggle } from "@/components/admin/admin-public-pr
 import { InviteGenerator } from "@/components/admin/invite-generator";
 import { InviteCodesList } from "@/components/admin/invite-codes-list";
 import { AdminParticipantsTable } from "@/components/admin/admin-participants-table";
+import { loadAdminParticipants } from "@/lib/admin/load-participants";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { loadHomeDashboardData } from "@/lib/pool/load-home-data";
 import { isPublicPredictionsEnabled } from "@/lib/pool/public-predictions-access";
@@ -21,18 +22,13 @@ export default async function AdminPage({ searchParams }: PageProps) {
   const { jugador } = await searchParams;
   const admin = createAdminClient();
 
-  const [{ data: codes }, { data: users }, homeData, publicPredictionsEnabled] = await Promise.all([
+  const [{ data: codes }, participants, homeData, publicPredictionsEnabled] = await Promise.all([
     admin
       .from("invitation_codes")
       .select("code, uses_count, max_uses, created_at, expires_at")
       .order("created_at", { ascending: false })
       .limit(20),
-    admin
-      .from("profiles")
-      .select(
-        "id, username, role, is_admin, invite_redeemed_at, total_points, joined_at, entry_fee_paid, withdrawn_at"
-      )
-      .order("joined_at", { ascending: true }),
+    loadAdminParticipants(admin),
     loadHomeDashboardData(),
     isPublicPredictionsEnabled(),
   ]);
@@ -73,7 +69,7 @@ export default async function AdminPage({ searchParams }: PageProps) {
 
       <AdminPodiumTies ties={podiumTies} currency={homeData.pool.currency} />
 
-      <AdminParticipantsTable participants={users ?? []} />
+      <AdminParticipantsTable participants={participants} />
 
       <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-4">
         <h2 className="text-lg font-semibold">{es.admin.invites}</h2>

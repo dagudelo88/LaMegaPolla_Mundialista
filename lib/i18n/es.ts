@@ -68,13 +68,13 @@ export const es = {
   join: {
     title: "Crear cuenta",
     subtitle:
-      "Código de invitación, nickname para posiciones, correo y contraseña. El nickname es obligatorio y no se puede dejar vacío.",
+      "En un solo paso: código válido, nickname, correo y contraseña. Si algo falla, no se crea la cuenta a medias.",
     redeemTitle: "Completar registro",
     redeemSubtitle:
       "Canjea tu código y elige el nickname que verán todos en la tabla de posiciones.",
     redeemLoggedInAs: "Sesión activa:",
     redeemLoggedInNote:
-      "Falta canjear tu invitación. Ingresa el código que te dio el administrador y elige tu nickname.",
+      "Tu cuenta existe pero falta canjear la invitación. Ingresa el código y el nickname para activar tu participación.",
     codeLabel: "Código de invitación",
     codePlaceholder: "Ingresa tu código",
     nicknameSection: "Nickname en la polla",
@@ -354,7 +354,7 @@ export const es = {
     publicPredictionsEnable: "Activar",
     publicPredictionsDisable: "Desactivar",
     participantsHint:
-      "Marca el aporte recibido para incluir al jugador en el pool y la tabla (plazo: 10 jun 2026, 23:59 hora Colombia). Retira del juego a quienes no paguen: pierden puntos y sus pronósticos dejan de contar.",
+      "Marca el aporte recibido para incluir al jugador en el pool y la tabla (plazo: 10 jun 2026, 23:59 hora Colombia). También verás cuentas creadas que aún no completaron el registro con código y nickname.",
     participantColumn: "Participante",
     participantPaidColumn: "Aporte pagado",
     participantActionsColumn: "Acciones",
@@ -367,6 +367,8 @@ export const es = {
     participantUnpaidBadge: "Aporte pendiente",
     participantAdminPaidBadge: "Aporte incluido (admin)",
     participantAdminPaidLabel: "Pagado (admin)",
+    participantIncompleteBadge: "Registro incompleto",
+    participantIncompletePaid: "Debe completar /join",
     participantActionError: "No se pudo completar la acción.",
     bugReports: {
       title: "Reportes de errores",
@@ -461,7 +463,8 @@ export const es = {
     usernameInvalid:
       "El nickname solo puede tener letras, números y guión bajo (_), sin espacios.",
     nicknameRequired: "Debes elegir un nickname para aparecer en la tabla de posiciones.",
-    emailTaken: "Ese correo ya está registrado. Inicia sesión.",
+    emailTaken:
+      "Ese correo ya está registrado. Inicia sesión y completa tu registro en /join si aún no canjeaste el código.",
     weakPassword: "La contraseña debe tener al menos 8 caracteres.",
     passwordMismatch: "Las contraseñas no coinciden.",
     emailNotConfirmed: "Confirma tu correo antes de entrar (revisa tu bandeja).",
