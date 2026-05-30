@@ -25,6 +25,7 @@ export async function loadPublicPlayerPredictions(
     .select("id, username")
     .eq("username", username)
     .not("invite_redeemed_at", "is", null)
+    .is("withdrawn_at", null)
     .maybeSingle();
 
   if (!profile?.username) notFound();

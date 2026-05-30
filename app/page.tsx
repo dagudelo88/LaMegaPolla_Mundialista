@@ -6,7 +6,12 @@ import { es } from "@/lib/i18n/es";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function HomePage() {
+interface HomePageProps {
+  searchParams: Promise<{ withdrawn?: string }>;
+}
+
+export default async function HomePage({ searchParams }: HomePageProps) {
+  const { withdrawn } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -14,6 +19,15 @@ export default async function HomePage() {
 
   if (user) {
     const profile = await getProfile(user.id);
+    if (profile?.withdrawn_at || withdrawn === "1") {
+      return (
+        <section className="mx-auto flex max-w-xl flex-col gap-6 py-12 text-center">
+          <h1 className="text-3xl font-bold">{es.landing.withdrawnTitle}</h1>
+          <p className="text-[var(--color-muted-foreground)]">{es.landing.withdrawnHint}</p>
+        </section>
+      );
+    }
+
     if (profile?.invite_redeemed_at) {
       const homeData = await loadHomeDashboardData();
       return (

@@ -7,6 +7,8 @@ export type AppProfile = {
   username: string | null;
   total_points: number;
   invite_redeemed_at: string | null;
+  entry_fee_paid?: boolean;
+  withdrawn_at?: string | null;
 };
 
 export async function getProfile(userId: string): Promise<AppProfile | null> {
@@ -21,7 +23,7 @@ export async function getProfile(userId: string): Promise<AppProfile | null> {
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, role, is_admin, username, total_points, invite_redeemed_at")
+    .select("id, role, is_admin, username, total_points, invite_redeemed_at, entry_fee_paid, withdrawn_at")
     .eq("id", userId)
     .maybeSingle();
 

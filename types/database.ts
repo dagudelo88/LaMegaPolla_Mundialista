@@ -18,6 +18,8 @@ export interface Profile {
   avatar_url: string | null;
   total_points: number;
   invite_redeemed_at: string | null;
+  entry_fee_paid: boolean;
+  withdrawn_at: string | null;
   joined_at: string;
 }
 

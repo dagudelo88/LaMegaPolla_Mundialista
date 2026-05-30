@@ -76,7 +76,17 @@ export async function middleware(request: NextRequest) {
 
   if (user && (path.startsWith("/dashboard") || path.startsWith("/pronosticos") || path.startsWith("/transparencia") || path.startsWith("/jugador"))) {
     const { data: profileRows } = await supabase.rpc("get_my_profile");
-    const profile = profileRows?.[0] as { invite_redeemed_at?: string | null } | undefined;
+    const profile = profileRows?.[0] as {
+      invite_redeemed_at?: string | null;
+      withdrawn_at?: string | null;
+    } | undefined;
+
+    if (profile?.withdrawn_at) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/";
+      url.searchParams.set("withdrawn", "1");
+      return NextResponse.redirect(url);
+    }
 
     if (!profile?.invite_redeemed_at && !path.startsWith("/join")) {
       const url = request.nextUrl.clone();

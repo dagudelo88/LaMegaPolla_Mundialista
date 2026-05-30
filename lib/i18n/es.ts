@@ -49,6 +49,9 @@ export const es = {
     leaderboardPlenos: "Plenos",
     poolTieHint:
       "Si los criterios de desempate no separan jugadores del podio, comparten puesto y reparten el premio (REGLAS §8).",
+    withdrawnTitle: "Retirado de la polla",
+    withdrawnHint:
+      "Tu participación fue retirada por el administrador (aporte no confirmado). Tus pronósticos ya no cuentan en el juego.",
   },
   login: {
     title: "Iniciar sesión",
@@ -287,7 +290,7 @@ export const es = {
     noMatchesFilter: "No hay partidos en este filtro.",
     podiumTiesTitle: "Empates en podio",
     podiumTiesHint:
-      "Jugadores con los mismos puntos comparten puesto. Reparte el premio del puesto entre ellos a partes iguales.",
+      "Solo aparecen empates reales (mismos puntos, plenos y puntos gastados en cambios). Reparte el premio del puesto a partes iguales.",
     podiumTiesNone: "No hay empates en el podio (1.º, 2.º o 3.er puesto).",
     podiumTiesPlace: "Puesto {rank}",
     podiumTiesSuggested: "Sugerido por persona",
@@ -317,6 +320,19 @@ export const es = {
     publicPredictionsOff: "Estado: desactivado",
     publicPredictionsEnable: "Activar",
     publicPredictionsDisable: "Desactivar",
+    participantsHint:
+      "Marca el aporte recibido para incluir al jugador en el pool y la tabla. Retira del juego a quienes no paguen: pierden puntos y sus pronósticos dejan de contar.",
+    participantColumn: "Participante",
+    participantPaidColumn: "Aporte pagado",
+    participantActionsColumn: "Acciones",
+    participantPaidYes: "Pagado",
+    participantPaidNo: "Pendiente",
+    participantWithdraw: "Retirar del juego",
+    participantWithdrawConfirm:
+      "¿Retirar a {user} del juego? Se borrarán sus puntos y sus pronósticos dejarán de ser válidos.",
+    participantWithdrawnBadge: "Retirado",
+    participantUnpaidBadge: "Aporte pendiente",
+    participantActionError: "No se pudo completar la acción.",
   },
   playerPredictions: {
     title: "Pronósticos del jugador",

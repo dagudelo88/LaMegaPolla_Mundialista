@@ -241,3 +241,91 @@ export async function setPublicPredictionsEnabled(enabled: boolean) {
   revalidatePublicPaths();
   revalidatePath("/admin");
 }
+
+export async function setParticipantEntryFeePaid(userId: string, paid: boolean) {
+  const { user } = await requireAdmin();
+  const admin = createAdminClient();
+
+  const { data: target, error: fetchErr } = await admin
+    .from("profiles")
+    .select("id, username, is_admin, withdrawn_at, entry_fee_paid")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (fetchErr || !target) throw new Error(fetchErr?.message ?? "participant_not_found");
+  if (target.is_admin) throw new Error("cannot_modify_admin");
+  if (target.withdrawn_at) throw new Error("participant_withdrawn");
+
+  const { error } = await admin
+    .from("profiles")
+    .update({ entry_fee_paid: paid })
+    .eq("id", userId);
+
+  if (error) throw new Error(error.message);
+
+  await admin.from("admin_actions").insert({
+    admin_id: user.id,
+    action: paid ? "mark_entry_fee_paid" : "mark_entry_fee_unpaid",
+    target_type: "profiles",
+    target_id: userId,
+    details: {
+      username: target.username,
+      previous: target.entry_fee_paid,
+      current: paid,
+    },
+  });
+
+  revalidatePublicPaths();
+  revalidatePath("/admin");
+}
+
+export async function withdrawParticipant(userId: string) {
+  const { user } = await requireAdmin();
+  const admin = createAdminClient();
+
+  const { data: target, error: fetchErr } = await admin
+    .from("profiles")
+    .select("id, username, is_admin, withdrawn_at, entry_fee_paid")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (fetchErr || !target) throw new Error(fetchErr?.message ?? "participant_not_found");
+  if (target.is_admin) throw new Error("cannot_withdraw_admin");
+  if (target.withdrawn_at) throw new Error("already_withdrawn");
+  if (target.entry_fee_paid) throw new Error("cannot_withdraw_paid_participant");
+
+  const now = new Date().toISOString();
+
+  const { error: updateErr } = await admin
+    .from("profiles")
+    .update({
+      withdrawn_at: now,
+      withdrawn_by: user.id,
+      total_points: 0,
+    })
+    .eq("id", userId);
+
+  if (updateErr) throw new Error(updateErr.message);
+
+  const { error: pointsErr } = await admin
+    .from("user_match_points")
+    .delete()
+    .eq("user_id", userId);
+
+  if (pointsErr) throw new Error(pointsErr.message);
+
+  await admin.from("admin_actions").insert({
+    admin_id: user.id,
+    action: "withdraw_participant",
+    target_type: "profiles",
+    target_id: userId,
+    details: {
+      username: target.username,
+      entry_fee_paid: target.entry_fee_paid,
+      withdrawn_at: now,
+    },
+  });
+
+  revalidatePublicPaths();
+  revalidatePath("/admin");
+}

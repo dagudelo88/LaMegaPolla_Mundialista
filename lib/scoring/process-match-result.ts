@@ -27,10 +27,23 @@ export async function processMatchResult(
 
   if (predErr) throw new Error(predErr.message);
 
-  const actual = { home: input.homeScore, away: input.awayScore };
-  const userIds: string[] = [];
+  const userIds = [...new Set((predictions ?? []).map((p) => p.user_id))];
+  const { data: eligibleProfiles, error: eligibleErr } = await admin
+    .from("profiles")
+    .select("id")
+    .in("id", userIds.length ? userIds : ["00000000-0000-0000-0000-000000000000"])
+    .eq("entry_fee_paid", true)
+    .is("withdrawn_at", null);
+
+  if (eligibleErr) throw new Error(eligibleErr.message);
+
+  const eligibleIds = new Set((eligibleProfiles ?? []).map((p) => p.id));
+  const scoredUserIds: string[] = [];
 
   for (const pred of predictions ?? []) {
+    if (!eligibleIds.has(pred.user_id)) continue;
+
+    const actual = { home: input.homeScore, away: input.awayScore };
     const points = calculateMatchPoints(
       input.phase,
       actual,
@@ -53,9 +66,9 @@ export async function processMatchResult(
     );
 
     if (upsertErr) throw new Error(upsertErr.message);
-    userIds.push(pred.user_id);
+    scoredUserIds.push(pred.user_id);
   }
 
-  await recalculateUsersTotalPoints(admin, userIds);
-  return { usersScored: userIds.length };
+  await recalculateUsersTotalPoints(admin, scoredUserIds);
+  return { usersScored: scoredUserIds.length };
 }

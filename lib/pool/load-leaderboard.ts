@@ -6,6 +6,8 @@ export interface LeaderboardRow {
   username: string;
   total_points: number;
   plenos_count: number;
+  /** Total points spent on paid prediction changes (REGLAS §8 tiebreaker). */
+  change_points_spent: number;
   joined_at: string;
 }
 
@@ -32,22 +34,34 @@ const PRIZE_BY_RANK: Record<1 | 2 | 3, keyof PodiumPrizeAmounts> = {
   3: "thirdPlace",
 };
 
-/** REGLAS §8 — row order (not displayed rank). */
+/** True when REGLAS §8 criteria 1–3 are equal (players share position). */
+export function shareLeaderboardPosition(a: LeaderboardRow, b: LeaderboardRow): boolean {
+  return (
+    a.total_points === b.total_points &&
+    a.plenos_count === b.plenos_count &&
+    a.change_points_spent === b.change_points_spent
+  );
+}
+
+/** REGLAS §8 — sort order: points, plenos, fewer change points spent, then username. */
 export function sortLeaderboard(rows: LeaderboardRow[]): LeaderboardRow[] {
   return [...rows].sort((a, b) => {
     if (b.total_points !== a.total_points) return b.total_points - a.total_points;
     if (b.plenos_count !== a.plenos_count) return b.plenos_count - a.plenos_count;
-    return a.joined_at.localeCompare(b.joined_at);
+    if (a.change_points_spent !== b.change_points_spent) {
+      return a.change_points_spent - b.change_points_spent;
+    }
+    return a.username.localeCompare(b.username);
   });
 }
 
-/** Competition ranking by total_points only (1, 1, 3…). */
+/** Competition ranks (1, 1, 3…) using full REGLAS §8 tiebreakers before sharing a rank. */
 export function assignCompetitionRanks(rows: LeaderboardRow[]): RankedLeaderboardRow[] {
   const sorted = sortLeaderboard(rows);
   let rank = 1;
 
   return sorted.map((row, index) => {
-    if (index > 0 && row.total_points !== sorted[index - 1]!.total_points) {
+    if (index > 0 && !shareLeaderboardPosition(row, sorted[index - 1]!)) {
       rank = index + 1;
     }
     return { ...row, rank };
@@ -92,7 +106,9 @@ export async function fetchLeaderboardRows(
     .from("profiles")
     .select("id, username, total_points, joined_at")
     .not("username", "is", null)
-    .not("invite_redeemed_at", "is", null);
+    .not("invite_redeemed_at", "is", null)
+    .eq("entry_fee_paid", true)
+    .is("withdrawn_at", null);
 
   if (profilesErr) throw new Error(profilesErr.message);
 
@@ -113,9 +129,24 @@ export async function fetchLeaderboardRows(
 
   if (plenosErr) throw new Error(plenosErr.message);
 
+  const { data: changeRows, error: changesErr } = await supabase
+    .from("prediction_changes")
+    .select("user_id, points_spent")
+    .in("user_id", profileIds);
+
+  if (changesErr) throw new Error(changesErr.message);
+
   const plenosByUser = new Map<string, number>();
   for (const row of plenoRows ?? []) {
     plenosByUser.set(row.user_id, (plenosByUser.get(row.user_id) ?? 0) + 1);
+  }
+
+  const changeSpentByUser = new Map<string, number>();
+  for (const row of changeRows ?? []) {
+    changeSpentByUser.set(
+      row.user_id,
+      (changeSpentByUser.get(row.user_id) ?? 0) + row.points_spent
+    );
   }
 
   return active.map((p) => ({
@@ -123,6 +154,7 @@ export async function fetchLeaderboardRows(
     username: p.username,
     total_points: p.total_points,
     plenos_count: plenosByUser.get(p.id) ?? 0,
+    change_points_spent: changeSpentByUser.get(p.id) ?? 0,
     joined_at: p.joined_at,
   }));
 }

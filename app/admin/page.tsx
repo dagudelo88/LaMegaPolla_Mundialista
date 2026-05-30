@@ -3,8 +3,8 @@ import { AdminPlayerPredictionsSection } from "@/components/admin/admin-player-p
 import { AdminPodiumTies } from "@/components/admin/admin-podium-ties";
 import { AdminPublicPredictionsToggle } from "@/components/admin/admin-public-predictions-toggle";
 import { InviteGenerator } from "@/components/admin/invite-generator";
+import { AdminParticipantsTable } from "@/components/admin/admin-participants-table";
 import { requireAdmin } from "@/lib/auth/require-admin";
-import { formatProfileRoles } from "@/lib/auth/roles";
 import { loadHomeDashboardData } from "@/lib/pool/load-home-data";
 import { isPublicPredictionsEnabled } from "@/lib/pool/public-predictions-access";
 import { getPodiumTies } from "@/lib/pool/load-leaderboard";
@@ -28,7 +28,9 @@ export default async function AdminPage({ searchParams }: PageProps) {
       .limit(20),
     admin
       .from("profiles")
-      .select("id, username, role, is_admin, invite_redeemed_at, total_points, joined_at")
+      .select(
+        "id, username, role, is_admin, invite_redeemed_at, total_points, joined_at, entry_fee_paid, withdrawn_at"
+      )
       .order("joined_at", { ascending: true }),
     loadHomeDashboardData(),
     isPublicPredictionsEnabled(),
@@ -70,7 +72,7 @@ export default async function AdminPage({ searchParams }: PageProps) {
 
       <AdminPodiumTies ties={podiumTies} currency={homeData.pool.currency} />
 
-      <InviteGenerator />
+      <AdminParticipantsTable participants={users ?? []} />
 
       <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-4">
         <h2 className="mb-3 text-lg font-semibold">{es.admin.invites}</h2>
@@ -92,25 +94,7 @@ export default async function AdminPage({ searchParams }: PageProps) {
         )}
       </div>
 
-      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-4">
-        <h2 className="mb-3 text-lg font-semibold">{es.admin.users}</h2>
-        <ul className="space-y-2 text-sm">
-          {(users ?? []).map((u) => (
-            <li
-              key={u.id}
-              className="flex justify-between border-b border-[var(--color-border)] py-2"
-            >
-              <Link
-                href={`/admin?jugador=${u.id}#corregir-pronosticos`}
-                className="font-medium hover:text-[var(--color-accent)] hover:underline"
-              >
-                @{u.username ?? "—"} ({formatProfileRoles(u)})
-              </Link>
-              <span>{u.total_points} pts</span>
-            </li>
-          ))}
-        </ul>
-      </div>
+      <InviteGenerator />
     </section>
   );
 }
