@@ -88,7 +88,7 @@ function PodiumSlot({
 
 function StatTile({ label, value, detail }: { label: string; value: string; detail?: string }) {
   return (
-    <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-3">
+    <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-4 py-3 text-center">
       <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-muted-foreground)]">
         {label}
       </p>
@@ -239,7 +239,7 @@ export function SubmissionSummary({
         )}
       </div>
 
-      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-6">
+      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-6 text-center">
         <h3 className="text-lg font-semibold">{es.pronosticos.submitTitle}</h3>
         <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">{es.pronosticos.submitHint}</p>
 

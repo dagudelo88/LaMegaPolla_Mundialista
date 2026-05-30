@@ -119,7 +119,8 @@ Gana quien tenga más puntos acumulados al final del Mundial.
 En caso de empate se aplican los siguientes criterios, en orden:
 
 1. Mayor cantidad de plenos (10 o 20 puntos en un partido).
-2. Fecha de inscripción (quien se unió primero).
+2. Menor cantidad de puntos gastados para cambiar resultados.
+3. En caso que reglas 1 y 2 no desempaten los jugadores comparten el puesto y reparten el pool.
 
 ---
 

@@ -40,13 +40,13 @@ export const es = {
     prizeThird: "3er puesto",
     leaderboardTitle: "Tabla de posiciones",
     leaderboardHint:
-      "Desempate en la tabla: plenos (10/20), luego fecha de inscripción. El puesto (#) se comparte si hay empate en puntos (REGLAS §8).",
+      "Desempate en la tabla: plenos (10/20), luego menor cantidad de puntos gastados en cambios. Si persiste el empate, comparten puesto y reparten el pool (REGLAS §8).",
     leaderboardEmpty: "Aún no hay participantes activos.",
     leaderboardNickname: "Nickname",
     leaderboardPoints: "Puntos",
     leaderboardPlenos: "Plenos",
     poolTieHint:
-      "Si hay empate en puntos en el podio, los jugadores comparten puesto y el administrador reparte el premio entre ellos.",
+      "Si los criterios de desempate no separan jugadores del podio, comparten puesto y reparten el premio (REGLAS §8).",
   },
   login: {
     title: "Iniciar sesión",

@@ -7,7 +7,7 @@ import { es } from "@/lib/i18n/es";
 
 export default async function ResultadosPage() {
   const { teams, matches } = await loadOfficialFixture();
-  const standings = buildOfficialStandings(teams, matches);
+  const { groups: standings, advancingThirdGroups } = buildOfficialStandings(teams, matches);
   const stats = countOfficialResults(matches);
 
   return (
@@ -30,7 +30,12 @@ export default async function ResultadosPage() {
         </p>
       </header>
 
-      <ResultsView matches={matches} standings={standings} stats={stats} />
+      <ResultsView
+        matches={matches}
+        standings={standings}
+        advancingThirdGroups={advancingThirdGroups}
+        stats={stats}
+      />
     </section>
   );
 }

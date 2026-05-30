@@ -47,6 +47,14 @@ export function BracketSimulatorPanel({
     return rankAllThirdPlaceTeams(standings);
   }, [groupComplete, standings]);
 
+  const advancingThirdGroups = useMemo(
+    () => new Set(rankedThirds.filter((entry) => entry.advances).map((entry) => entry.group)),
+    [rankedThirds]
+  );
+
+  const teamAdvancesFromGroup = (group: string, rank: number) =>
+    rank <= 2 || (rank === 3 && advancingThirdGroups.has(group));
+
   const teamById = useMemo(() => new Map(teams.map((t) => [t.id, t])), [teams]);
 
   return (
@@ -79,8 +87,16 @@ export function BracketSimulatorPanel({
                   <tbody>
                     {s.positions.map((row) => {
                       const team = teamById.get(row.teamId);
+                      const advances = teamAdvancesFromGroup(s.group, row.rank);
                       return (
-                        <tr key={row.teamId}>
+                        <tr
+                          key={row.teamId}
+                          className={
+                            advances
+                              ? "bg-[var(--color-primary)]/10 font-medium"
+                              : "opacity-60"
+                          }
+                        >
                           <td>{row.rank}</td>
                           <td>
                             <span className="inline-flex items-center gap-1.5">

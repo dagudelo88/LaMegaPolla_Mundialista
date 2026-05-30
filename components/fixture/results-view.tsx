@@ -1,4 +1,5 @@
 import { FixtureMatchRow } from "@/components/fixture/fixture-match-row";
+import { TeamFlag } from "@/components/predictions/team-flag";
 import { matchToFixtureSides } from "@/lib/matches/fixture-sides";
 import { es } from "@/lib/i18n/es";
 import { GROUP_LETTERS, PHASE_LABELS, type MatchPhase, type MatchWithTeams } from "@/types/database";
@@ -26,7 +27,16 @@ interface StandingsGroup {
 interface ResultsViewProps {
   matches: MatchWithTeams[];
   standings: StandingsGroup[];
+  advancingThirdGroups: Set<string>;
   stats: { finished: number; live: number; scheduled: number; total: number };
+}
+
+function teamAdvancesFromGroup(
+  group: string,
+  rank: number,
+  advancingThirdGroups: Set<string>
+) {
+  return rank <= 2 || (rank === 3 && advancingThirdGroups.has(group));
 }
 
 const KNOCKOUT_ORDER: MatchPhase[] = [
@@ -38,7 +48,7 @@ const KNOCKOUT_ORDER: MatchPhase[] = [
   "final",
 ];
 
-export function ResultsView({ matches, standings, stats }: ResultsViewProps) {
+export function ResultsView({ matches, standings, advancingThirdGroups, stats }: ResultsViewProps) {
   const groupMatches = matches.filter((m) => m.phase === "group_stage");
 
   const knockoutByPhase = new Map<MatchPhase, MatchWithTeams[]>();
@@ -58,19 +68,19 @@ export function ResultsView({ matches, standings, stats }: ResultsViewProps) {
   return (
     <div className="space-y-8">
       <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-3">
+        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-3 text-center">
           <p className="text-xs uppercase tracking-wide text-[var(--color-muted-foreground)]">
             {es.fixture.statsFinished}
           </p>
           <p className="mt-1 text-2xl font-bold tabular-nums">{stats.finished}</p>
         </div>
-        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-3">
+        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-3 text-center">
           <p className="text-xs uppercase tracking-wide text-[var(--color-muted-foreground)]">
             {es.fixture.statsLive}
           </p>
           <p className="mt-1 text-2xl font-bold tabular-nums">{stats.live}</p>
         </div>
-        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-3">
+        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-3 text-center">
           <p className="text-xs uppercase tracking-wide text-[var(--color-muted-foreground)]">
             {es.fixture.statsPending}
           </p>
@@ -100,15 +110,34 @@ export function ResultsView({ matches, standings, stats }: ResultsViewProps) {
                     </tr>
                   </thead>
                   <tbody>
-                    {group.rows.map((row) => (
-                      <tr key={row.fifaCode} className="border-t border-[var(--color-border)]">
-                        <td className="py-1 tabular-nums">{row.rank}</td>
-                        <td className="py-1 font-medium">{row.name}</td>
-                        <td className="py-1 text-center tabular-nums">{row.played}</td>
-                        <td className="py-1 text-center tabular-nums">{row.pts}</td>
-                        <td className="py-1 text-center tabular-nums">{row.gd}</td>
-                      </tr>
-                    ))}
+                    {group.rows.map((row) => {
+                      const advances = teamAdvancesFromGroup(
+                        group.group,
+                        row.rank,
+                        advancingThirdGroups
+                      );
+                      return (
+                        <tr
+                          key={row.fifaCode}
+                          className={`border-t border-[var(--color-border)] ${
+                            advances
+                              ? "bg-[var(--color-primary)]/10 font-medium"
+                              : "opacity-60"
+                          }`}
+                        >
+                          <td className="py-1 tabular-nums">{row.rank}</td>
+                          <td className="py-1">
+                            <span className="inline-flex items-center gap-1.5">
+                              <TeamFlag fifaCode={row.fifaCode} name={row.name} />
+                              {row.name}
+                            </span>
+                          </td>
+                          <td className="py-1 text-center tabular-nums">{row.played}</td>
+                          <td className="py-1 text-center tabular-nums">{row.pts}</td>
+                          <td className="py-1 text-center tabular-nums">{row.gd}</td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
