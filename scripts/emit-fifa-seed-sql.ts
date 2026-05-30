@@ -62,7 +62,7 @@ for (const m of knockoutMatches) {
   const homeJson = esc(JSON.stringify(m.home_source));
   const awayJson = esc(JSON.stringify(m.away_source));
   lines.push(
-    `INSERT INTO public.matches (fifa_match_number, phase, group_letter, home_team_id, away_team_id, home_source, away_source, kickoff_at, prediction_deadline, venue, matchday_key, status) VALUES (${m.fifa_match_number}, '${esc(m.phase)}', NULL, NULL, NULL, '${homeJson}'::jsonb, '${awayJson}'::jsonb, '${kickoff}', '${deadline}', '${esc(m.venue)}', 'knockout_${esc(m.phase)}_${m.fifa_match_number}', 'scheduled') ON CONFLICT (fifa_match_number) DO UPDATE SET phase = EXCLUDED.phase, home_source = EXCLUDED.home_source, away_source = EXCLUDED.away_source, kickoff_at = EXCLUDED.kickoff_at, prediction_deadline = EXCLUDED.prediction_deadline, venue = EXCLUDED.venue, matchday_key = EXCLUDED.matchday_key, status = EXCLUDED.status;`
+    `INSERT INTO public.matches (fifa_match_number, phase, group_letter, home_team_id, away_team_id, home_source, away_source, kickoff_at, prediction_deadline, venue, matchday_key, status) VALUES (${m.fifa_match_number}, '${esc(m.phase)}', NULL, NULL, NULL, '${homeJson}'::jsonb, '${awayJson}'::jsonb, '${kickoff}', '${deadline}', '${esc(m.venue)}', 'knockout_${esc(m.phase)}_${m.fifa_match_number}', 'scheduled') ON CONFLICT (fifa_match_number) DO UPDATE SET phase = EXCLUDED.phase, home_team_id = NULL, away_team_id = NULL, home_source = EXCLUDED.home_source, away_source = EXCLUDED.away_source, kickoff_at = EXCLUDED.kickoff_at, prediction_deadline = EXCLUDED.prediction_deadline, venue = EXCLUDED.venue, matchday_key = EXCLUDED.matchday_key, status = EXCLUDED.status;`
   );
 }
 

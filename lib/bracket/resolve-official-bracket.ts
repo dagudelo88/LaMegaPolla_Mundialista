@@ -95,11 +95,25 @@ export async function resolveOfficialBracket(
       groupResults,
       thirdGroups,
       winners,
-      losers
+      losers,
+      { requireOfficialGroupCompletion: true }
     );
 
     if (resolved.unresolved) {
       unresolvedMatches += 1;
+      if (row.home_team_id != null || row.away_team_id != null) {
+        const { error } = await admin
+          .from("matches")
+          .update({
+            home_team_id: null,
+            away_team_id: null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", row.id);
+
+        if (error) throw new Error(error.message);
+        updatedMatches += 1;
+      }
     } else if (
       row.home_team_id !== resolved.homeTeamId ||
       row.away_team_id !== resolved.awayTeamId

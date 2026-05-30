@@ -1,3 +1,7 @@
+import {
+  areAllGroupsComplete,
+  isGroupStageCompleteForGroup,
+} from "./group-completion";
 import { computeAllGroupStandings, getTeamAtRank } from "./group-standings";
 import { pickBestThirdForSlot } from "./third-place-advancement";
 import type {
@@ -10,21 +14,41 @@ import type {
   TeamRef,
 } from "./types";
 
+export interface KnockoutResolveOptions {
+  /** Only resolve group/third slots after official group-stage results are complete. */
+  requireOfficialGroupCompletion?: boolean;
+}
+
 function resolveSlot(
   slot: BracketSlot,
   standings: ReturnType<typeof computeAllGroupStandings>,
   advancingThirdGroups: string[],
   winners: Map<number, number>,
   losers: Map<number, number>,
-  usedThirdTeamIds: Set<number>
+  usedThirdTeamIds: Set<number>,
+  teams: TeamRef[],
+  groupResults: GroupMatchResult[],
+  options?: KnockoutResolveOptions
 ): number | null {
   switch (slot.type) {
     case "group_rank": {
+      if (
+        options?.requireOfficialGroupCompletion &&
+        !isGroupStageCompleteForGroup(slot.group, teams, groupResults)
+      ) {
+        return null;
+      }
       const groupStanding = standings.find((s) => s.group === slot.group);
       if (!groupStanding) return null;
       return getTeamAtRank(groupStanding, slot.rank)?.teamId ?? null;
     }
     case "third_best": {
+      if (
+        options?.requireOfficialGroupCompletion &&
+        !areAllGroupsComplete(teams, groupResults)
+      ) {
+        return null;
+      }
       const pick = pickBestThirdForSlot(
         standings,
         advancingThirdGroups,
@@ -93,7 +117,8 @@ export function resolveKnockoutMatch(
   groupResults: GroupMatchResult[],
   advancingThirdGroups: string[],
   winners: Map<number, number>,
-  losers: Map<number, number>
+  losers: Map<number, number>,
+  options?: KnockoutResolveOptions
 ): ResolvedMatchTeams {
   const standings = computeAllGroupStandings(teams, groupResults);
   const usedThirdTeamIds = new Set<number>();
@@ -103,7 +128,10 @@ export function resolveKnockoutMatch(
     advancingThirdGroups,
     winners,
     losers,
-    usedThirdTeamIds
+    usedThirdTeamIds,
+    teams,
+    groupResults,
+    options
   );
   const awayTeamId = resolveSlot(
     def.awaySource,
@@ -111,7 +139,10 @@ export function resolveKnockoutMatch(
     advancingThirdGroups,
     winners,
     losers,
-    usedThirdTeamIds
+    usedThirdTeamIds,
+    teams,
+    groupResults,
+    options
   );
 
   return {

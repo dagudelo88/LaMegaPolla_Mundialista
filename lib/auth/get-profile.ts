@@ -10,6 +10,7 @@ export type AppProfile = {
   invite_redeemed_at: string | null;
   entry_fee_paid?: boolean;
   withdrawn_at?: string | null;
+  predictions_submitted?: boolean;
 };
 
 export const getProfile = cache(async (userId: string): Promise<AppProfile | null> => {

@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { computeGroupStanding } from "@/lib/bracket/group-standings";
-import { resolveAllKnockoutMatches, resolveTournamentPodium, FINAL_MATCH_NUMBER, THIRD_PLACE_MATCH_NUMBER } from "@/lib/bracket/knockout-resolver";
+import {
+  resolveAllKnockoutMatches,
+  resolveKnockoutMatch,
+  resolveTournamentPodium,
+  FINAL_MATCH_NUMBER,
+  THIRD_PLACE_MATCH_NUMBER,
+} from "@/lib/bracket/knockout-resolver";
 import { rankThirdPlaceTeams, validateThirdPlaceSelection, computeAdvancingThirdGroups, rankAllThirdPlaceTeams } from "@/lib/bracket/third-place-advancement";
 import type { GroupMatchResult, KnockoutMatchDef, MatchWinnerContext, TeamRef } from "@/lib/bracket/types";
 
@@ -33,6 +39,37 @@ describe("third place advancement", () => {
     expect(validateThirdPlaceSelection(["A", "B"]).valid).toBe(false);
     const eight = ["A", "B", "C", "D", "E", "F", "G", "H"];
     expect(validateThirdPlaceSelection(eight).valid).toBe(true);
+  });
+});
+
+describe("resolveKnockoutMatch (official)", () => {
+  it("keeps round of 32 unresolved when group stage has no official results", () => {
+    const teams: TeamRef[] = [
+      ...teamsA,
+      { id: 5, fifaCode: "CAN", groupLetter: "B" },
+      { id: 6, fifaCode: "BIH", groupLetter: "B" },
+      { id: 7, fifaCode: "QAT", groupLetter: "B" },
+      { id: 8, fifaCode: "SUI", groupLetter: "B" },
+    ];
+
+    const resolved = resolveKnockoutMatch(
+      {
+        fifaMatchNumber: 73,
+        phase: "round_of_32",
+        homeSource: { type: "group_rank", group: "A", rank: 2 },
+        awaySource: { type: "group_rank", group: "B", rank: 2 },
+      },
+      teams,
+      [],
+      [],
+      new Map(),
+      new Map(),
+      { requireOfficialGroupCompletion: true }
+    );
+
+    expect(resolved.unresolved).toBe(true);
+    expect(resolved.homeTeamId).toBeNull();
+    expect(resolved.awayTeamId).toBeNull();
   });
 });
 

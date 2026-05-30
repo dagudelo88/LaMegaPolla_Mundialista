@@ -9,10 +9,17 @@ type MiddlewareProfile = {
   withdrawn_at?: string | null;
   is_admin?: boolean;
   role?: string;
+  predictions_submitted?: boolean;
 };
+
+function authenticatedLandingPath(profile: MiddlewareProfile | undefined): string {
+  if (!profile?.invite_redeemed_at) return "/join";
+  return profile.predictions_submitted ? "/" : "/pronosticos";
+}
 
 function routeNeedsProfile(path: string): boolean {
   return (
+    path === "/" ||
     AUTH_ROUTES.some((p) => path.startsWith(p)) ||
     path.startsWith("/join") ||
     path.startsWith("/admin") ||
@@ -59,16 +66,28 @@ export async function middleware(request: NextRequest) {
 
   if (user && isAuthRoute) {
     const url = request.nextUrl.clone();
-    url.pathname = profile?.invite_redeemed_at ? "/dashboard" : "/join";
+    url.pathname = authenticatedLandingPath(profile);
     return NextResponse.redirect(url);
   }
 
   if (user && path.startsWith("/join")) {
     if (profile?.invite_redeemed_at) {
       const url = request.nextUrl.clone();
-      url.pathname = "/dashboard";
+      url.pathname = authenticatedLandingPath(profile);
       return NextResponse.redirect(url);
     }
+  }
+
+  if (
+    user &&
+    path === "/" &&
+    profile?.invite_redeemed_at &&
+    !profile.withdrawn_at &&
+    !profile.predictions_submitted
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/pronosticos";
+    return NextResponse.redirect(url);
   }
 
   if (path.startsWith("/admin")) {

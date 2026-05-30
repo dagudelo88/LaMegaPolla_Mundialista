@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { RegisterForm } from "@/components/join/register-form";
 import { RedeemForm } from "@/components/join/redeem-form";
 import { createClient } from "@/lib/supabase/server";
+import { getAuthenticatedLandingPath } from "@/lib/auth/landing-path";
 import { getProfile } from "@/lib/auth/get-profile";
 import { es } from "@/lib/i18n/es";
 
@@ -21,7 +22,18 @@ export default async function JoinPage() {
     const profile = await getProfile(user.id);
 
     if (profile?.invite_redeemed_at) {
-      redirect("/dashboard");
+      const { data: submission } = await supabase
+        .from("user_tournament_submissions")
+        .select("is_complete")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      redirect(
+        getAuthenticatedLandingPath({
+          invite_redeemed_at: profile.invite_redeemed_at,
+          predictions_submitted: submission?.is_complete ?? false,
+        })
+      );
     }
     needsRedeemOnly = true;
   }

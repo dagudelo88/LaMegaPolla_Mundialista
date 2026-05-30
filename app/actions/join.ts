@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/auth/get-profile";
+import { resolveAuthenticatedLandingPath } from "@/lib/auth/landing-path";
 import { validateInviteCode } from "@/lib/auth/validate-invite-code";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { mapAuthError } from "@/lib/auth/map-auth-error";
@@ -144,7 +145,8 @@ export async function registerWithInvite(
 
   revalidatePath("/", "layout");
   revalidatePath("/dashboard");
-  redirect("/dashboard");
+  revalidatePath("/pronosticos");
+  redirect("/pronosticos");
 }
 
 export async function redeemInvite(
@@ -187,7 +189,8 @@ export async function redeemInvite(
   if (existingProfile?.invite_redeemed_at) {
     revalidatePath("/", "layout");
     revalidatePath("/dashboard");
-    redirect("/dashboard");
+    revalidatePath("/pronosticos");
+    redirect(await resolveAuthenticatedLandingPath(supabase, user.id));
   }
 
   const { error } = await supabase.rpc("redeem_invitation_code", {
@@ -208,7 +211,8 @@ export async function redeemInvite(
       if (row?.redeemed_by === user.id) {
         revalidatePath("/", "layout");
         revalidatePath("/dashboard");
-        redirect("/dashboard");
+        revalidatePath("/pronosticos");
+        redirect(await resolveAuthenticatedLandingPath(supabase, user.id));
       }
     }
     return { error: mapRedeemError(msg) };
@@ -216,5 +220,6 @@ export async function redeemInvite(
 
   revalidatePath("/", "layout");
   revalidatePath("/dashboard");
-  redirect("/dashboard");
+  revalidatePath("/pronosticos");
+  redirect("/pronosticos");
 }

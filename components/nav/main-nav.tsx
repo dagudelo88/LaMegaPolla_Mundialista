@@ -24,25 +24,34 @@ export function MainNav({
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
-  const links: { href: string; label: string }[] = [
-    { href: "/", label: es.nav.home },
-    { href: "/reglas", label: es.nav.rules },
-    { href: "/programacion", label: es.nav.schedule },
-    { href: "/resultados", label: es.nav.results },
-  ];
+  const links: { href: string; label: string }[] = [{ href: "/", label: es.nav.home }];
 
   if (isAuthenticated && inviteComplete) {
-    links.push({ href: "/dashboard", label: es.nav.dashboard });
-    links.push({ href: "/pronosticos", label: es.nav.predictions });
-    links.push({ href: "/transparencia", label: es.nav.transparency });
+    links.push(
+      { href: "/pronosticos", label: es.nav.predictions },
+      { href: "/dashboard", label: es.nav.dashboard },
+      { href: "/programacion", label: es.nav.schedule },
+      { href: "/resultados", label: es.nav.results },
+      { href: "/transparencia", label: es.nav.transparency },
+      { href: "/reglas", label: es.nav.rules }
+    );
     if (isAdmin) {
       links.push({ href: "/admin", label: es.nav.admin });
     }
-  } else if (isAuthenticated) {
-    links.push({ href: "/join", label: es.nav.completeRegistration });
   } else {
-    links.push({ href: "/join", label: es.nav.join });
-    links.push({ href: "/login", label: es.nav.login });
+    links.push(
+      { href: "/programacion", label: es.nav.schedule },
+      { href: "/resultados", label: es.nav.results },
+      { href: "/reglas", label: es.nav.rules }
+    );
+    if (isAuthenticated) {
+      links.push({ href: "/join", label: es.nav.completeRegistration });
+    } else {
+      links.push(
+        { href: "/join", label: es.nav.join },
+        { href: "/login", label: es.nav.login }
+      );
+    }
   }
 
   return (
