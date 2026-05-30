@@ -6,7 +6,8 @@ import { processMatchResult } from "@/lib/scoring/process-match-result";
 import { processJornadaBonus } from "@/lib/scoring/process-jornada-bonus";
 import type { MatchPhase } from "@/lib/scoring/calculate-match-points";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { CACHE_TAGS } from "@/lib/cache/tags";
 
 const REVALIDATE_PATHS = [
   "/admin",
@@ -22,6 +23,8 @@ const REVALIDATE_PATHS = [
 ] as const;
 
 function revalidatePublicPaths() {
+  revalidateTag(CACHE_TAGS.leaderboard);
+  revalidateTag(CACHE_TAGS.fixture);
   for (const path of REVALIDATE_PATHS) {
     revalidatePath(path);
   }

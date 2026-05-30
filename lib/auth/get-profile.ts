@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 
 export type AppProfile = {
@@ -11,7 +12,7 @@ export type AppProfile = {
   withdrawn_at?: string | null;
 };
 
-export async function getProfile(userId: string): Promise<AppProfile | null> {
+export const getProfile = cache(async (userId: string): Promise<AppProfile | null> => {
   const supabase = await createClient();
 
   const { data: rpcRows, error: rpcError } = await supabase.rpc("get_my_profile");
@@ -23,7 +24,9 @@ export async function getProfile(userId: string): Promise<AppProfile | null> {
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, role, is_admin, username, total_points, invite_redeemed_at, entry_fee_paid, withdrawn_at")
+    .select(
+      "id, role, is_admin, username, total_points, invite_redeemed_at, entry_fee_paid, withdrawn_at"
+    )
     .eq("id", userId)
     .maybeSingle();
 
@@ -33,4 +36,4 @@ export async function getProfile(userId: string): Promise<AppProfile | null> {
   }
 
   return data as AppProfile | null;
-}
+});

@@ -4,6 +4,25 @@ import { updateSession } from "@/lib/supabase/middleware";
 const PROTECTED_PREFIXES = ["/dashboard", "/admin", "/pronosticos", "/transparencia", "/jugador"];
 const AUTH_ROUTES = ["/login"];
 
+type MiddlewareProfile = {
+  invite_redeemed_at?: string | null;
+  withdrawn_at?: string | null;
+  is_admin?: boolean;
+  role?: string;
+};
+
+function routeNeedsProfile(path: string): boolean {
+  return (
+    AUTH_ROUTES.some((p) => path.startsWith(p)) ||
+    path.startsWith("/join") ||
+    path.startsWith("/admin") ||
+    path.startsWith("/dashboard") ||
+    path.startsWith("/pronosticos") ||
+    path.startsWith("/transparencia") ||
+    path.startsWith("/jugador")
+  );
+}
+
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
@@ -22,6 +41,12 @@ export async function middleware(request: NextRequest) {
     });
   }
 
+  let profile: MiddlewareProfile | undefined;
+  if (user && routeNeedsProfile(path)) {
+    const { data: profileRows } = await supabase.rpc("get_my_profile");
+    profile = profileRows?.[0] as MiddlewareProfile | undefined;
+  }
+
   const isProtected = PROTECTED_PREFIXES.some((p) => path.startsWith(p));
   const isAuthRoute = AUTH_ROUTES.some((p) => path.startsWith(p));
 
@@ -33,18 +58,12 @@ export async function middleware(request: NextRequest) {
   }
 
   if (user && isAuthRoute) {
-    const { data: profileRows } = await supabase.rpc("get_my_profile");
-    const profile = profileRows?.[0] as { invite_redeemed_at?: string | null } | undefined;
-
     const url = request.nextUrl.clone();
     url.pathname = profile?.invite_redeemed_at ? "/dashboard" : "/join";
     return NextResponse.redirect(url);
   }
 
   if (user && path.startsWith("/join")) {
-    const { data: profileRows } = await supabase.rpc("get_my_profile");
-    const profile = profileRows?.[0] as { invite_redeemed_at?: string | null } | undefined;
-
     if (profile?.invite_redeemed_at) {
       const url = request.nextUrl.clone();
       url.pathname = "/dashboard";
@@ -56,12 +75,7 @@ export async function middleware(request: NextRequest) {
     if (!user) {
       return new NextResponse(null, { status: 404 });
     }
-    const { data: profileRows } = await supabase.rpc("get_my_profile");
-    const profile = profileRows?.[0] as
-      | { is_admin?: boolean; role?: string }
-      | undefined;
-    const isAdmin =
-      profile?.is_admin === true || profile?.role === "admin";
+    const isAdmin = profile?.is_admin === true || profile?.role === "admin";
 
     if (!isAdmin) {
       return new NextResponse(null, { status: 404 });
@@ -74,13 +88,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && (path.startsWith("/dashboard") || path.startsWith("/pronosticos") || path.startsWith("/transparencia") || path.startsWith("/jugador"))) {
-    const { data: profileRows } = await supabase.rpc("get_my_profile");
-    const profile = profileRows?.[0] as {
-      invite_redeemed_at?: string | null;
-      withdrawn_at?: string | null;
-    } | undefined;
-
+  if (
+    user &&
+    (path.startsWith("/dashboard") ||
+      path.startsWith("/pronosticos") ||
+      path.startsWith("/transparencia") ||
+      path.startsWith("/jugador"))
+  ) {
     if (profile?.withdrawn_at) {
       const url = request.nextUrl.clone();
       url.pathname = "/";

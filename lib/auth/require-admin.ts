@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/auth/get-profile";
 import { isAdminProfile } from "@/lib/auth/roles";
@@ -6,13 +7,13 @@ import type { User } from "@supabase/supabase-js";
 export { getProfile } from "@/lib/auth/get-profile";
 export type { AppProfile } from "@/lib/auth/get-profile";
 
-export async function getSessionUser(): Promise<User | null> {
+export const getSessionUser = cache(async (): Promise<User | null> => {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   return user;
-}
+});
 
 export async function requireUser() {
   const user = await getSessionUser();

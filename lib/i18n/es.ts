@@ -1,6 +1,9 @@
 export const es = {
   appName: "La Mega Polla Mundialista",
   tagline: "Pronósticos del Mundial 2026 entre amigos",
+  common: {
+    loading: "Cargando…",
+  },
   nav: {
     home: "Inicio",
     rules: "Reglas",

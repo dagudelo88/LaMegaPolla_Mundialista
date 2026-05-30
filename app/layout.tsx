@@ -3,12 +3,9 @@ import { Geist } from "next/font/google";
 import "./globals.css";
 import { SiteBackground } from "@/components/layout/site-background";
 import { MainNav } from "@/components/nav/main-nav";
-import { createClient } from "@/lib/supabase/server";
-import { getProfile } from "@/lib/auth/require-admin";
+import { getSessionUser, getProfile } from "@/lib/auth/require-admin";
 import { isAdminProfile } from "@/lib/auth/roles";
 import { es } from "@/lib/i18n/es";
-
-export const dynamic = "force-dynamic";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,10 +20,7 @@ export const metadata: Metadata = {
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getSessionUser();
 
   let isAdmin = false;
   let username: string | null = null;

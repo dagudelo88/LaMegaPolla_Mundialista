@@ -20,7 +20,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import type { MatchPhase } from "@/lib/scoring/calculate-match-points";
 import { recalculateUserMatchPoints } from "@/lib/scoring/process-user-match-points";
 import { recalculateUserTotalPoints } from "@/lib/scoring/recalculate-total-points";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { CACHE_TAGS } from "@/lib/cache/tags";
 
 function clampScore(n: number): number {
   if (!Number.isInteger(n) || n < 0 || n > 20) {
@@ -320,6 +321,7 @@ export async function applyPaidPredictionChange(
     await recalculateUserTotalPoints(admin, user.id);
   }
 
+  revalidateTag(CACHE_TAGS.leaderboard);
   revalidatePath("/dashboard");
   revalidatePath("/pronosticos");
   revalidatePath("/transparencia");

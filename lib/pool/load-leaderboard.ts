@@ -1,5 +1,7 @@
-import { createClient } from "@/lib/supabase/server";
+import { unstable_cache } from "next/cache";
+import { CACHE_TAGS } from "@/lib/cache/tags";
 import { ACTIVE_PARTICIPANT_OR_FILTER } from "@/lib/participants/is-active-participant";
+import { createPublicSupabase } from "@/lib/supabase/public";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export interface LeaderboardRow {
@@ -160,8 +162,16 @@ export async function fetchLeaderboardRows(
   }));
 }
 
+const loadCachedLeaderboardRows = unstable_cache(
+  async () => {
+    const supabase = createPublicSupabase();
+    return fetchLeaderboardRows(supabase);
+  },
+  ["leaderboard-rows"],
+  { revalidate: 30, tags: [CACHE_TAGS.leaderboard] }
+);
+
 export async function loadLeaderboard(): Promise<RankedLeaderboardRow[]> {
-  const supabase = await createClient();
-  const rows = await fetchLeaderboardRows(supabase);
+  const rows = await loadCachedLeaderboardRows();
   return assignCompetitionRanks(rows);
 }

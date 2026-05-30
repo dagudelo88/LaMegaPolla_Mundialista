@@ -6,7 +6,8 @@ import type { MatchPhase } from "@/lib/scoring/calculate-match-points";
 import { recalculateUserMatchPoints } from "@/lib/scoring/process-user-match-points";
 import type { BracketSlot } from "@/lib/bracket/types";
 import { buildGroupResultsFromPredictions, resolveAdvancingThirdGroups } from "@/lib/predictions/helpers";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { CACHE_TAGS } from "@/lib/cache/tags";
 
 const REVALIDATE_PATHS = [
   "/admin",
@@ -18,6 +19,7 @@ const REVALIDATE_PATHS = [
 ] as const;
 
 function revalidateAll() {
+  revalidateTag(CACHE_TAGS.leaderboard);
   for (const path of REVALIDATE_PATHS) {
     revalidatePath(path);
   }

@@ -1,11 +1,10 @@
 import Link from "next/link";
 import { HomeGuestLanding } from "@/components/home/home-guest-landing";
 import { HomeLoggedIn } from "@/components/home/home-logged-in";
-import { getProfile } from "@/lib/auth/require-admin";
+import { Button } from "@/components/ui/button";
+import { getProfile, getSessionUser } from "@/lib/auth/require-admin";
 import { loadHomeDashboardData } from "@/lib/pool/load-home-data";
 import { es } from "@/lib/i18n/es";
-import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/server";
 
 interface HomePageProps {
   searchParams: Promise<{ withdrawn?: string }>;
@@ -13,10 +12,7 @@ interface HomePageProps {
 
 export default async function HomePage({ searchParams }: HomePageProps) {
   const { withdrawn } = await searchParams;
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getSessionUser();
 
   if (user) {
     const profile = await getProfile(user.id);
