@@ -14,9 +14,45 @@ const loadAppConfigMap = unstable_cache(
     }
     return out;
   },
-  ["app-config-map"],
+  ["app-config-map-v2"],
   { revalidate: 300, tags: [CACHE_TAGS.appConfig] }
 );
+
+export function configNumberFromMap(
+  map: Record<string, unknown>,
+  key: string,
+  fallback: number
+): number {
+  const raw = map[key];
+  if (raw === undefined || raw === null) return fallback;
+  if (typeof raw === "number") return raw;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+export function configBooleanFromMap(
+  map: Record<string, unknown>,
+  key: string,
+  fallback: boolean
+): boolean {
+  const raw = map[key];
+  if (raw === undefined || raw === null) return fallback;
+  if (typeof raw === "boolean") return raw;
+  if (raw === "true") return true;
+  if (raw === "false") return false;
+  return fallback;
+}
+
+export function configStringFromMap(
+  map: Record<string, unknown>,
+  key: string,
+  fallback: string
+): string {
+  const raw = map[key];
+  if (raw === undefined || raw === null) return fallback;
+  if (typeof raw === "string") return raw.replace(/^"|"$/g, "");
+  return String(raw);
+}
 
 export async function getConfig<T = unknown>(key: string): Promise<T | null> {
   const all = await loadAppConfigMap();
@@ -24,20 +60,13 @@ export async function getConfig<T = unknown>(key: string): Promise<T | null> {
 }
 
 export async function getConfigNumber(key: string, fallback: number): Promise<number> {
-  const raw = await getConfig<number | string>(key);
-  if (raw === null) return fallback;
-  if (typeof raw === "number") return raw;
-  const n = Number(raw);
-  return Number.isFinite(n) ? n : fallback;
+  const all = await loadAppConfigMap();
+  return configNumberFromMap(all, key, fallback);
 }
 
 export async function getConfigBoolean(key: string, fallback: boolean): Promise<boolean> {
-  const raw = await getConfig<boolean | string>(key);
-  if (raw === null) return fallback;
-  if (typeof raw === "boolean") return raw;
-  if (raw === "true") return true;
-  if (raw === "false") return false;
-  return fallback;
+  const all = await loadAppConfigMap();
+  return configBooleanFromMap(all, key, fallback);
 }
 
 export async function getAllConfig(): Promise<Record<string, unknown>> {
