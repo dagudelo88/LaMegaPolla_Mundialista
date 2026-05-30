@@ -78,8 +78,89 @@ function PredictionTeamSide({
   );
 }
 
+const SCORE_MIN = 0;
+const SCORE_MAX = 20;
+
 const scoreInputClass =
-  "w-[2.5ch] min-w-[2rem] border-0 border-b-2 border-transparent bg-transparent p-0 text-center text-2xl font-bold tabular-nums focus:border-[var(--color-primary)] focus:outline-none disabled:opacity-70 sm:text-3xl";
+  "min-w-[2.25rem] w-9 border-0 bg-transparent p-0 text-center text-2xl font-bold tabular-nums focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none sm:min-w-[2.5rem] sm:w-10 sm:text-3xl";
+
+const scoreStepperButtonClass =
+  "flex h-8 w-7 shrink-0 items-center justify-center rounded-md border border-[var(--color-border)] bg-[var(--color-background)] text-lg font-bold leading-none text-[var(--color-muted-foreground)] transition-colors hover:border-emerald-500/40 hover:text-[var(--color-foreground)] disabled:cursor-not-allowed disabled:opacity-40 sm:h-9 sm:w-8";
+
+function parseScoreValue(value: string): number {
+  if (value === "") return SCORE_MIN;
+  const n = Number(value);
+  if (!Number.isInteger(n)) return SCORE_MIN;
+  return Math.min(SCORE_MAX, Math.max(SCORE_MIN, n));
+}
+
+function ScoreStepper({
+  value,
+  onChange,
+  label,
+  editable,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  label: string;
+  editable: boolean;
+}) {
+  const numeric = parseScoreValue(value);
+
+  if (!editable) {
+    return (
+      <span className="min-w-[2.25rem] text-center text-2xl font-bold tabular-nums sm:min-w-[2.5rem] sm:text-3xl">
+        {value !== "" ? value : "—"}
+      </span>
+    );
+  }
+
+  const step = (delta: number) => {
+    onChange(String(Math.min(SCORE_MAX, Math.max(SCORE_MIN, numeric + delta))));
+  };
+
+  const onInputChange = (raw: string) => {
+    if (raw === "") {
+      onChange("");
+      return;
+    }
+    const n = Number(raw);
+    if (!Number.isInteger(n)) return;
+    onChange(String(Math.min(SCORE_MAX, Math.max(SCORE_MIN, n))));
+  };
+
+  return (
+    <div className="flex items-center gap-0.5">
+      <button
+        type="button"
+        aria-label={`${label} −`}
+        disabled={numeric <= SCORE_MIN}
+        onClick={() => step(-1)}
+        className={scoreStepperButtonClass}
+      >
+        −
+      </button>
+      <input
+        type="number"
+        min={SCORE_MIN}
+        max={SCORE_MAX}
+        value={value}
+        aria-label={label}
+        onChange={(e) => onInputChange(e.target.value)}
+        className={`${scoreInputClass} rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-1`}
+      />
+      <button
+        type="button"
+        aria-label={`${label} +`}
+        disabled={numeric >= SCORE_MAX}
+        onClick={() => step(1)}
+        className={scoreStepperButtonClass}
+      >
+        +
+      </button>
+    </div>
+  );
+}
 
 function scoresMatchInitial(
   h: string,
@@ -333,30 +414,20 @@ export function MatchPredictionCard({
           <PredictionTeamSide team={home} label={homeName} />
         </div>
 
-        <div className="min-w-[5.5rem] text-center">
-          <div className="flex items-baseline justify-center">
-            <label className="sr-only">{es.pronosticos.home}</label>
-            <input
-              type="number"
-              min={0}
-              max={20}
-              value={homeScore}
-              disabled={inputsDisabled}
-              onChange={(e) => onHomeChange(e.target.value)}
-              className={scoreInputClass}
-            />
-            <span className="mx-1 text-[var(--color-muted-foreground)]">-</span>
-            <label className="sr-only">{es.pronosticos.away}</label>
-            <input
-              type="number"
-              min={0}
-              max={20}
-              value={awayScore}
-              disabled={inputsDisabled}
-              onChange={(e) => onAwayChange(e.target.value)}
-              className={scoreInputClass}
-            />
-          </div>
+        <div className="flex items-center justify-center gap-1.5">
+          <ScoreStepper
+            value={homeScore}
+            onChange={onHomeChange}
+            label={es.pronosticos.home}
+            editable={!inputsDisabled}
+          />
+          <span className="text-[var(--color-muted-foreground)]">-</span>
+          <ScoreStepper
+            value={awayScore}
+            onChange={onAwayChange}
+            label={es.pronosticos.away}
+            editable={!inputsDisabled}
+          />
         </div>
 
         <div className="flex justify-center">
