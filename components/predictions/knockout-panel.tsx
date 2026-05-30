@@ -49,6 +49,7 @@ interface KnockoutPanelProps {
   paidChangeBlockReasonByMatchId?: Record<string, PaidChangeBlockReason>;
   changeCosts?: Partial<Record<MatchPhase, number>>;
   changesExhausted?: boolean;
+  onSaved?: () => void;
 }
 
 function slotLabel(slot: BracketSlot): string {
@@ -81,6 +82,7 @@ export function KnockoutPanel({
   paidChangeBlockReasonByMatchId,
   changeCosts,
   changesExhausted,
+  onSaved,
 }: KnockoutPanelProps) {
   const teamMap = useMemo(() => new Map(teams.map((t) => [t.id, t])), [teams]);
   const predMap = useMemo(() => new Map(predictions.map((p) => [p.match_id, p])), [predictions]);
@@ -175,16 +177,14 @@ export function KnockoutPanel({
                     initialAway={pred ? pred.predicted_away : ""}
                     initialAdvancesTeamId={pred?.predicted_advances_team_id ?? null}
                     predictionId={pred?.id}
-                    disabled={
-                      disabled ||
-                      teamsResolved?.unresolved === true ||
-                      (!!paidChangeMode && !!changesExhausted)
-                    }
-                    paidChangeMode={paidChangeMode && !changesExhausted}
+                    disabled={disabled || teamsResolved?.unresolved === true}
+                    paidChangeMode={paidChangeMode}
                     paidChangeEligible={paidChangeEligibleByMatchId?.[m.id] ?? false}
                     paidChangeBlockReason={paidChangeBlockReasonByMatchId?.[m.id]}
+                    changesExhausted={changesExhausted}
                     changeCost={changeCosts?.[phase]}
                     adminOverridden={pred?.admin_overridden}
+                    onSaved={onSaved}
                   />
                 );
               })}

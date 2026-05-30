@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { TeamFlag } from "@/components/predictions/team-flag";
 import { submitFullTournament } from "@/app/actions/predictions";
 import { resolveTournamentPodium } from "@/lib/bracket/knockout-resolver";
@@ -119,6 +120,7 @@ export function SubmissionSummary({
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const router = useRouter();
 
   const teamMap = useMemo(() => new Map(teams.map((t) => [t.id, t])), [teams]);
 
@@ -166,6 +168,7 @@ export function SubmissionSummary({
         await submitFullTournament();
         setSuccess(true);
         setError(null);
+        router.refresh();
       } catch (e) {
         setSuccess(false);
         setError(e instanceof Error ? e.message : es.pronosticos.saveError);

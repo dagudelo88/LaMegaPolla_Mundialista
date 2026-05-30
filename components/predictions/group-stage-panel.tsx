@@ -36,6 +36,7 @@ interface GroupStagePanelProps {
   paidChangeBlockReasonByMatchId?: Record<string, PaidChangeBlockReason>;
   changeCost?: number;
   changesExhausted?: boolean;
+  onSaved?: () => void;
 }
 
 export function GroupStagePanel({
@@ -47,6 +48,7 @@ export function GroupStagePanel({
   paidChangeBlockReasonByMatchId,
   changeCost,
   changesExhausted,
+  onSaved,
 }: GroupStagePanelProps) {
   const predMap = new Map(predictions.map((p) => [p.match_id, p]));
   const groupMatches = matches.filter((m) => m.phase === "group_stage");
@@ -81,12 +83,14 @@ export function GroupStagePanel({
                     initialAway={pred ? pred.predicted_away : ""}
                     initialAdvancesTeamId={pred?.predicted_advances_team_id ?? null}
                     predictionId={pred?.id}
-                    disabled={disabled && (!paidChangeMode || !!changesExhausted)}
-                    paidChangeMode={paidChangeMode && !changesExhausted}
+                    disabled={disabled && !paidChangeMode}
+                    paidChangeMode={paidChangeMode}
                     paidChangeEligible={paidChangeEligibleByMatchId?.[m.id] ?? false}
                     paidChangeBlockReason={paidChangeBlockReasonByMatchId?.[m.id]}
+                    changesExhausted={changesExhausted}
                     changeCost={changeCost}
                     adminOverridden={pred?.admin_overridden}
+                    onSaved={onSaved}
                   />
                 );
               })}

@@ -4,13 +4,17 @@ import { formatProfileRoles } from "@/lib/auth/roles";
 import { MyPollSummary } from "@/components/dashboard/my-poll-summary";
 import { BugReportForm } from "@/components/bugs/bug-report-form";
 import { Button } from "@/components/ui/button";
+import { loadChangeAvailability } from "@/lib/changes/load-change-availability";
 import { loadDashboardData } from "@/lib/pool/load-dashboard-data";
 import { es } from "@/lib/i18n/es";
 
 export default async function DashboardPage() {
   const user = await requireUser();
   const profile = await getProfile(user.id);
-  const dashboardData = await loadDashboardData(user.id, profile?.username ?? null);
+  const [dashboardData, changeAvailability] = await Promise.all([
+    loadDashboardData(user.id, profile?.username ?? null),
+    loadChangeAvailability(user.id),
+  ]);
 
   return (
     <section className="space-y-8">
@@ -30,6 +34,7 @@ export default async function DashboardPage() {
       <MyPollSummary
         totalPoints={profile?.total_points ?? 0}
         data={dashboardData}
+        changeAvailability={changeAvailability}
       />
 
       <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-6">

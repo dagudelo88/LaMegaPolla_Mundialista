@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { AdminPredictionOverrideForm } from "@/components/admin/admin-prediction-override-form";
 import { es } from "@/lib/i18n/es";
 import {
+  formatAppDateTime,
   formatMatchDateHeader,
   formatMatchDateSortKey,
 } from "@/lib/matches/format-datetime";
@@ -111,7 +112,7 @@ export function AdminUserPredictionsPanel({
                 className="border-b border-[var(--color-border)] pb-2 last:border-0"
               >
                 <span className="text-[var(--color-muted-foreground)]">
-                  {new Date(row.created_at).toLocaleString("es")}
+                  {formatAppDateTime(row.created_at)}
                 </span>
                 {" · "}
                 {row.old_home ?? "—"}-{row.old_away ?? "—"} → {row.new_home}-{row.new_away}

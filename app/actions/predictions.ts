@@ -2,6 +2,8 @@
 
 import { requireUser } from "@/lib/auth/require-admin";
 import { getPaidChangeCost } from "@/lib/changes/paid-change-cost";
+import { countPaidChangesToday } from "@/lib/changes/count-paid-changes-today";
+import { getTournamentTodayKey } from "@/lib/changes/tournament-today";
 import { getConfig } from "@/lib/config/get-config";
 import { getConfigNumber } from "@/lib/config/get-config";
 import type { BracketSlot } from "@/lib/bracket/types";
@@ -211,15 +213,11 @@ export async function applyPaidPredictionChange(
   if (!submitted) throw new Error("not_submitted_yet");
 
   const maxPerDay = await getConfigNumber("changes.max_per_day", 1);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = getTournamentTodayKey();
 
-  const { count } = await supabase
-    .from("prediction_changes")
-    .select("*", { count: "exact", head: true })
-    .eq("user_id", user.id)
-    .eq("change_date", today);
+  const changesToday = await countPaidChangesToday(supabase, user.id);
 
-  if ((count ?? 0) >= maxPerDay) {
+  if (changesToday >= maxPerDay) {
     throw new Error("daily_limit_reached");
   }
 
@@ -376,11 +374,7 @@ export async function loadPronosticosData(userId: string) {
     .eq("id", userId)
     .single();
 
-  const { count: changesToday } = await supabase
-    .from("prediction_changes")
-    .select("*", { count: "exact", head: true })
-    .eq("user_id", userId)
-    .eq("change_date", new Date().toISOString().slice(0, 10));
+  const changesToday = await countPaidChangesToday(supabase, userId);
 
   const groupResults = buildGroupResultsFromPredictions(
     (matches ?? []) as Parameters<typeof buildGroupResultsFromPredictions>[0],
@@ -407,7 +401,7 @@ export async function loadPronosticosData(userId: string) {
     isSubmitted: submission?.is_complete ?? false,
     submittedAt: submission?.submitted_at ?? null,
     totalPoints: profile?.total_points ?? 0,
-    changesUsedToday: changesToday ?? 0,
+    changesUsedToday: changesToday,
     paidChangeEligibleByMatchId,
     paidChangeBlockReasonByMatchId,
     groupResults,

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { PronosticosPayload } from "@/app/actions/predictions";
 import { BracketSimulatorPanel } from "@/components/predictions/bracket-simulator-panel";
 import { GroupStagePanel } from "@/components/predictions/group-stage-panel";
@@ -9,6 +10,8 @@ import { LockedStateBanner } from "@/components/predictions/locked-state-banner"
 import { SubmissionSummary } from "@/components/predictions/submission-summary";
 import { countProgress } from "@/lib/predictions/helpers";
 import { es } from "@/lib/i18n/es";
+import { formatAppDateTime } from "@/lib/matches/format-datetime";
+import { Button } from "@/components/ui/button";
 import type { MatchPhase } from "@/types/database";
 
 type Tab = "groups" | "bracket" | "knockout" | "summary";
@@ -20,7 +23,8 @@ interface PronosticosShellProps {
 }
 
 export function PronosticosShell({ data, maxChangesPerDay, changeCosts }: PronosticosShellProps) {
-  const [tab, setTab] = useState<Tab>("groups");
+  const router = useRouter();
+  const [tab, setTab] = useState<Tab>(data.isSubmitted ? "groups" : "groups");
 
   const groupMatchIds = useMemo(
     () => data.matches.filter((m) => m.phase === "group_stage").map((m) => m.id),
@@ -36,6 +40,9 @@ export function PronosticosShell({ data, maxChangesPerDay, changeCosts }: Pronos
   const deadlinePassed = new Date() >= new Date(data.globalDeadline);
   const groupComplete = progress.groupDone >= progress.groupTotal && progress.groupTotal > 0;
   const knockoutUnlocked = groupComplete;
+  const changesExhausted = data.changesUsedToday >= maxChangesPerDay;
+
+  const handleSaved = () => router.refresh();
 
   const tabs: { id: Tab; label: string }[] = [
     { id: "groups", label: es.pronosticos.tabGroups },
@@ -53,7 +60,7 @@ export function PronosticosShell({ data, maxChangesPerDay, changeCosts }: Pronos
       <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-4">
         <p className="text-sm text-[var(--color-muted-foreground)]">
           {es.pronosticos.deadline}:{" "}
-          <strong>{new Date(data.globalDeadline).toLocaleString("es")}</strong>
+          <strong>{formatAppDateTime(data.globalDeadline)}</strong>
         </p>
         <p className="mt-2 text-sm">
           {es.pronosticos.progress}: {progress.groupDone}/{progress.groupTotal}{" "}
@@ -89,6 +96,20 @@ export function PronosticosShell({ data, maxChangesPerDay, changeCosts }: Pronos
         ))}
       </nav>
 
+      {data.isSubmitted && (tab === "bracket" || tab === "summary") && (
+        <div className="rounded-lg border border-[var(--color-accent)]/30 bg-[var(--color-accent)]/5 p-4">
+          <p className="text-sm">{es.pronosticos.paidChangeTabHint}</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button type="button" size="sm" variant="outline" onClick={() => setTab("groups")}>
+              {es.pronosticos.tabGroups}
+            </Button>
+            <Button type="button" size="sm" variant="outline" onClick={() => setTab("knockout")}>
+              {es.pronosticos.tabKnockout}
+            </Button>
+          </div>
+        </div>
+      )}
+
       {tab === "groups" && (
         <GroupStagePanel
           matches={data.matches}
@@ -98,7 +119,8 @@ export function PronosticosShell({ data, maxChangesPerDay, changeCosts }: Pronos
           paidChangeEligibleByMatchId={data.paidChangeEligibleByMatchId}
           paidChangeBlockReasonByMatchId={data.paidChangeBlockReasonByMatchId}
           changeCost={changeCosts.group_stage}
-          changesExhausted={data.changesUsedToday >= maxChangesPerDay}
+          changesExhausted={changesExhausted}
+          onSaved={handleSaved}
         />
       )}
 
@@ -118,13 +140,14 @@ export function PronosticosShell({ data, maxChangesPerDay, changeCosts }: Pronos
           groupResults={data.groupResults}
           advancingThirdGroups={data.advancingThirdGroups}
           knockoutDefs={data.knockoutDefs}
-          disabled={data.isSubmitted && data.changesUsedToday >= maxChangesPerDay}
+          disabled={false}
           unlocked={knockoutUnlocked || data.isSubmitted}
           paidChangeMode={data.isSubmitted}
           paidChangeEligibleByMatchId={data.paidChangeEligibleByMatchId}
           paidChangeBlockReasonByMatchId={data.paidChangeBlockReasonByMatchId}
           changeCosts={changeCosts}
-          changesExhausted={data.changesUsedToday >= maxChangesPerDay}
+          changesExhausted={changesExhausted}
+          onSaved={handleSaved}
         />
       )}
 

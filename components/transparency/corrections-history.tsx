@@ -6,6 +6,7 @@ import {
   type TransparencyFilter,
 } from "@/app/actions/transparency";
 import { es } from "@/lib/i18n/es";
+import { formatAppDateTime } from "@/lib/matches/format-datetime";
 import type { TransparencyEntry } from "@/types/database";
 import { Button } from "@/components/ui/button";
 
@@ -99,7 +100,7 @@ export function CorrectionsHistory({
                   {kindLabel(entry.kind)}
                 </span>
                 <span className="text-[var(--color-muted-foreground)]">
-                  {new Date(entry.createdAt).toLocaleString("es")}
+                  {formatAppDateTime(entry.createdAt)}
                 </span>
               </div>
               <p className="mt-2 text-sm">

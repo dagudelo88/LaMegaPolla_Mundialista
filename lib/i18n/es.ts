@@ -116,6 +116,7 @@ export const es = {
     paidChangesMatch: "Partido",
     paidChangesChange: "Cambio",
     paidChangesPoints: "Puntos",
+    paidChangeGoToPredictions: "Ir a cambiar un pronóstico",
     pendingJoin: "Debes canjear tu código de invitación para participar.",
     goJoin: "Ir a unirme",
   },
@@ -173,9 +174,22 @@ export const es = {
     paidChange: "Cambio pagado",
     paidChangeCost: "Costo",
     paidChangeUsed: "Ya usaste tu cambio de hoy",
+    paidChangeAvailable: "Tienes {count} cambio disponible hoy",
+    paidChangeAvailableHint:
+      "Cuesta 3 pts en fase de grupos y 9 pts desde octavos de final (REGLAS §5). Hazlo en Fase de grupos o Eliminatorias.",
+    paidChangeExhaustedHint: "Podrás cambiar de nuevo mañana (hora Colombia).",
+    paidChangeGoToPredictions: "Ir a cambiar un pronóstico",
+    paidChangeTabHint:
+      "Para gastar puntos en un cambio, ve a Fase de grupos o Eliminatorias.",
     paidChangeSameDayBlocked: "No puedes cambiar partidos que se juegan hoy.",
+    paidChangeLocked: "El plazo para cambiar este partido ya cerró.",
     paidChangeNotScheduled: "Este partido ya no admite cambios pagos.",
     paidChangeConfirm: "¿Gastar {cost} pts para cambiar {before} → {after}?",
+    paidChangeStart: "Cambiar marcador",
+    paidChangeApply: "Confirmar cambio pagado",
+    paidChangeCancel: "Cancelar",
+    paidChangeUnchanged: "El marcador es igual al actual. Modifica al menos un valor.",
+    paidChangeEditingHint: "Ajusta el marcador y confirma cuando estés listo. No se guarda hasta que pulses confirmar.",
     adminOverriddenBadge: "Ajustado por administrador",
     insufficientPoints: "Puntos insuficientes",
     notSubmittedYet: "Debes enviar tu pronóstico completo antes del inicio del torneo.",
@@ -195,7 +209,7 @@ export const es = {
   },
   fixture: {
     scheduleTitle: "Programación oficial",
-    scheduleSubtitle: "Calendario completo del Mundial 2026: fechas, horarios y sedes (hora Ciudad de México).",
+    scheduleSubtitle: "Calendario completo del Mundial 2026: fechas, horarios y sedes (hora Colombia).",
     resultsTitle: "Resultados oficiales",
     resultsSubtitle:
       "Marcadores reales después de 90 minutos. Solo el administrador carga los resultados oficiales.",
@@ -318,6 +332,7 @@ export const es = {
     pointsSpent: "−{count} pts",
     loadMore: "Cargar más",
     byAdmin: "por @{username}",
+    todayAvailability: "Tu cambio de hoy",
   },
   errors: {
     generic: "Algo salió mal. Inténtalo de nuevo.",
