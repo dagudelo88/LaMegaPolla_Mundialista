@@ -14,7 +14,7 @@
 }
 
 body {
-  background: var(--color-background);
+  background: transparent;
   color: var(--color-foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
   min-height: 100dvh;

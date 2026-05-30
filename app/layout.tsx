@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import "./globals.css";
+import { SiteBackground } from "@/components/layout/site-background";
 import { MainNav } from "@/components/nav/main-nav";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/auth/require-admin";
@@ -39,7 +40,8 @@ export default async function RootLayout({
 
   return (
     <html lang="es">
-      <body className={`${geistSans.variable} antialiased`}>
+      <body className={`${geistSans.variable} relative min-h-dvh antialiased`}>
+        <SiteBackground />
         <MainNav
           isAuthenticated={Boolean(user)}
           inviteComplete={inviteComplete}
