@@ -5,6 +5,8 @@ import {
   loadTransparencyHistory,
   type TransparencyFilter,
 } from "@/app/actions/transparency";
+import { TeamWithFlag } from "@/components/predictions/team-flag";
+import { ScoreChangeDisplay } from "@/components/transparency/score-change-display";
 import { es } from "@/lib/i18n/es";
 import { formatAppDateTime } from "@/lib/matches/format-datetime";
 import type { TransparencyEntry } from "@/types/database";
@@ -27,6 +29,39 @@ function kindBadgeClass(kind: TransparencyEntry["kind"]): string {
   if (kind === "paid_change") return "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200";
   if (kind === "admin_prediction") return "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200";
   return "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200";
+}
+
+function MatchHeader({ entry }: { entry: TransparencyEntry }) {
+  return (
+    <div className="mt-2 space-y-2">
+      <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-muted-foreground)]">
+        {entry.matchLabel}
+      </p>
+      {entry.homeTeam && entry.awayTeam ? (
+        <div className="flex flex-wrap items-center justify-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 sm:justify-start">
+          <TeamWithFlag
+            name={entry.homeTeam.name}
+            fifaCode={entry.homeTeam.fifaCode}
+            align="left"
+            flagSize="sm"
+            layout="inline"
+          />
+          <span className="text-xs font-semibold text-[var(--color-muted-foreground)]">
+            {es.pronosticos.vs}
+          </span>
+          <TeamWithFlag
+            name={entry.awayTeam.name}
+            fifaCode={entry.awayTeam.fifaCode}
+            align="left"
+            flagSize="sm"
+            layout="inline"
+          />
+        </div>
+      ) : (
+        <p className="text-sm text-[var(--color-muted-foreground)]">{entry.matchLabel}</p>
+      )}
+    </div>
+  );
 }
 
 interface CorrectionsHistoryProps {
@@ -103,19 +138,22 @@ export function CorrectionsHistory({
                   {formatAppDateTime(entry.createdAt)}
                 </span>
               </div>
-              <p className="mt-2 text-sm">
-                {entry.kind !== "result_correction" && (
-                  <>
-                    <strong>@{entry.playerUsername}</strong>
-                    {" · "}
-                  </>
-                )}
-                {entry.matchLabel}
-              </p>
-              <p className="mt-1 font-mono text-sm">
-                {entry.beforeScore} → {entry.afterScore}
-              </p>
-              <p className="mt-1 text-sm">
+
+              {entry.kind !== "result_correction" && (
+                <p className="mt-2 text-sm">
+                  <strong>@{entry.playerUsername}</strong>
+                </p>
+              )}
+
+              <MatchHeader entry={entry} />
+
+              <ScoreChangeDisplay
+                homeTeam={entry.homeTeam}
+                awayTeam={entry.awayTeam}
+                scoreChange={entry.scoreChange}
+              />
+
+              <p className="mt-3 text-sm">
                 {entry.kind === "paid_change" && entry.pointsSpent != null ? (
                   <span className="font-semibold text-red-600">
                     {es.transparency.pointsSpent.replace("{count}", String(entry.pointsSpent))}

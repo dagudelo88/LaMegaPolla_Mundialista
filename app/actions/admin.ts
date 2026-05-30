@@ -17,6 +17,7 @@ const REVALIDATE_PATHS = [
   "/dashboard",
   "/programacion",
   "/pronosticos",
+  "/jugador",
 ] as const;
 
 function revalidatePublicPaths() {
@@ -209,4 +210,34 @@ export async function resolveOfficialKnockoutBracket() {
 
   revalidatePublicPaths();
   return result;
+}
+
+export async function setPublicPredictionsEnabled(enabled: boolean) {
+  const { user } = await requireAdmin();
+  const admin = createAdminClient();
+
+  const { error } = await admin
+    .from("app_config")
+    .upsert(
+      {
+        key: "pool.public_predictions_enabled",
+        value: enabled,
+        description: "Permite a participantes ver pronósticos ajenos desde la tabla de posiciones",
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "key" }
+    );
+
+  if (error) throw new Error(error.message);
+
+  await admin.from("admin_actions").insert({
+    admin_id: user.id,
+    action: "set_public_predictions_enabled",
+    target_type: "app_config",
+    target_id: "pool.public_predictions_enabled",
+    details: { enabled },
+  });
+
+  revalidatePublicPaths();
+  revalidatePath("/admin");
 }

@@ -112,6 +112,20 @@ export type TransparencyEntryKind =
   | "admin_prediction"
   | "result_correction";
 
+export interface TransparencyMatchTeam {
+  name: string;
+  fifaCode: string;
+}
+
+export interface TransparencyScoreChange {
+  beforeHome: number | null;
+  beforeAway: number | null;
+  afterHome: number | null;
+  afterAway: number | null;
+  beforeAdvancesTeam: TransparencyMatchTeam | null;
+  afterAdvancesTeam: TransparencyMatchTeam | null;
+}
+
 export interface TransparencyEntry {
   id: string;
   kind: TransparencyEntryKind;
@@ -120,8 +134,12 @@ export interface TransparencyEntry {
   actorUsername?: string;
   matchNumber: number | null;
   matchLabel: string;
+  phaseLabel: string | null;
+  homeTeam: TransparencyMatchTeam | null;
+  awayTeam: TransparencyMatchTeam | null;
   beforeScore: string;
   afterScore: string;
+  scoreChange: TransparencyScoreChange;
   pointsSpent?: number;
   reason?: string;
 }

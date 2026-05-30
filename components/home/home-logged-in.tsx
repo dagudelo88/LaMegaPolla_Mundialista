@@ -38,7 +38,7 @@ function PrizeCard({
   );
 }
 
-export function HomeLoggedIn({ username, leaderboard, pool }: HomeLoggedInProps) {
+export function HomeLoggedIn({ username, leaderboard, pool, playerLinksEnabled }: HomeLoggedInProps) {
   const fmt = (n: number) => formatPoolAmount(n, pool.currency);
 
   return (
@@ -106,10 +106,14 @@ export function HomeLoggedIn({ username, leaderboard, pool }: HomeLoggedInProps)
         <div className="mb-4">
           <h2 className="text-lg font-semibold">{es.landing.leaderboardTitle}</h2>
           <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
-            {es.landing.leaderboardHint}
+            {playerLinksEnabled ? es.landing.leaderboardHintWithLinks : es.landing.leaderboardHint}
           </p>
         </div>
-        <LeaderboardTable rows={leaderboard} />
+        <LeaderboardTable
+          rows={leaderboard}
+          highlightUsername={username}
+          playerLinksEnabled={playerLinksEnabled}
+        />
       </div>
     </section>
   );

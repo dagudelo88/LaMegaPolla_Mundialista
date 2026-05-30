@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export interface LeaderboardRow {
+  id: string;
   username: string;
   total_points: number;
   plenos_count: number;
@@ -118,6 +119,7 @@ export async function fetchLeaderboardRows(
   }
 
   return active.map((p) => ({
+    id: p.id,
     username: p.username,
     total_points: p.total_points,
     plenos_count: plenosByUser.get(p.id) ?? 0,

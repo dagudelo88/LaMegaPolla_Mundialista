@@ -20,11 +20,22 @@ interface PronosticosShellProps {
   data: PronosticosPayload;
   maxChangesPerDay: number;
   changeCosts: Partial<Record<MatchPhase, number>>;
+  mode?: "edit" | "view";
+  viewUsername?: string;
+  viewRank?: number | null;
 }
 
-export function PronosticosShell({ data, maxChangesPerDay, changeCosts }: PronosticosShellProps) {
+export function PronosticosShell({
+  data,
+  maxChangesPerDay,
+  changeCosts,
+  mode = "edit",
+  viewUsername,
+  viewRank,
+}: PronosticosShellProps) {
   const router = useRouter();
-  const [tab, setTab] = useState<Tab>(data.isSubmitted ? "groups" : "groups");
+  const isViewMode = mode === "view";
+  const [tab, setTab] = useState<Tab>("groups");
 
   const groupMatchIds = useMemo(
     () => data.matches.filter((m) => m.phase === "group_stage").map((m) => m.id),
@@ -39,17 +50,23 @@ export function PronosticosShell({ data, maxChangesPerDay, changeCosts }: Pronos
 
   const deadlinePassed = new Date() >= new Date(data.globalDeadline);
   const groupComplete = progress.groupDone >= progress.groupTotal && progress.groupTotal > 0;
-  const knockoutUnlocked = groupComplete;
+  const knockoutUnlocked = groupComplete || isViewMode;
   const changesExhausted = data.changesUsedToday >= maxChangesPerDay;
 
   const handleSaved = () => router.refresh();
 
-  const tabs: { id: Tab; label: string }[] = [
-    { id: "groups", label: es.pronosticos.tabGroups },
-    { id: "bracket", label: es.pronosticos.tabBracket },
-    { id: "knockout", label: es.pronosticos.tabKnockout },
-    { id: "summary", label: es.pronosticos.tabSummary },
-  ];
+  const tabs: { id: Tab; label: string }[] = isViewMode
+    ? [
+        { id: "groups", label: es.pronosticos.tabGroups },
+        { id: "bracket", label: es.pronosticos.tabBracket },
+        { id: "knockout", label: es.pronosticos.tabKnockout },
+      ]
+    : [
+        { id: "groups", label: es.pronosticos.tabGroups },
+        { id: "bracket", label: es.pronosticos.tabBracket },
+        { id: "knockout", label: es.pronosticos.tabKnockout },
+        { id: "summary", label: es.pronosticos.tabSummary },
+      ];
 
   if (!data.matches.length) {
     return <p className="text-sm">{es.pronosticos.noMatches}</p>;
@@ -57,20 +74,46 @@ export function PronosticosShell({ data, maxChangesPerDay, changeCosts }: Pronos
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-4">
-        <p className="text-sm text-[var(--color-muted-foreground)]">
-          {es.pronosticos.deadline}:{" "}
-          <strong>{formatAppDateTime(data.globalDeadline)}</strong>
-        </p>
-        <p className="mt-2 text-sm">
-          {es.pronosticos.progress}: {progress.groupDone}/{progress.groupTotal}{" "}
-          {es.pronosticos.groupProgress.toLowerCase()} · {progress.thirdPlaceDone}/8{" "}
-          {es.pronosticos.thirdProgress.toLowerCase()} · {progress.knockoutDone}/
-          {progress.knockoutTotal} {es.pronosticos.knockoutProgress.toLowerCase()}
-        </p>
-      </div>
+      {isViewMode && viewUsername && (
+        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-4">
+          <p className="text-sm text-[var(--color-muted-foreground)]">
+            {es.playerPredictions.viewingLabel}{" "}
+            <strong className="text-[var(--color-foreground)]">@{viewUsername}</strong>
+            {viewRank != null && (
+              <>
+                {" "}
+                · {es.playerPredictions.rankLabel} #{viewRank}
+              </>
+            )}
+          </p>
+          <p className="mt-2 text-sm">
+            {es.playerPredictions.pointsLabel}:{" "}
+            <strong className="tabular-nums">{data.totalPoints}</strong>
+            {!data.isSubmitted && (
+              <span className="ml-2 text-[var(--color-muted-foreground)]">
+                ({es.playerPredictions.notSubmitted})
+              </span>
+            )}
+          </p>
+        </div>
+      )}
 
-      {data.isSubmitted && (
+      {!isViewMode && (
+        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-4">
+          <p className="text-sm text-[var(--color-muted-foreground)]">
+            {es.pronosticos.deadline}:{" "}
+            <strong>{formatAppDateTime(data.globalDeadline)}</strong>
+          </p>
+          <p className="mt-2 text-sm">
+            {es.pronosticos.progress}: {progress.groupDone}/{progress.groupTotal}{" "}
+            {es.pronosticos.groupProgress.toLowerCase()} · {progress.thirdPlaceDone}/8{" "}
+            {es.pronosticos.thirdProgress.toLowerCase()} · {progress.knockoutDone}/
+            {progress.knockoutTotal} {es.pronosticos.knockoutProgress.toLowerCase()}
+          </p>
+        </div>
+      )}
+
+      {!isViewMode && data.isSubmitted && (
         <LockedStateBanner
           submittedAt={data.submittedAt}
           totalPoints={data.totalPoints}
@@ -96,7 +139,7 @@ export function PronosticosShell({ data, maxChangesPerDay, changeCosts }: Pronos
         ))}
       </nav>
 
-      {data.isSubmitted && (tab === "bracket" || tab === "summary") && (
+      {!isViewMode && data.isSubmitted && (tab === "bracket" || tab === "summary") && (
         <div className="rounded-lg border border-[var(--color-accent)]/30 bg-[var(--color-accent)]/5 p-4">
           <p className="text-sm">{es.pronosticos.paidChangeTabHint}</p>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -114,13 +157,13 @@ export function PronosticosShell({ data, maxChangesPerDay, changeCosts }: Pronos
         <GroupStagePanel
           matches={data.matches}
           predictions={data.predictions}
-          disabled={data.isSubmitted}
-          paidChangeMode={data.isSubmitted}
+          disabled={isViewMode || data.isSubmitted}
+          paidChangeMode={!isViewMode && data.isSubmitted}
           paidChangeEligibleByMatchId={data.paidChangeEligibleByMatchId}
           paidChangeBlockReasonByMatchId={data.paidChangeBlockReasonByMatchId}
           changeCost={changeCosts.group_stage}
           changesExhausted={changesExhausted}
-          onSaved={handleSaved}
+          onSaved={isViewMode ? undefined : handleSaved}
         />
       )}
 
@@ -128,7 +171,7 @@ export function PronosticosShell({ data, maxChangesPerDay, changeCosts }: Pronos
         <BracketSimulatorPanel
           teams={data.teams}
           groupResults={data.groupResults}
-          groupComplete={groupComplete}
+          groupComplete={groupComplete || isViewMode}
         />
       )}
 
@@ -140,18 +183,18 @@ export function PronosticosShell({ data, maxChangesPerDay, changeCosts }: Pronos
           groupResults={data.groupResults}
           advancingThirdGroups={data.advancingThirdGroups}
           knockoutDefs={data.knockoutDefs}
-          disabled={false}
+          disabled={isViewMode}
           unlocked={knockoutUnlocked || data.isSubmitted}
-          paidChangeMode={data.isSubmitted}
+          paidChangeMode={!isViewMode && data.isSubmitted}
           paidChangeEligibleByMatchId={data.paidChangeEligibleByMatchId}
           paidChangeBlockReasonByMatchId={data.paidChangeBlockReasonByMatchId}
           changeCosts={changeCosts}
           changesExhausted={changesExhausted}
-          onSaved={handleSaved}
+          onSaved={isViewMode ? undefined : handleSaved}
         />
       )}
 
-      {tab === "summary" && (
+      {!isViewMode && tab === "summary" && (
         <SubmissionSummary
           groupDone={progress.groupDone}
           groupTotal={progress.groupTotal}

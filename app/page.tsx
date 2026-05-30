@@ -21,6 +21,7 @@ export default async function HomePage() {
           username={profile.username}
           leaderboard={homeData.leaderboard}
           pool={homeData.pool}
+          playerLinksEnabled={homeData.playerLinksEnabled}
         />
       );
     }

@@ -20,6 +20,15 @@ export async function getConfigNumber(key: string, fallback: number): Promise<nu
   return Number.isFinite(n) ? n : fallback;
 }
 
+export async function getConfigBoolean(key: string, fallback: boolean): Promise<boolean> {
+  const raw = await getConfig<boolean | string>(key);
+  if (raw === null) return fallback;
+  if (typeof raw === "boolean") return raw;
+  if (raw === "true") return true;
+  if (raw === "false") return false;
+  return fallback;
+}
+
 export async function getAllConfig(): Promise<Record<string, unknown>> {
   const supabase = await createClient();
   const { data } = await supabase.from("app_config").select("key, value");

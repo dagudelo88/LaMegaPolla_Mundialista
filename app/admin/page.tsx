@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { AdminPlayerPredictionsSection } from "@/components/admin/admin-player-predictions-section";
 import { AdminPodiumTies } from "@/components/admin/admin-podium-ties";
+import { AdminPublicPredictionsToggle } from "@/components/admin/admin-public-predictions-toggle";
 import { InviteGenerator } from "@/components/admin/invite-generator";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { formatProfileRoles } from "@/lib/auth/roles";
 import { loadHomeDashboardData } from "@/lib/pool/load-home-data";
+import { isPublicPredictionsEnabled } from "@/lib/pool/public-predictions-access";
 import { getPodiumTies } from "@/lib/pool/load-leaderboard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { es } from "@/lib/i18n/es";
@@ -18,7 +20,7 @@ export default async function AdminPage({ searchParams }: PageProps) {
   const { jugador } = await searchParams;
   const admin = createAdminClient();
 
-  const [{ data: codes }, { data: users }, homeData] = await Promise.all([
+  const [{ data: codes }, { data: users }, homeData, publicPredictionsEnabled] = await Promise.all([
     admin
       .from("invitation_codes")
       .select("code, uses_count, max_uses, created_at, expires_at")
@@ -29,6 +31,7 @@ export default async function AdminPage({ searchParams }: PageProps) {
       .select("id, username, role, is_admin, invite_redeemed_at, total_points, joined_at")
       .order("joined_at", { ascending: true }),
     loadHomeDashboardData(),
+    isPublicPredictionsEnabled(),
   ]);
 
   const podiumTies = getPodiumTies(homeData.leaderboard, {
@@ -45,6 +48,8 @@ export default async function AdminPage({ searchParams }: PageProps) {
           {es.admin.dashboardHint}
         </p>
       </header>
+
+      <AdminPublicPredictionsToggle enabled={publicPredictionsEnabled} />
 
       <AdminPlayerPredictionsSection selectedPlayerId={jugador} />
 

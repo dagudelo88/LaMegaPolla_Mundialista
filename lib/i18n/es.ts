@@ -41,6 +41,8 @@ export const es = {
     leaderboardTitle: "Tabla de posiciones",
     leaderboardHint:
       "Desempate en la tabla: plenos (10/20), luego menor cantidad de puntos gastados en cambios. Si persiste el empate, comparten puesto y reparten el pool (REGLAS §8).",
+    leaderboardHintWithLinks:
+      "Haz clic en la posición o el nickname para ver los pronósticos de un jugador.",
     leaderboardEmpty: "Aún no hay participantes activos.",
     leaderboardNickname: "Nickname",
     leaderboardPoints: "Puntos",
@@ -308,6 +310,22 @@ export const es = {
     overrideSuccessRecalc: "Pronóstico corregido y puntos recalculados.",
     overrideHistory: "Historial de correcciones",
     noOverrideHistory: "Sin correcciones registradas.",
+    publicPredictionsTitle: "Ver pronósticos de otros jugadores",
+    publicPredictionsHint:
+      "Cuando está activado, los participantes pueden abrir los pronósticos de otros desde la tabla de posiciones (solo lectura).",
+    publicPredictionsOn: "Estado: activado",
+    publicPredictionsOff: "Estado: desactivado",
+    publicPredictionsEnable: "Activar",
+    publicPredictionsDisable: "Desactivar",
+  },
+  playerPredictions: {
+    title: "Pronósticos del jugador",
+    subtitle: "Vista de solo lectura. No puedes editar los marcadores de otro participante.",
+    backToLeaderboard: "← Tabla de posiciones",
+    viewingLabel: "Pronósticos de",
+    rankLabel: "Posición",
+    pointsLabel: "Puntos",
+    notSubmitted: "Polla no enviada aún",
   },
   transparency: {
     title: "Historial de cambios",
@@ -333,6 +351,12 @@ export const es = {
     loadMore: "Cargar más",
     byAdmin: "por @{username}",
     todayAvailability: "Tu cambio de hoy",
+    scoreChangeTitle: "Cambio de marcador",
+    beforeLabel: "Antes",
+    afterLabel: "Después",
+    homeTeam: "Local",
+    awayTeam: "Visitante",
+    advancePick: "Equipo que avanza (penales)",
   },
   errors: {
     generic: "Algo salió mal. Inténtalo de nuevo.",

@@ -1,16 +1,21 @@
 import { getConfig, getConfigNumber } from "@/lib/config/get-config";
 import { calculatePoolPayouts, type PoolPayouts } from "@/lib/pool/calculate-pool";
 import { loadLeaderboard, type RankedLeaderboardRow } from "@/lib/pool/load-leaderboard";
+import { isPublicPredictionsEnabled } from "@/lib/pool/public-predictions-access";
 
 export type LeaderboardRow = RankedLeaderboardRow;
 
 export interface HomeDashboardData {
   leaderboard: LeaderboardRow[];
   pool: PoolPayouts;
+  playerLinksEnabled: boolean;
 }
 
 export async function loadHomeDashboardData(): Promise<HomeDashboardData> {
-  const leaderboard = await loadLeaderboard();
+  const [leaderboard, playerLinksEnabled] = await Promise.all([
+    loadLeaderboard(),
+    isPublicPredictionsEnabled(),
+  ]);
 
   const [
     entryFee,
@@ -45,5 +50,5 @@ export async function loadHomeDashboardData(): Promise<HomeDashboardData> {
     }
   );
 
-  return { leaderboard, pool };
+  return { leaderboard, pool, playerLinksEnabled };
 }

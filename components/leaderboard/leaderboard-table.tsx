@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { es } from "@/lib/i18n/es";
 import type { RankedLeaderboardRow } from "@/lib/pool/load-leaderboard";
 
@@ -5,12 +6,14 @@ interface LeaderboardTableProps {
   rows: RankedLeaderboardRow[];
   highlightTop?: number;
   highlightUsername?: string | null;
+  playerLinksEnabled?: boolean;
 }
 
 export function LeaderboardTable({
   rows,
   highlightTop = 3,
   highlightUsername,
+  playerLinksEnabled = false,
 }: LeaderboardTableProps) {
   if (rows.length === 0) {
     return (
@@ -33,6 +36,8 @@ export function LeaderboardTable({
           {rows.map((row) => {
             const isPodium = row.rank <= highlightTop;
             const isMe = highlightUsername != null && row.username === highlightUsername;
+            const playerHref = `/jugador/${encodeURIComponent(row.username)}`;
+
             return (
               <tr
                 key={row.username}
@@ -44,8 +49,30 @@ export function LeaderboardTable({
                       : ""
                 }`}
               >
-                <td className="py-2 pr-4 font-medium tabular-nums">{row.rank}</td>
-                <td className="py-2 pr-4 font-medium">@{row.username}</td>
+                <td className="py-2 pr-4 font-medium tabular-nums">
+                  {playerLinksEnabled ? (
+                    <Link
+                      href={playerHref}
+                      className="text-[var(--color-primary)] underline-offset-2 hover:underline"
+                    >
+                      {row.rank}
+                    </Link>
+                  ) : (
+                    row.rank
+                  )}
+                </td>
+                <td className="py-2 pr-4 font-medium">
+                  {playerLinksEnabled ? (
+                    <Link
+                      href={playerHref}
+                      className="text-[var(--color-primary)] underline-offset-2 hover:underline"
+                    >
+                      @{row.username}
+                    </Link>
+                  ) : (
+                    <>@{row.username}</>
+                  )}
+                </td>
                 <td className="py-2 pr-4 tabular-nums">{row.total_points}</td>
                 <td className="py-2 tabular-nums">{row.plenos_count}</td>
               </tr>
