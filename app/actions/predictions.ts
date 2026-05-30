@@ -6,6 +6,7 @@ import { getConfig } from "@/lib/config/get-config";
 import { getConfigNumber } from "@/lib/config/get-config";
 import type { BracketSlot } from "@/lib/bracket/types";
 import { buildGroupResultsFromPredictions, resolveAdvancingThirdGroups } from "@/lib/predictions/helpers";
+import { canPaidChangeMatch } from "@/lib/predictions/paid-change-eligibility";
 import { validateFullSubmission } from "@/lib/predictions/submission-validator";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -227,7 +228,9 @@ export async function applyPaidPredictionChange(
 
   const { data: prediction } = await supabase
     .from("predictions")
-    .select("predicted_home, predicted_away, match_id, locked")
+    .select(
+      "predicted_home, predicted_away, predicted_advances_team_id, match_id, locked"
+    )
     .eq("id", predictionId)
     .eq("user_id", user.id)
     .maybeSingle();
@@ -237,14 +240,15 @@ export async function applyPaidPredictionChange(
 
   const { data: match } = await supabase
     .from("matches")
-    .select("prediction_deadline, status, phase")
+    .select("prediction_deadline, status, phase, kickoff_at")
     .eq("id", prediction.match_id)
     .maybeSingle();
 
   if (!match) throw new Error("match_not_found");
 
-  if (match.status !== "scheduled" || new Date() > new Date(match.prediction_deadline)) {
-    throw new Error("match_locked");
+  const eligibility = canPaidChangeMatch(match);
+  if (!eligibility.allowed) {
+    throw new Error(eligibility.reason ?? "match_locked");
   }
 
   const isKnockout = match.phase !== "group_stage";
@@ -270,10 +274,13 @@ export async function applyPaidPredictionChange(
   const { error: changeErr } = await supabase.from("prediction_changes").insert({
     user_id: user.id,
     prediction_id: predictionId,
+    match_id: prediction.match_id,
     old_home: prediction.predicted_home,
     old_away: prediction.predicted_away,
+    old_advances_team_id: prediction.predicted_advances_team_id,
     new_home: home,
     new_away: away,
+    new_advances_team_id: advancesId,
     points_spent: cost,
     change_date: today,
   });
@@ -305,6 +312,7 @@ export async function applyPaidPredictionChange(
 
   revalidatePath("/dashboard");
   revalidatePath("/pronosticos");
+  revalidatePath("/transparencia");
 }
 
 export type PronosticosPayload = Awaited<ReturnType<typeof loadPronosticosData>>;
@@ -336,10 +344,23 @@ export async function loadPronosticosData(userId: string) {
     away_team: m.away_team_id ? teamMap.get(m.away_team_id) ?? null : null,
   }));
 
+  const paidChangeEligibleByMatchId: Record<string, boolean> = {};
+  const paidChangeBlockReasonByMatchId: Record<
+    string,
+    import("@/lib/predictions/paid-change-eligibility").PaidChangeBlockReason
+  > = {};
+  for (const m of matches) {
+    const eligibility = canPaidChangeMatch(m);
+    paidChangeEligibleByMatchId[m.id] = eligibility.allowed;
+    if (eligibility.reason) {
+      paidChangeBlockReasonByMatchId[m.id] = eligibility.reason;
+    }
+  }
+
   const { data: predictions } = await supabase
     .from("predictions")
     .select(
-      "id, match_id, predicted_home, predicted_away, predicted_is_draw, predicted_advances_team_id, locked"
+      "id, match_id, predicted_home, predicted_away, predicted_is_draw, predicted_advances_team_id, locked, admin_overridden, admin_note"
     )
     .eq("user_id", userId);
 
@@ -387,6 +408,8 @@ export async function loadPronosticosData(userId: string) {
     submittedAt: submission?.submitted_at ?? null,
     totalPoints: profile?.total_points ?? 0,
     changesUsedToday: changesToday ?? 0,
+    paidChangeEligibleByMatchId,
+    paidChangeBlockReasonByMatchId,
     groupResults,
     knockoutDefs: (matches ?? [])
       .filter((m) => m.phase !== "group_stage")

@@ -10,6 +10,8 @@ import { revalidatePath } from "next/cache";
 const REVALIDATE_PATHS = [
   "/admin",
   "/admin/resultados",
+  "/admin/predicciones",
+  "/transparencia",
   "/resultados",
   "/",
   "/dashboard",
@@ -132,6 +134,16 @@ export async function setMatchResult(
     resultAdvancesTeamId = advancesTeamId;
   }
 
+  const isCorrection = existing.status === "finished";
+  if (
+    isCorrection &&
+    existing.home_score === home &&
+    existing.away_score === away &&
+    existing.result_advances_team_id === resultAdvancesTeamId
+  ) {
+    throw new Error("El resultado no cambió.");
+  }
+
   const { error: updateErr } = await admin
     .from("matches")
     .update({
@@ -152,9 +164,11 @@ export async function setMatchResult(
     awayScore: away,
   });
 
+  const bracket = await resolveOfficialBracket(admin);
+
   await admin.from("admin_actions").insert({
     admin_id: user.id,
-    action: existing.status === "finished" ? "correct_match_result" : "set_match_result",
+    action: isCorrection ? "correct_match_result" : "set_match_result",
     target_type: "matches",
     target_id: matchId,
     details: {
@@ -171,11 +185,12 @@ export async function setMatchResult(
         resultAdvancesTeamId: resultAdvancesTeamId,
       },
       usersScored,
+      bracket,
     },
   });
 
   revalidatePublicPaths();
-  return { usersScored };
+  return { usersScored, isCorrection, bracket };
 }
 
 export async function resolveOfficialKnockoutBracket() {

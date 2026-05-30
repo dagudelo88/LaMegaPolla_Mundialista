@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import type { PaidChangeBlockReason } from "@/lib/predictions/paid-change-eligibility";
 import { MatchPredictionCard } from "@/components/predictions/match-prediction-card";
 import { resolveAllKnockoutMatches } from "@/lib/bracket/knockout-resolver";
 import type { BracketSlot, GroupMatchResult, KnockoutMatchDef, TeamRef } from "@/lib/bracket/types";
@@ -31,6 +32,7 @@ interface PredictionRow {
   predicted_home: number;
   predicted_away: number;
   predicted_advances_team_id: number | null;
+  admin_overridden?: boolean;
 }
 
 interface KnockoutPanelProps {
@@ -43,7 +45,10 @@ interface KnockoutPanelProps {
   disabled: boolean;
   unlocked: boolean;
   paidChangeMode?: boolean;
+  paidChangeEligibleByMatchId?: Record<string, boolean>;
+  paidChangeBlockReasonByMatchId?: Record<string, PaidChangeBlockReason>;
   changeCosts?: Partial<Record<MatchPhase, number>>;
+  changesExhausted?: boolean;
 }
 
 function slotLabel(slot: BracketSlot): string {
@@ -72,7 +77,10 @@ export function KnockoutPanel({
   disabled,
   unlocked,
   paidChangeMode,
+  paidChangeEligibleByMatchId,
+  paidChangeBlockReasonByMatchId,
   changeCosts,
+  changesExhausted,
 }: KnockoutPanelProps) {
   const teamMap = useMemo(() => new Map(teams.map((t) => [t.id, t])), [teams]);
   const predMap = useMemo(() => new Map(predictions.map((p) => [p.match_id, p])), [predictions]);
@@ -167,9 +175,16 @@ export function KnockoutPanel({
                     initialAway={pred ? pred.predicted_away : ""}
                     initialAdvancesTeamId={pred?.predicted_advances_team_id ?? null}
                     predictionId={pred?.id}
-                    disabled={disabled || teamsResolved?.unresolved === true}
-                    paidChangeMode={paidChangeMode}
+                    disabled={
+                      disabled ||
+                      teamsResolved?.unresolved === true ||
+                      (!!paidChangeMode && !!changesExhausted)
+                    }
+                    paidChangeMode={paidChangeMode && !changesExhausted}
+                    paidChangeEligible={paidChangeEligibleByMatchId?.[m.id] ?? false}
+                    paidChangeBlockReason={paidChangeBlockReasonByMatchId?.[m.id]}
                     changeCost={changeCosts?.[phase]}
+                    adminOverridden={pred?.admin_overridden}
                   />
                 );
               })}

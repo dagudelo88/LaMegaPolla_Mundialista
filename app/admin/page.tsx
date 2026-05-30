@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AdminPlayerPredictionsSection } from "@/components/admin/admin-player-predictions-section";
 import { AdminPodiumTies } from "@/components/admin/admin-podium-ties";
 import { InviteGenerator } from "@/components/admin/invite-generator";
 import { requireAdmin } from "@/lib/auth/require-admin";
@@ -8,8 +9,13 @@ import { getPodiumTies } from "@/lib/pool/load-leaderboard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { es } from "@/lib/i18n/es";
 
-export default async function AdminPage() {
+interface PageProps {
+  searchParams: Promise<{ jugador?: string }>;
+}
+
+export default async function AdminPage({ searchParams }: PageProps) {
   await requireAdmin();
+  const { jugador } = await searchParams;
   const admin = createAdminClient();
 
   const [{ data: codes }, { data: users }, homeData] = await Promise.all([
@@ -20,7 +26,7 @@ export default async function AdminPage() {
       .limit(20),
     admin
       .from("profiles")
-      .select("username, role, is_admin, invite_redeemed_at, total_points, joined_at")
+      .select("id, username, role, is_admin, invite_redeemed_at, total_points, joined_at")
       .order("joined_at", { ascending: true }),
     loadHomeDashboardData(),
   ]);
@@ -33,14 +39,29 @@ export default async function AdminPage() {
 
   return (
     <section className="space-y-8">
-      <h1 className="text-3xl font-bold">{es.admin.title}</h1>
+      <header className="space-y-2">
+        <h1 className="text-3xl font-bold">{es.admin.title}</h1>
+        <p className="max-w-2xl text-sm text-[var(--color-muted-foreground)]">
+          {es.admin.dashboardHint}
+        </p>
+      </header>
 
-      <Link
-        href="/admin/resultados"
-        className="inline-flex rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-3 text-sm font-medium hover:border-[var(--color-accent)]"
-      >
-        {es.admin.resultsLink} →
-      </Link>
+      <AdminPlayerPredictionsSection selectedPlayerId={jugador} />
+
+      <div className="flex flex-wrap gap-3">
+        <Link
+          href="/admin/resultados"
+          className="inline-flex rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-3 text-sm font-medium hover:border-[var(--color-accent)]"
+        >
+          {es.admin.resultsLink} →
+        </Link>
+        <Link
+          href="/admin#corregir-pronosticos"
+          className="inline-flex rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-3 text-sm font-medium hover:border-[var(--color-accent)]"
+        >
+          {es.admin.predictionsLink} →
+        </Link>
+      </div>
 
       <AdminPodiumTies ties={podiumTies} currency={homeData.pool.currency} />
 
@@ -71,12 +92,15 @@ export default async function AdminPage() {
         <ul className="space-y-2 text-sm">
           {(users ?? []).map((u) => (
             <li
-              key={u.username ?? Math.random()}
+              key={u.id}
               className="flex justify-between border-b border-[var(--color-border)] py-2"
             >
-              <span>
+              <Link
+                href={`/admin?jugador=${u.id}#corregir-pronosticos`}
+                className="font-medium hover:text-[var(--color-accent)] hover:underline"
+              >
                 @{u.username ?? "—"} ({formatProfileRoles(u)})
-              </span>
+              </Link>
               <span>{u.total_points} pts</span>
             </li>
           ))}

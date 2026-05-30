@@ -1,9 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { savePredictionDraft, applyPaidPredictionChange } from "@/app/actions/predictions";
 import { TeamWithFlag } from "@/components/predictions/team-flag";
 import { es } from "@/lib/i18n/es";
+import type { PaidChangeBlockReason } from "@/lib/predictions/paid-change-eligibility";
 import type { MatchPhase } from "@/types/database";
 import { Button } from "@/components/ui/button";
 
@@ -30,7 +32,10 @@ export interface MatchCardProps {
   predictionId?: string;
   disabled: boolean;
   paidChangeMode?: boolean;
+  paidChangeEligible?: boolean;
+  paidChangeBlockReason?: PaidChangeBlockReason;
   changeCost?: number;
+  adminOverridden?: boolean;
   onSaved?: () => void;
 }
 
@@ -50,7 +55,10 @@ export function MatchPredictionCard({
   predictionId,
   disabled,
   paidChangeMode,
+  paidChangeEligible = true,
+  paidChangeBlockReason,
   changeCost,
+  adminOverridden,
   onSaved,
 }: MatchCardProps) {
   const [homeScore, setHomeScore] = useState<string>(
@@ -88,6 +96,19 @@ export function MatchPredictionCard({
       setStatus("saving");
       try {
         if (paidChangeMode && predictionId) {
+          const before = `${initialHome}-${initialAway}`;
+          const after = `${hn}-${an}`;
+          const cost = changeCost ?? 0;
+          const confirmed = window.confirm(
+            es.pronosticos.paidChangeConfirm
+              .replace("{cost}", String(cost))
+              .replace("{before}", before)
+              .replace("{after}", after)
+          );
+          if (!confirmed) {
+            setStatus("idle");
+            return;
+          }
           await applyPaidPredictionChange(predictionId, hn, an, phase, {
             predictedAdvancesTeamId: hn === an ? adv : null,
           });
@@ -102,7 +123,7 @@ export function MatchPredictionCard({
         setStatus("error");
       }
     },
-    [disabled, paidChangeMode, predictionId, matchId, phase, isKnockout, onSaved]
+    [disabled, paidChangeMode, predictionId, matchId, phase, isKnockout, onSaved, changeCost, initialHome, initialAway]
   );
 
   const scheduleSave = useCallback(
@@ -142,6 +163,14 @@ export function MatchPredictionCard({
           {es.pronosticos.matchNumber} #{matchNumber}
         </span>
         <span>{new Date(kickoffAt).toLocaleString("es")}</span>
+        {adminOverridden && (
+          <Link
+            href="/transparencia?filter=admin"
+            className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900 dark:bg-amber-950 dark:text-amber-200"
+          >
+            {es.pronosticos.adminOverriddenBadge}
+          </Link>
+        )}
         {venue && <span className="w-full sm:w-auto">{venue}</span>}
       </div>
 
@@ -218,15 +247,29 @@ export function MatchPredictionCard({
           {status === "error" && es.pronosticos.saveError}
         </span>
         {paidChangeMode && (
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            disabled={disabled || homeScore === "" || awayScore === ""}
-            onClick={() => persist(homeScore, awayScore, advancesId)}
-          >
-            {es.pronosticos.paidChange} ({changeCost} {es.pronosticos.pts})
-          </Button>
+          <div className="flex flex-col items-end gap-1">
+            {!paidChangeEligible && paidChangeBlockReason && (
+              <span className="max-w-[14rem] text-right text-xs text-[var(--color-muted-foreground)]">
+                {paidChangeBlockReason === "match_same_day"
+                  ? es.pronosticos.paidChangeSameDayBlocked
+                  : es.pronosticos.paidChangeNotScheduled}
+              </span>
+            )}
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={
+                disabled ||
+                !paidChangeEligible ||
+                homeScore === "" ||
+                awayScore === ""
+              }
+              onClick={() => persist(homeScore, awayScore, advancesId)}
+            >
+              {es.pronosticos.paidChange} ({changeCost} {es.pronosticos.pts})
+            </Button>
+          </div>
         )}
       </div>
     </article>

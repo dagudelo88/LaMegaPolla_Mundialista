@@ -39,6 +39,19 @@ export default async function AdminResultadosPage() {
         <span className="text-[var(--color-foreground)]">{es.admin.resultsTitle}</span>
       </nav>
 
+      <div className="rounded-xl border-2 border-[var(--color-accent)] bg-[var(--color-card)] p-4">
+        <p className="text-sm font-medium">{es.admin.resultsNotPredictionsTitle}</p>
+        <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
+          {es.admin.resultsNotPredictionsHint}
+        </p>
+        <Link
+          href="/admin#corregir-pronosticos"
+          className="mt-3 inline-flex rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-[var(--color-primary-foreground)] hover:opacity-90"
+        >
+          {es.admin.predictionsLink} →
+        </Link>
+      </div>
+
       <header>
         <h1 className="text-3xl font-bold">{es.admin.resultsTitle}</h1>
         <p className="mt-2 max-w-2xl text-sm text-[var(--color-muted-foreground)]">

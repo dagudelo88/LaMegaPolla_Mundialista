@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { es } from "@/lib/i18n/es";
 
 interface LockedStateBannerProps {
@@ -31,6 +32,12 @@ export function LockedStateBanner({
         {changesUsedToday}/{maxChangesPerDay} cambios hoy
         {changesUsedToday >= maxChangesPerDay && ` (${es.pronosticos.paidChangeUsed})`}
       </p>
+      <Link
+        href="/transparencia"
+        className="mt-3 inline-block text-sm font-medium text-[var(--color-accent)] hover:underline"
+      >
+        {es.pronosticos.viewChangeHistory} →
+      </Link>
     </div>
   );
 }

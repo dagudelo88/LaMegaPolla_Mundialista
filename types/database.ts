@@ -70,7 +70,60 @@ export interface Prediction {
   predicted_is_draw: boolean;
   predicted_advances_team_id: number | null;
   locked: boolean;
+  admin_overridden?: boolean;
+  admin_note?: string | null;
   submitted_at?: string;
+}
+
+export interface PredictionChange {
+  id: string;
+  user_id: string;
+  prediction_id: string;
+  match_id: string | null;
+  old_home: number;
+  old_away: number;
+  new_home: number;
+  new_away: number;
+  old_advances_team_id: number | null;
+  new_advances_team_id: number | null;
+  points_spent: number;
+  change_date: string;
+  created_at: string;
+}
+
+export interface PredictionAdminOverride {
+  id: string;
+  admin_id: string;
+  user_id: string;
+  prediction_id: string | null;
+  match_id: string;
+  old_home: number | null;
+  old_away: number | null;
+  old_advances_team_id: number | null;
+  new_home: number;
+  new_away: number;
+  new_advances_team_id: number | null;
+  admin_note: string;
+  created_at: string;
+}
+
+export type TransparencyEntryKind =
+  | "paid_change"
+  | "admin_prediction"
+  | "result_correction";
+
+export interface TransparencyEntry {
+  id: string;
+  kind: TransparencyEntryKind;
+  createdAt: string;
+  playerUsername: string;
+  actorUsername?: string;
+  matchNumber: number | null;
+  matchLabel: string;
+  beforeScore: string;
+  afterScore: string;
+  pointsSpent?: number;
+  reason?: string;
 }
 
 export interface BracketPick {

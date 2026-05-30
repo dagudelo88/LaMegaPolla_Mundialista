@@ -1,5 +1,6 @@
 "use client";
 
+import type { PaidChangeBlockReason } from "@/lib/predictions/paid-change-eligibility";
 import { MatchPredictionCard } from "@/components/predictions/match-prediction-card";
 import type { MatchPhase } from "@/types/database";
 import { GROUP_LETTERS } from "@/types/database";
@@ -23,6 +24,7 @@ interface PredictionRow {
   predicted_home: number;
   predicted_away: number;
   predicted_advances_team_id: number | null;
+  admin_overridden?: boolean;
 }
 
 interface GroupStagePanelProps {
@@ -30,6 +32,8 @@ interface GroupStagePanelProps {
   predictions: PredictionRow[];
   disabled: boolean;
   paidChangeMode?: boolean;
+  paidChangeEligibleByMatchId?: Record<string, boolean>;
+  paidChangeBlockReasonByMatchId?: Record<string, PaidChangeBlockReason>;
   changeCost?: number;
   changesExhausted?: boolean;
 }
@@ -39,6 +43,8 @@ export function GroupStagePanel({
   predictions,
   disabled,
   paidChangeMode,
+  paidChangeEligibleByMatchId,
+  paidChangeBlockReasonByMatchId,
   changeCost,
   changesExhausted,
 }: GroupStagePanelProps) {
@@ -77,7 +83,10 @@ export function GroupStagePanel({
                     predictionId={pred?.id}
                     disabled={disabled && (!paidChangeMode || !!changesExhausted)}
                     paidChangeMode={paidChangeMode && !changesExhausted}
+                    paidChangeEligible={paidChangeEligibleByMatchId?.[m.id] ?? false}
+                    paidChangeBlockReason={paidChangeBlockReasonByMatchId?.[m.id]}
                     changeCost={changeCost}
+                    adminOverridden={pred?.admin_overridden}
                   />
                 );
               })}

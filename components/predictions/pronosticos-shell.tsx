@@ -95,6 +95,8 @@ export function PronosticosShell({ data, maxChangesPerDay, changeCosts }: Pronos
           predictions={data.predictions}
           disabled={data.isSubmitted}
           paidChangeMode={data.isSubmitted}
+          paidChangeEligibleByMatchId={data.paidChangeEligibleByMatchId}
+          paidChangeBlockReasonByMatchId={data.paidChangeBlockReasonByMatchId}
           changeCost={changeCosts.group_stage}
           changesExhausted={data.changesUsedToday >= maxChangesPerDay}
         />
@@ -119,7 +121,10 @@ export function PronosticosShell({ data, maxChangesPerDay, changeCosts }: Pronos
           disabled={data.isSubmitted && data.changesUsedToday >= maxChangesPerDay}
           unlocked={knockoutUnlocked || data.isSubmitted}
           paidChangeMode={data.isSubmitted}
+          paidChangeEligibleByMatchId={data.paidChangeEligibleByMatchId}
+          paidChangeBlockReasonByMatchId={data.paidChangeBlockReasonByMatchId}
           changeCosts={changeCosts}
+          changesExhausted={data.changesUsedToday >= maxChangesPerDay}
         />
       )}
 

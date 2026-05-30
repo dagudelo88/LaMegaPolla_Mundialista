@@ -11,10 +11,21 @@ import {
 import { es } from "@/lib/i18n/es";
 import type { MatchWithTeams } from "@/types/database";
 
-type StatusFilter = "pending" | "finished" | "all";
+type StatusFilter = "pending" | "live" | "finished" | "all";
 
 interface AdminResultsPanelProps {
   matches: MatchWithTeams[];
+}
+
+function countByFilter(matches: MatchWithTeams[], filter: StatusFilter): number {
+  if (filter === "all") return matches.length;
+  if (filter === "pending") {
+    return matches.filter((m) => m.status !== "finished").length;
+  }
+  if (filter === "live") {
+    return matches.filter((m) => m.status === "live").length;
+  }
+  return matches.filter((m) => m.status === "finished").length;
 }
 
 export function AdminResultsPanel({ matches }: AdminResultsPanelProps) {
@@ -23,10 +34,19 @@ export function AdminResultsPanel({ matches }: AdminResultsPanelProps) {
   const [bracketMessage, setBracketMessage] = useState<string | null>(null);
   const [bracketError, setBracketError] = useState<string | null>(null);
 
+  const tabs: { key: StatusFilter; label: string }[] = [
+    { key: "pending", label: es.admin.filterPending },
+    { key: "live", label: es.admin.filterLive },
+    { key: "finished", label: es.admin.filterFinished },
+    { key: "all", label: es.admin.filterAll },
+  ];
+
   const filtered = useMemo(() => {
     let list = matches;
     if (filter === "pending") {
       list = matches.filter((m) => m.status !== "finished");
+    } else if (filter === "live") {
+      list = matches.filter((m) => m.status === "live");
     } else if (filter === "finished") {
       list = matches.filter((m) => m.status === "finished");
     }
@@ -45,12 +65,6 @@ export function AdminResultsPanel({ matches }: AdminResultsPanelProps) {
     }
     return [...map.entries()].sort(([a], [b]) => a.localeCompare(b));
   }, [filtered]);
-
-  const tabs: { key: StatusFilter; label: string }[] = [
-    { key: "pending", label: es.admin.filterPending },
-    { key: "finished", label: es.admin.filterFinished },
-    { key: "all", label: es.admin.filterAll },
-  ];
 
   async function handleResolveBracket() {
     setBracketPending(true);
@@ -110,7 +124,7 @@ export function AdminResultsPanel({ matches }: AdminResultsPanelProps) {
                 : "bg-[var(--color-muted)] text-[var(--color-muted-foreground)] hover:bg-[var(--color-border)]"
             }`}
           >
-            {tab.label}
+            {tab.label} ({countByFilter(matches, tab.key)})
           </button>
         ))}
       </div>

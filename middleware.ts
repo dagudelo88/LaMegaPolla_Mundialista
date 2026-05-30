@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
-const PROTECTED_PREFIXES = ["/dashboard", "/admin", "/pronosticos"];
+const PROTECTED_PREFIXES = ["/dashboard", "/admin", "/pronosticos", "/transparencia"];
 const AUTH_ROUTES = ["/login"];
 
 export async function middleware(request: NextRequest) {
@@ -74,7 +74,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && (path.startsWith("/dashboard") || path.startsWith("/pronosticos"))) {
+  if (user && (path.startsWith("/dashboard") || path.startsWith("/pronosticos") || path.startsWith("/transparencia"))) {
     const { data: profileRows } = await supabase.rpc("get_my_profile");
     const profile = profileRows?.[0] as { invite_redeemed_at?: string | null } | undefined;
 
