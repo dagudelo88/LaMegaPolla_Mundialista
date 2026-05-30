@@ -133,7 +133,7 @@ export const es = {
     tabKnockout: "Eliminatorias",
     tabSummary: "Resumen y envío",
     progress: "Progreso",
-    deadline: "Fecha límite pronóstico inicial",
+    deadline: "Fecha límite pronóstico inicial (10 jun 2026, 23:59 hora Colombia)",
     deadlinePassed: "La fecha límite del pronóstico inicial ya pasó.",
     save: "Guardando…",
     saved: "Guardado",
@@ -321,7 +321,7 @@ export const es = {
     publicPredictionsEnable: "Activar",
     publicPredictionsDisable: "Desactivar",
     participantsHint:
-      "Marca el aporte recibido para incluir al jugador en el pool y la tabla. Retira del juego a quienes no paguen: pierden puntos y sus pronósticos dejan de contar.",
+      "Marca el aporte recibido para incluir al jugador en el pool y la tabla (plazo: 10 jun 2026, 23:59 hora Colombia). Retira del juego a quienes no paguen: pierden puntos y sus pronósticos dejan de contar.",
     participantColumn: "Participante",
     participantPaidColumn: "Aporte pagado",
     participantActionsColumn: "Acciones",

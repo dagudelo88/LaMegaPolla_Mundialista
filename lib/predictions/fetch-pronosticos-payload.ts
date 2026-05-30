@@ -1,5 +1,6 @@
 import type { BracketSlot } from "@/lib/bracket/types";
 import { countPaidChangesToday } from "@/lib/changes/count-paid-changes-today";
+import { DEFAULT_GLOBAL_DEADLINE } from "@/lib/config/tournament-deadline";
 import { getConfig } from "@/lib/config/get-config";
 import { buildGroupResultsFromPredictions, resolveAdvancingThirdGroups } from "@/lib/predictions/helpers";
 import { canPaidChangeMatch } from "@/lib/predictions/paid-change-eligibility";
@@ -7,7 +8,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 export async function fetchPronosticosPayload(supabase: SupabaseClient, userId: string) {
   const globalDeadline =
-    (await getConfig<string>("tournament.global_deadline")) ?? "2026-06-11T00:00:00Z";
+    (await getConfig<string>("tournament.global_deadline")) ?? DEFAULT_GLOBAL_DEADLINE;
 
   const { data: teams } = await supabase
     .from("teams")

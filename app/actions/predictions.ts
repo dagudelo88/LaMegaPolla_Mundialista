@@ -4,8 +4,8 @@ import { requireUser } from "@/lib/auth/require-admin";
 import { getPaidChangeCost } from "@/lib/changes/paid-change-cost";
 import { countPaidChangesToday } from "@/lib/changes/count-paid-changes-today";
 import { getTournamentTodayKey } from "@/lib/changes/tournament-today";
-import { getConfig } from "@/lib/config/get-config";
-import { getConfigNumber } from "@/lib/config/get-config";
+import { getConfig, getConfigNumber } from "@/lib/config/get-config";
+import { DEFAULT_GLOBAL_DEADLINE } from "@/lib/config/tournament-deadline";
 import { buildGroupResultsFromPredictions, resolveAdvancingThirdGroups } from "@/lib/predictions/helpers";
 import { fetchPronosticosPayload } from "@/lib/predictions/fetch-pronosticos-payload";
 import { canPaidChangeMatch } from "@/lib/predictions/paid-change-eligibility";
@@ -107,7 +107,7 @@ export async function submitFullTournament() {
   const submitted = await getSubmissionState(user.id);
   if (submitted) throw new Error("already_submitted");
 
-  const globalDeadline = (await getConfig<string>("tournament.global_deadline")) ?? "2026-06-11T00:00:00Z";
+  const globalDeadline = (await getConfig<string>("tournament.global_deadline")) ?? DEFAULT_GLOBAL_DEADLINE;
 
   const { data: matches } = await supabase
     .from("matches")

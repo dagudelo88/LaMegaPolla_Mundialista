@@ -19,12 +19,13 @@ El objetivo es acumular la mayor cantidad de puntos posible prediciendo los resu
 - Para participar debes recibir un **código de invitación** del administrador.
 - Al registrarte elegirás un **apodo (nickname)**. Este será tu identidad pública en la polla (en la tabla de posiciones, en los pronósticos, etc.).
 - Tu correo electrónico nunca se muestra a otros participantes.
+- El **aporte de la polla** debe estar cancelado y confirmado por el administrador antes del **10 de junio de 2026, 23:59 (hora Colombia)**. Quienes no paguen a tiempo pueden ser retirados del juego y sus pronósticos no contarán.
 
 ---
 
 ## 3. Pronóstico Inicial Obligatorio
 
-Antes del inicio del Mundial existe una **fecha límite global**.
+La **fecha límite global** para enviar tu polla es el **10 de junio de 2026, 23:59 (hora Colombia)** — mismo corte que el aporte (§2). A partir de ahí comienza la competencia de puntos con el Mundial.
 
 En esa fecha debes enviar tu **pronóstico completo** del torneo, que incluye:
 
