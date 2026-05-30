@@ -64,14 +64,14 @@ function PredictionTeamSide({
         name={team.name_es}
         fifaCode={team.fifa_code}
         align="center"
-        flagSize="md"
+        flagSize="sm"
       />
     );
   }
 
   return (
     <div className="flex flex-col items-center gap-1 text-center">
-      <p className="max-w-[9rem] text-sm font-medium leading-tight text-[var(--color-muted-foreground)] sm:text-base">
+      <p className="max-w-[4.5rem] text-xs font-medium leading-tight text-[var(--color-muted-foreground)] sm:max-w-[9rem] sm:text-base">
         {label}
       </p>
     </div>
@@ -82,10 +82,10 @@ const SCORE_MIN = 0;
 const SCORE_MAX = 20;
 
 const scoreInputClass =
-  "min-w-[2.25rem] w-9 border-0 bg-transparent p-0 text-center text-2xl font-bold tabular-nums focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none sm:min-w-[2.5rem] sm:w-10 sm:text-3xl";
+  "min-w-[1.5rem] w-7 border-0 bg-transparent p-0 text-center text-lg font-bold tabular-nums focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none sm:min-w-[2.5rem] sm:w-10 sm:text-3xl";
 
 const scoreStepperButtonClass =
-  "flex h-8 w-7 shrink-0 items-center justify-center rounded-md border border-[var(--color-border)] bg-[var(--color-background)] text-lg font-bold leading-none text-[var(--color-muted-foreground)] transition-colors hover:border-emerald-500/40 hover:text-[var(--color-foreground)] disabled:cursor-not-allowed disabled:opacity-40 sm:h-9 sm:w-8";
+  "flex h-5 w-7 shrink-0 items-center justify-center rounded border border-[var(--color-border)] bg-[var(--color-background)] text-xs font-bold leading-none text-[var(--color-muted-foreground)] transition-colors hover:border-emerald-500/40 hover:text-[var(--color-foreground)] disabled:cursor-not-allowed disabled:opacity-40 sm:h-7 sm:w-10 sm:rounded-md sm:text-sm";
 
 function parseScoreValue(value: string): number {
   if (value === "") return SCORE_MIN;
@@ -99,11 +99,13 @@ function ScoreStepper({
   onChange,
   label,
   editable,
+  controlsSide,
 }: {
   value: string;
   onChange: (value: string) => void;
   label: string;
   editable: boolean;
+  controlsSide: "left" | "right";
 }) {
   const numeric = parseScoreValue(value);
 
@@ -129,26 +131,8 @@ function ScoreStepper({
     onChange(String(Math.min(SCORE_MAX, Math.max(SCORE_MIN, n))));
   };
 
-  return (
-    <div className="flex items-center gap-0.5">
-      <button
-        type="button"
-        aria-label={`${label} −`}
-        disabled={numeric <= SCORE_MIN}
-        onClick={() => step(-1)}
-        className={scoreStepperButtonClass}
-      >
-        −
-      </button>
-      <input
-        type="number"
-        min={SCORE_MIN}
-        max={SCORE_MAX}
-        value={value}
-        aria-label={label}
-        onChange={(e) => onInputChange(e.target.value)}
-        className={`${scoreInputClass} rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-1`}
-      />
+  const controls = (
+    <div className="flex flex-col gap-px sm:gap-0.5">
       <button
         type="button"
         aria-label={`${label} +`}
@@ -158,6 +142,43 @@ function ScoreStepper({
       >
         +
       </button>
+      <button
+        type="button"
+        aria-label={`${label} −`}
+        disabled={numeric <= SCORE_MIN}
+        onClick={() => step(-1)}
+        className={scoreStepperButtonClass}
+      >
+        −
+      </button>
+    </div>
+  );
+
+  const input = (
+    <input
+      type="number"
+      min={SCORE_MIN}
+      max={SCORE_MAX}
+      value={value}
+      aria-label={label}
+      onChange={(e) => onInputChange(e.target.value)}
+      className={`${scoreInputClass} rounded border border-emerald-500/30 bg-emerald-500/10 px-0.5 py-0.5 sm:rounded-lg sm:px-1.5 sm:py-1`}
+    />
+  );
+
+  return (
+    <div className="flex items-center gap-px sm:gap-0.5">
+      {controlsSide === "left" ? (
+        <>
+          {controls}
+          {input}
+        </>
+      ) : (
+        <>
+          {input}
+          {controls}
+        </>
+      )}
     </div>
   );
 }
@@ -409,28 +430,32 @@ export function MatchPredictionCard({
         </span>
       </div>
 
-      <div className="mt-2 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-        <div className="flex justify-center">
+      <div className="mt-2 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1 sm:gap-2">
+        <div className="flex min-w-0 justify-center">
           <PredictionTeamSide team={home} label={homeName} />
         </div>
 
-        <div className="flex items-center justify-center gap-1.5">
+        <div className="flex shrink-0 items-center justify-center gap-0.5 sm:gap-1.5">
           <ScoreStepper
             value={homeScore}
             onChange={onHomeChange}
             label={es.pronosticos.home}
             editable={!inputsDisabled}
+            controlsSide="left"
           />
-          <span className="text-[var(--color-muted-foreground)]">-</span>
+          <span className="px-0.5 text-sm text-[var(--color-muted-foreground)] sm:px-0 sm:text-base">
+            -
+          </span>
           <ScoreStepper
             value={awayScore}
             onChange={onAwayChange}
             label={es.pronosticos.away}
             editable={!inputsDisabled}
+            controlsSide="right"
           />
         </div>
 
-        <div className="flex justify-center">
+        <div className="flex min-w-0 justify-center">
           <PredictionTeamSide team={away} label={awayName} />
         </div>
       </div>

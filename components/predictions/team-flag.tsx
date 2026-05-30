@@ -95,7 +95,7 @@ export function TeamWithFlag({
   return (
     <div className="flex flex-col items-center gap-1.5">
       <TeamFlag fifaCode={fifaCode} name={name} size={flagSize} className="mx-auto" />
-      <p className={`max-w-[9rem] text-center font-medium leading-tight ${nameClass}`}>
+      <p className={`max-w-[4.5rem] text-center font-medium leading-tight sm:max-w-[9rem] ${nameClass}`}>
         {name}
       </p>
     </div>
