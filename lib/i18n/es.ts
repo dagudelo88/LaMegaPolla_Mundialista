@@ -265,6 +265,14 @@ export const es = {
   admin: {
     title: "Panel de administración",
     invites: "Códigos de invitación",
+    invitesHint:
+      "Copia un código y envíalo por WhatsApp, correo u otro medio. Cada código permite un registro.",
+    inviteCopy: "Copiar",
+    inviteCopied: "Copiado",
+    inviteCopyError: "Error al copiar",
+    inviteExhausted: "Usado",
+    generateInviteTitle: "Generar nuevo código",
+    generateInviteHint: "Crea un código adicional cuando necesites invitar a otro jugador.",
     generate: "Generar código",
     users: "Participantes",
     noCodes: "Aún no hay códigos generados.",

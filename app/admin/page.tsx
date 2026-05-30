@@ -3,6 +3,7 @@ import { AdminPlayerPredictionsSection } from "@/components/admin/admin-player-p
 import { AdminPodiumTies } from "@/components/admin/admin-podium-ties";
 import { AdminPublicPredictionsToggle } from "@/components/admin/admin-public-predictions-toggle";
 import { InviteGenerator } from "@/components/admin/invite-generator";
+import { InviteCodesList } from "@/components/admin/invite-codes-list";
 import { AdminParticipantsTable } from "@/components/admin/admin-participants-table";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { loadHomeDashboardData } from "@/lib/pool/load-home-data";
@@ -75,26 +76,15 @@ export default async function AdminPage({ searchParams }: PageProps) {
       <AdminParticipantsTable participants={users ?? []} />
 
       <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-4">
-        <h2 className="mb-3 text-lg font-semibold">{es.admin.invites}</h2>
-        {codes?.length ? (
-          <ul className="space-y-2 font-mono text-sm">
-            {codes.map((c) => (
-              <li key={c.code} className="flex justify-between gap-4 border-b border-[var(--color-border)] py-2">
-                <span>{c.code}</span>
-                <span className="text-[var(--color-muted-foreground)]">
-                  {c.uses_count}/{c.max_uses}
-                </span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-[var(--color-muted-foreground)]">
-            {es.admin.noCodes}
-          </p>
-        )}
+        <h2 className="text-lg font-semibold">{es.admin.invites}</h2>
+        <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
+          {es.admin.invitesHint}
+        </p>
+        <div className="mt-3">
+          <InviteCodesList codes={codes ?? []} />
+        </div>
+        <InviteGenerator />
       </div>
-
-      <InviteGenerator />
     </section>
   );
 }
