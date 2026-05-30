@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { ACTIVE_PARTICIPANT_OR_FILTER } from "@/lib/participants/is-active-participant";
 import {
   getJornadaKey,
   isJornadaComplete,
@@ -136,7 +137,7 @@ export async function processJornadaBonus(
       "id",
       candidateUserIds.length ? candidateUserIds : ["00000000-0000-0000-0000-000000000000"]
     )
-    .eq("entry_fee_paid", true)
+    .or(ACTIVE_PARTICIPANT_OR_FILTER)
     .is("withdrawn_at", null);
 
   if (eligibleErr) throw new Error(eligibleErr.message);

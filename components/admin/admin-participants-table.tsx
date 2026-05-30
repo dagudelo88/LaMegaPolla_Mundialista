@@ -8,6 +8,7 @@ import {
   withdrawParticipant,
 } from "@/app/actions/admin";
 import { formatProfileRoles } from "@/lib/auth/roles";
+import { effectiveEntryFeePaid } from "@/lib/participants/is-active-participant";
 import { es } from "@/lib/i18n/es";
 import { Button } from "@/components/ui/button";
 
@@ -95,8 +96,9 @@ export function AdminParticipantsTable({ participants }: AdminParticipantsTableP
               {registered.map((p) => {
                 const isWithdrawn = p.withdrawn_at != null;
                 const isPending = pendingId === p.id;
+                const paid = effectiveEntryFeePaid(p);
                 const canTogglePaid = !p.is_admin && !isWithdrawn;
-                const canWithdraw = !p.is_admin && !isWithdrawn && !p.entry_fee_paid;
+                const canWithdraw = !p.is_admin && !isWithdrawn && !paid;
 
                 return (
                   <tr key={p.id} className="border-b border-[var(--color-border)]">
@@ -114,9 +116,14 @@ export function AdminParticipantsTable({ participants }: AdminParticipantsTableP
                             · {es.admin.participantWithdrawnBadge}
                           </span>
                         )}
-                        {!isWithdrawn && !p.entry_fee_paid && (
+                        {!isWithdrawn && !paid && (
                           <span className="ml-2 font-medium text-amber-600 dark:text-amber-400">
                             · {es.admin.participantUnpaidBadge}
+                          </span>
+                        )}
+                        {!isWithdrawn && p.is_admin && (
+                          <span className="ml-2 font-medium text-green-700 dark:text-green-400">
+                            · {es.admin.participantAdminPaidBadge}
                           </span>
                         )}
                       </p>
@@ -130,21 +137,19 @@ export function AdminParticipantsTable({ participants }: AdminParticipantsTableP
                       >
                         <input
                           type="checkbox"
-                          checked={p.entry_fee_paid}
+                          checked={paid}
                           disabled={!canTogglePaid || isPending}
                           onChange={(e) => handlePaidToggle(p.id, e.target.checked)}
                           aria-label={
-                            p.entry_fee_paid
-                              ? es.admin.participantPaidYes
-                              : es.admin.participantPaidNo
+                            paid ? es.admin.participantPaidYes : es.admin.participantPaidNo
                           }
                           className={`size-5 shrink-0 appearance-none rounded border-2 bg-center bg-no-repeat transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
-                            p.entry_fee_paid
+                            paid
                               ? "border-green-600 bg-green-600 focus-visible:outline-green-600/50"
                               : "border-red-500 bg-red-500/20 focus-visible:outline-red-500/50"
                           }`}
                           style={
-                            p.entry_fee_paid
+                            paid
                               ? {
                                   backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3E%3C/svg%3E")`,
                                   backgroundSize: "0.85rem",
@@ -154,13 +159,15 @@ export function AdminParticipantsTable({ participants }: AdminParticipantsTableP
                         />
                         <span
                           className={`font-medium ${
-                            p.entry_fee_paid
+                            paid
                               ? "text-green-700 dark:text-green-400"
                               : "text-red-700 dark:text-red-400"
                           }`}
                         >
-                          {p.entry_fee_paid
-                            ? es.admin.participantPaidYes
+                          {paid
+                            ? p.is_admin
+                              ? es.admin.participantAdminPaidLabel
+                              : es.admin.participantPaidYes
                             : es.admin.participantPaidNo}
                         </span>
                       </label>

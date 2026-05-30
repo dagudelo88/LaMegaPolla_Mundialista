@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { ACTIVE_PARTICIPANT_OR_FILTER } from "@/lib/participants/is-active-participant";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export interface LeaderboardRow {
@@ -107,7 +108,7 @@ export async function fetchLeaderboardRows(
     .select("id, username, total_points, joined_at")
     .not("username", "is", null)
     .not("invite_redeemed_at", "is", null)
-    .eq("entry_fee_paid", true)
+    .or(ACTIVE_PARTICIPANT_OR_FILTER)
     .is("withdrawn_at", null);
 
   if (profilesErr) throw new Error(profilesErr.message);

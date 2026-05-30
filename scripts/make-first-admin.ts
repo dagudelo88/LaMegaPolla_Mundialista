@@ -62,7 +62,7 @@ async function main() {
   const { error: upErr } = await supabase
     .from("profiles")
     .upsert(
-      { id: user.id, role: "participant", is_admin: true },
+      { id: user.id, role: "participant", is_admin: true, entry_fee_paid: true },
       { onConflict: "id" }
     );
 

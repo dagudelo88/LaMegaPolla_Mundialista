@@ -354,6 +354,8 @@ export const es = {
       "¿Retirar a {user} del juego? Se borrarán sus puntos y sus pronósticos dejarán de ser válidos.",
     participantWithdrawnBadge: "Retirado",
     participantUnpaidBadge: "Aporte pendiente",
+    participantAdminPaidBadge: "Aporte incluido (admin)",
+    participantAdminPaidLabel: "Pagado (admin)",
     participantActionError: "No se pudo completar la acción.",
     bugReports: {
       title: "Reportes de errores",
