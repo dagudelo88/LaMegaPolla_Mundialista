@@ -14,6 +14,7 @@ export function LoginForm() {
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "";
   const authError = searchParams.get("error") === "auth" ? es.errors.generic : null;
+  const resetSuccess = searchParams.get("reset") === "ok";
 
   return (
     <form action={action} className="mx-auto max-w-md space-y-4">
@@ -32,9 +33,17 @@ export function LoginForm() {
         />
       </div>
       <div>
-        <label htmlFor="password" className="mb-1 block text-sm font-medium">
-          {es.login.passwordLabel}
-        </label>
+        <div className="mb-1 flex items-center justify-between gap-2">
+          <label htmlFor="password" className="text-sm font-medium">
+            {es.login.passwordLabel}
+          </label>
+          <Link
+            href="/recuperar-contrasena"
+            className="text-xs font-medium text-[var(--color-accent)] hover:underline"
+          >
+            {es.login.forgotPassword}
+          </Link>
+        </div>
         <input
           id="password"
           name="password"
@@ -44,6 +53,14 @@ export function LoginForm() {
           className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2"
         />
       </div>
+      {resetSuccess ? (
+        <p
+          className="rounded-lg border border-[var(--color-primary)]/30 bg-[var(--color-primary)]/10 px-3 py-2 text-sm text-[var(--color-foreground)]"
+          role="status"
+        >
+          {es.login.resetSuccess}
+        </p>
+      ) : null}
       {(state.error || authError) && (
         <p className="text-sm text-red-400" role="alert">
           {state.error ?? authError}

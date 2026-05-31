@@ -6,6 +6,7 @@ import { resolveAuthenticatedLandingPath } from "@/lib/auth/landing-path";
 import { validateInviteCode } from "@/lib/auth/validate-invite-code";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { mapAuthError } from "@/lib/auth/map-auth-error";
+import { validatePasswordPair } from "@/lib/auth/password";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { es } from "@/lib/i18n/es";
@@ -16,7 +17,6 @@ export type JoinState = {
   success?: boolean;
 };
 
-const MIN_PASSWORD_LENGTH = 8;
 const MIN_NICKNAME_LENGTH = 3;
 const MAX_NICKNAME_LENGTH = 24;
 const NICKNAME_PATTERN = /^[a-zA-Z0-9_]+$/;
@@ -93,12 +93,9 @@ export async function registerWithInvite(
     return { error: nicknameError };
   }
 
-  if (password.length < MIN_PASSWORD_LENGTH) {
-    return { error: es.errors.weakPassword };
-  }
-
-  if (password !== passwordConfirm) {
-    return { error: es.errors.passwordMismatch };
+  const passwordCheck = validatePasswordPair(password, passwordConfirm);
+  if (!passwordCheck.ok) {
+    return { error: passwordCheck.error };
   }
 
   const inviteCheck = await validateInviteCode(code);

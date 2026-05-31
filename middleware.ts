@@ -2,7 +2,8 @@ import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
 const PROTECTED_PREFIXES = ["/dashboard", "/admin", "/pronosticos", "/transparencia", "/jugador"];
-const AUTH_ROUTES = ["/login"];
+const AUTH_ROUTES = ["/login", "/recuperar-contrasena"];
+const PASSWORD_UPDATE_PATH = "/actualizar-contrasena";
 
 type MiddlewareProfile = {
   invite_redeemed_at?: string | null;
@@ -56,6 +57,12 @@ export async function middleware(request: NextRequest) {
 
   const isProtected = PROTECTED_PREFIXES.some((p) => path.startsWith(p));
   const isAuthRoute = AUTH_ROUTES.some((p) => path.startsWith(p));
+
+  if (!user && path.startsWith(PASSWORD_UPDATE_PATH)) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/recuperar-contrasena";
+    return NextResponse.redirect(url);
+  }
 
   if (!user && isProtected) {
     const url = request.nextUrl.clone();

@@ -84,6 +84,21 @@ export const es = {
     button: "Entrar",
     noAccount: "¿Primera vez?",
     createAccount: "Crear cuenta con invitación",
+    forgotPassword: "¿Olvidaste tu contraseña?",
+    resetSuccess: "Contraseña actualizada. Ya puedes iniciar sesión con tu nueva clave.",
+  },
+  passwordReset: {
+    forgotTitle: "Recuperar contraseña",
+    forgotSubtitle:
+      "Te enviaremos un enlace a tu correo para elegir una contraseña nueva.",
+    forgotSubmit: "Enviar enlace",
+    forgotSuccess:
+      "Si el correo está registrado, recibirás un enlace en unos minutos. Revisa también spam.",
+    forgotBackToLogin: "Volver a iniciar sesión",
+    updateTitle: "Nueva contraseña",
+    updateSubtitle: "Elige una contraseña nueva para tu cuenta.",
+    updateSubmit: "Guardar contraseña",
+    passwordHint: "Mínimo 8 caracteres.",
   },
   join: {
     title: "Crear cuenta",
@@ -496,6 +511,7 @@ export const es = {
       "Ese correo ya está registrado. Inicia sesión y completa tu registro en /join si aún no canjeaste el código.",
     weakPassword: "La contraseña debe tener al menos 8 caracteres.",
     passwordMismatch: "Las contraseñas no coinciden.",
+    rateLimited: "Demasiados intentos. Espera un momento e inténtalo de nuevo.",
     emailNotConfirmed: "Confirma tu correo antes de entrar (revisa tu bandeja).",
     emailConfirmationRequired:
       "Debes confirmar el correo antes de continuar. Pide al administrador desactivar la confirmación por correo en Supabase, o revisa tu email.",

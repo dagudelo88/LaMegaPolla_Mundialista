@@ -14,5 +14,8 @@ export function mapAuthError(message: string): string {
   if (lower.includes("password")) {
     return es.errors.weakPassword;
   }
+  if (lower.includes("rate limit") || lower.includes("too many requests")) {
+    return es.errors.rateLimited;
+  }
   return es.errors.generic;
 }
