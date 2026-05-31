@@ -3,6 +3,7 @@ import { HomeGuestLanding } from "@/components/home/home-guest-landing";
 import { HomeLoggedIn } from "@/components/home/home-logged-in";
 import { Button } from "@/components/ui/button";
 import { getProfile, getSessionUser } from "@/lib/auth/require-admin";
+import { getWhatsAppGroupInviteUrl } from "@/lib/config/whatsapp-group";
 import { createClient } from "@/lib/supabase/server";
 import { loadHomeDashboardData } from "@/lib/pool/load-home-data";
 import { es } from "@/lib/i18n/es";
@@ -40,10 +41,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       return (
         <HomeLoggedIn
           username={profile.username}
-          leaderboard={homeData.leaderboard}
-          pool={homeData.pool}
-          playerLinksEnabled={homeData.playerLinksEnabled}
+          {...homeData}
           predictionsSubmitted={submission?.is_complete ?? false}
+          whatsappGroupInviteUrl={getWhatsAppGroupInviteUrl()}
         />
       );
     }
@@ -63,5 +63,12 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     );
   }
 
-  return <HomeGuestLanding />;
+  const homeData = await loadHomeDashboardData();
+
+  return (
+    <HomeGuestLanding
+      registeredParticipants={homeData.registeredParticipants}
+      potentialPool={homeData.potentialPool}
+    />
+  );
 }

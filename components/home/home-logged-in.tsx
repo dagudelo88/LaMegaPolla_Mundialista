@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { WhatsAppGroupLink } from "@/components/community/whatsapp-group-link";
+import { PoolStatCard, PrizeCard } from "@/components/home/pool-cards";
 import { LeaderboardTable } from "@/components/leaderboard/leaderboard-table";
 import { Button } from "@/components/ui/button";
 import { formatPoolAmount } from "@/lib/pool/calculate-pool";
@@ -8,37 +10,7 @@ import { es } from "@/lib/i18n/es";
 interface HomeLoggedInProps extends HomeDashboardData {
   username: string | null;
   predictionsSubmitted?: boolean;
-}
-
-function PrizeCard({
-  place,
-  amount,
-  pct,
-  highlight,
-}: {
-  place: string;
-  amount: string;
-  pct: number;
-  highlight?: "gold" | "silver" | "bronze";
-}) {
-  const border =
-    highlight === "gold"
-      ? "border-[var(--color-accent)]"
-      : highlight === "silver"
-        ? "border-slate-400"
-        : highlight === "bronze"
-          ? "border-amber-700"
-          : "border-[var(--color-border)]";
-
-  return (
-    <div className={`rounded-xl border-2 ${border} bg-[var(--color-card)] px-4 py-5 text-center`}>
-      <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-muted-foreground)]">
-        {place}
-      </p>
-      <p className="mt-2 text-2xl font-bold tabular-nums">{amount}</p>
-      <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">{pct}% del pool</p>
-    </div>
-  );
+  whatsappGroupInviteUrl?: string | null;
 }
 
 export function HomeLoggedIn({
@@ -46,7 +18,10 @@ export function HomeLoggedIn({
   leaderboard,
   pool,
   playerLinksEnabled,
+  registeredParticipants,
+  paidParticipants,
   predictionsSubmitted = true,
+  whatsappGroupInviteUrl = null,
 }: HomeLoggedInProps) {
   const fmt = (n: number) => formatPoolAmount(n, pool.currency);
 
@@ -80,23 +55,26 @@ export function HomeLoggedIn({
         <p className="mt-2 text-xs text-[var(--color-muted-foreground)]">
           {es.landing.poolTieHint}
         </p>
+        <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
+          {es.landing.poolContribution}: {fmt(pool.entryFee)}
+        </p>
 
-        <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
-          <div className="flex justify-between gap-2 border-b border-[var(--color-border)] py-2">
-            <dt className="text-[var(--color-muted-foreground)]">{es.landing.poolParticipants}</dt>
-            <dd className="font-semibold tabular-nums">{pool.activeParticipants}</dd>
-          </div>
-          <div className="flex justify-between gap-2 border-b border-[var(--color-border)] py-2">
-            <dt className="text-[var(--color-muted-foreground)]">{es.landing.poolContribution}</dt>
-            <dd className="font-semibold tabular-nums">{fmt(pool.entryFee)}</dd>
-          </div>
-          <div className="flex justify-between gap-2 border-b border-[var(--color-border)] py-2 sm:col-span-2">
-            <dt className="text-[var(--color-muted-foreground)]">{es.landing.poolTotal}</dt>
-            <dd className="text-lg font-bold tabular-nums text-[var(--color-primary)]">
-              {fmt(pool.totalPool)}
-            </dd>
-          </div>
-        </dl>
+        <div className="mt-6 grid gap-3 sm:grid-cols-3">
+          <PoolStatCard
+            label={es.landing.poolStatPaid}
+            value={String(paidParticipants)}
+          />
+          <PoolStatCard
+            label={es.landing.poolStatRegistered}
+            value={String(registeredParticipants)}
+            hint={es.landing.poolStatRegisteredHint}
+          />
+          <PoolStatCard
+            label={es.landing.poolStatTotal}
+            value={fmt(pool.totalPool)}
+            highlight
+          />
+        </div>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           <PrizeCard
@@ -121,11 +99,16 @@ export function HomeLoggedIn({
       </div>
 
       <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-6">
-        <div className="mb-4">
-          <h2 className="text-lg font-semibold">{es.landing.leaderboardTitle}</h2>
-          <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
-            {playerLinksEnabled ? es.landing.leaderboardHintWithLinks : es.landing.leaderboardHint}
-          </p>
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h2 className="text-lg font-semibold">{es.landing.leaderboardTitle}</h2>
+            <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
+              {playerLinksEnabled ? es.landing.leaderboardHintWithLinks : es.landing.leaderboardHint}
+            </p>
+          </div>
+          {whatsappGroupInviteUrl ? (
+            <WhatsAppGroupLink inviteUrl={whatsappGroupInviteUrl} />
+          ) : null}
         </div>
         <LeaderboardTable
           rows={leaderboard}

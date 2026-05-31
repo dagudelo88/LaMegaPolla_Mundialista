@@ -27,6 +27,16 @@ export const es = {
     ctaLogin: "Iniciar sesión",
     ctaRegister: "Crear cuenta con invitación",
     inviteNote: "¿Primera vez? Pide tu código de invitación al administrador.",
+    guestPromoTitle: "La polla está en marcha",
+    guestPromoLead:
+      "Ya hay jugadores inscritos compitiendo por el Mundial 2026. Cuantos más confirmen su aporte, más grande será el pool y los premios del podio.",
+    guestPromoCta:
+      "Pide tu código, crea tu cuenta y suma al pool antes de que se llene la tabla.",
+    guestPoolPotential: "Pool potencial",
+    guestPoolPotentialHint:
+      "Proyección si todos los registrados confirman el aporte ({fee} c/u).",
+    guestPrizesTitle: "Premios proyectados del podio",
+    guestPrizesHint: "Según REGLAS §12. Los montos crecen con cada jugador que confirme el pago.",
     loggedInTitle: "La Mega Polla Mundialista 2026",
     loggedInWelcome: "Hola,",
     completeRegistrationTitle: "Completa tu registro",
@@ -36,6 +46,11 @@ export const es = {
     poolHint:
       "Distribución según REGLAS §12. El pool = participantes activos × aporte configurado. En empate en puntos en el podio, el admin reparte el premio.",
     poolParticipants: "Participantes activos",
+    poolStatPaid: "Jugadores pagos participando",
+    poolStatRegistered: "Jugadores registrados",
+    poolStatRegisteredHint:
+      "Incluye quienes ya canjearon invitación y aún no confirman el aporte.",
+    poolStatTotal: "Total del pool",
     poolContribution: "Aporte por jugador",
     poolTotal: "Pool total",
     prizeFirst: "1er puesto",
@@ -53,6 +68,8 @@ export const es = {
     leaderboardNickname: "Nickname",
     leaderboardPoints: "Puntos",
     leaderboardPlenos: "Plenos",
+    whatsappGroupTitle: "Unirse al grupo de WhatsApp de la polla",
+    whatsappGroupAria: "Abrir invitación al grupo de WhatsApp (solo participantes registrados)",
     poolTieHint:
       "Si los criterios de desempate no separan jugadores del podio, comparten puesto y reparten el premio (REGLAS §8).",
     withdrawnTitle: "Retirado de la polla",
