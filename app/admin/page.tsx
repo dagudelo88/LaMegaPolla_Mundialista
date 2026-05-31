@@ -5,6 +5,7 @@ import { AdminPublicPredictionsToggle } from "@/components/admin/admin-public-pr
 import { InviteGenerator } from "@/components/admin/invite-generator";
 import { InviteCodesList } from "@/components/admin/invite-codes-list";
 import { AdminParticipantsTable } from "@/components/admin/admin-participants-table";
+import { loadInviteCodesSummary } from "@/lib/admin/load-invite-codes";
 import { loadAdminParticipants } from "@/lib/admin/load-participants";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { loadHomeDashboardData } from "@/lib/pool/load-home-data";
@@ -22,12 +23,8 @@ export default async function AdminPage({ searchParams }: PageProps) {
   const { jugador } = await searchParams;
   const admin = createAdminClient();
 
-  const [{ data: codes }, participants, homeData, publicPredictionsEnabled] = await Promise.all([
-    admin
-      .from("invitation_codes")
-      .select("code, uses_count, max_uses, created_at, expires_at")
-      .order("created_at", { ascending: false })
-      .limit(20),
+  const [inviteCodes, participants, homeData, publicPredictionsEnabled] = await Promise.all([
+    loadInviteCodesSummary(admin),
     loadAdminParticipants(admin),
     loadHomeDashboardData(),
     isPublicPredictionsEnabled(),
@@ -77,7 +74,12 @@ export default async function AdminPage({ searchParams }: PageProps) {
           {es.admin.invitesHint}
         </p>
         <div className="mt-3">
-          <InviteCodesList codes={codes ?? []} />
+          <InviteCodesList
+            totalGenerated={inviteCodes.totalGenerated}
+            totalUsed={inviteCodes.totalUsed}
+            available={inviteCodes.available}
+            used={inviteCodes.used}
+          />
         </div>
         <InviteGenerator />
       </div>
