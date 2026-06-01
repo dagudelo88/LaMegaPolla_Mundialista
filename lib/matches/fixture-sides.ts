@@ -7,6 +7,7 @@ export interface FixtureTeamSide {
   name_es: string;
   flag_emoji?: string | null;
   placeholder?: string;
+  sourceLabel?: string;
 }
 
 export function matchToFixtureSides(match: {
@@ -24,10 +25,12 @@ export function matchToFixtureSides(match: {
         fifa_code: match.home_team.fifa_code,
         name_es: match.home_team.name_es,
         flag_emoji: match.home_team.flag_emoji,
+        sourceLabel: homeSlot ? formatBracketSlotLabel(homeSlot) : undefined,
       }
     : {
         name_es: homeSlot ? formatBracketSlotLabel(homeSlot) : es.fixture.tbd,
         placeholder: homeSlot ? formatBracketSlotLabel(homeSlot) : es.fixture.tbd,
+        sourceLabel: homeSlot ? formatBracketSlotLabel(homeSlot) : undefined,
       };
 
   const away: FixtureTeamSide = match.away_team
@@ -36,10 +39,12 @@ export function matchToFixtureSides(match: {
         fifa_code: match.away_team.fifa_code,
         name_es: match.away_team.name_es,
         flag_emoji: match.away_team.flag_emoji,
+        sourceLabel: awaySlot ? formatBracketSlotLabel(awaySlot) : undefined,
       }
     : {
         name_es: awaySlot ? formatBracketSlotLabel(awaySlot) : es.fixture.tbd,
         placeholder: awaySlot ? formatBracketSlotLabel(awaySlot) : es.fixture.tbd,
+        sourceLabel: awaySlot ? formatBracketSlotLabel(awaySlot) : undefined,
       };
 
   return { home, away };

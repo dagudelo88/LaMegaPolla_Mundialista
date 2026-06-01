@@ -82,7 +82,7 @@ export async function loadAdminUserPredictions(userId: string) {
       admin.from("profiles").select("id, username, total_points").eq("id", userId).single(),
       admin
         .from("teams")
-        .select("id, fifa_code, name_es, name_en, group_letter, flag_emoji")
+        .select("*")
         .order("group_letter")
         .order("fifa_code"),
       admin

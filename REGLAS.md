@@ -88,6 +88,20 @@ Sin embargo, puedes **gastar puntos** para modificar pronósticos de partidos qu
 
 Esta mecánica te permite corregir errores, pero te penaliza por hacerlo (especialmente en las rondas finales).
 
+### Ventana de Ajustes por Clasificación Oficial (Mejores Terceros)
+
+Cuando termine la fase de grupos y el administrador publique la **lista oficial de clasificados** y el **orden oficial de clasificación** (incluidos los 8 mejores terceros), se abrirá una ventana especial **sin costo en puntos**:
+
+- **Desde**: la validación oficial de clasificados por el administrador.
+- **Hasta**: el inicio del **primer partido de eliminatorias** (hora de kickoff).
+
+Durante esa ventana, **solo los jugadores cuyos cruces de eliminatorias cambian** por una diferencia en el **orden de los mejores terceros** — por ejemplo, por **fair play**, conducta fair play o **otros criterios de desempate** que FIFA aplique después de los partidos — podrán **ajustar sin costo** los pronósticos de **esos partidos afectados**.
+
+- Si tu llave no cambia por el orden oficial de terceros, **no** podrás usar esta ventana (sigues con cambios pagos normales si aplica).
+- Estos ajustes **no consumen** tu límite de 1 cambio por día ni restan puntos de tu marcador.
+- Solo aplican a **partidos de eliminatorias concretos** cuyo cruce (local/visitante) difiere del que tenías por el orden de terceros, y que **aún no hayan comenzado**.
+- Una vez arranque el primer partido de eliminatorias, vuelve a regir la mecánica normal de **cambios pagos** (§5).
+
 ---
 
 ## 6. Bonus por Jornada: Partido Más Goleador

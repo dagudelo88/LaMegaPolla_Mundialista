@@ -188,7 +188,7 @@ export const es = {
     selectAdvance: "Selecciona el equipo",
     thirdPlaceTitle: "8 mejores terceros que avanzan",
     thirdPlaceHint:
-      "Se calculan automáticamente a partir de tus resultados de grupos (pts → DG → GF). Los 8 mejores terceros avanzan a octavos.",
+      "Se calculan automáticamente con criterios FIFA (pts → DG → GF → conducta → ranking FIFA). Los 8 mejores terceros avanzan a octavos.",
     thirdPlacePending: "Completa los 72 partidos de grupos para ver el ranking de terceros.",
     thirdPlaceStatus: "Estado",
     thirdPlaceAdvances: "Clasifica",
@@ -243,6 +243,14 @@ export const es = {
     paidChangeCancel: "Cancelar",
     paidChangeUnchanged: "El marcador es igual al actual. Modifica al menos un valor.",
     paidChangeEditingHint: "Ajusta el marcador y confirma cuando estés listo. No se guarda hasta que pulses confirmar.",
+    qualifierAdjustmentTitle: "Ventana de ajustes por clasificación oficial",
+    qualifierAdjustmentHint:
+      "El orden oficial de los mejores terceros cambia algunos de tus cruces de eliminatorias (fair play u otros desempates). Solo puedes corregir gratis los partidos afectados, sin gastar puntos ni consumir tu cambio diario (REGLAS §5).",
+    qualifierAdjustmentDeadline:
+      "Plazo: hasta el inicio del primer partido de eliminatorias ({deadline}).",
+    qualifierAdjustmentKnockoutHint:
+      "En Eliminatorias o Calendario, edita solo las tarjetas marcadas como afectadas. El resto sigue con cambios pagos normales.",
+    qualifierAdjustmentMatchBadge: "Cruce afectado · ajuste gratis",
     adminOverriddenBadge: "Ajustado por administrador",
     insufficientPoints: "Puntos insuficientes",
     notSubmittedYet: "Debes enviar tu pronóstico completo antes del inicio del torneo.",
@@ -289,6 +297,9 @@ export const es = {
     filterPending: "Pendientes",
     standingsTitle: "Tablas de grupos",
     standingsHint: "Calculadas con los resultados oficiales ya cargados.",
+    qualifiedTitle: "Clasificados oficiales a eliminatorias",
+    qualifiedHint:
+      "Lista validada por el administrador con la nomenclatura FIFA que alimenta la llave oficial.",
     statsFinished: "Finalizados",
     statsLive: "En juego",
     statsPending: "Pendientes",
@@ -355,6 +366,22 @@ export const es = {
     resolveBracketHint:
       "Al validar o corregir un resultado, los cruces se actualizan automáticamente. Usa este botón solo si necesitas forzar una actualización manual.",
     resolveSuccess: "Eliminatorias actualizadas: {updated} partidos. Sin resolver: {unresolved}.",
+    validateQualifiers: "Validar clasificados oficiales",
+    validateQualifiersHint:
+      "Revisa manualmente la lista calculada contra el fixture oficial FIFA. Cuando esté correcta, valídala para publicarla en Resultados.",
+    validateQualifiersReviewTitle: "Lista calculada para revisión",
+    validateQualifiersReviewHint:
+      "Compara códigos, equipos y estadísticas con FIFA antes de validar. La publicación solo ocurre cuando confirmes esta lista.",
+    validateQualifiersReady: "Lista lista para validar",
+    validateQualifiersPending: "Faltan resultados de grupos",
+    validateQualifiersSuccess: "Clasificados oficiales validados el {date}.",
+    validateQualifiersIncomplete:
+      "Aún faltan partidos de fase de grupos finalizados para validar la lista oficial.",
+    tieBreakCorrectionsTitle: "Orden manual de mejores terceros",
+    tieBreakCorrectionsHint:
+      "Si FIFA publica un orden distinto para los terceros, ajusta solo estos 12 equipos. Los primeros 8 del orden serán los terceros clasificados.",
+    thirdOrderSave: "Guardar orden",
+    thirdOrderSaved: "Orden guardado. Revisa nuevamente la lista.",
     saving: "Guardando…",
     saved: "Resultado guardado. Puntos recalculados para {count} participantes.",
     savedWithBracket:

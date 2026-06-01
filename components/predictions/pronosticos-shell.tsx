@@ -8,6 +8,7 @@ import { GroupStagePanel } from "@/components/predictions/group-stage-panel";
 import { KnockoutPanel } from "@/components/predictions/knockout-panel";
 import { SchedulePredictionsPanel } from "@/components/predictions/schedule-predictions-panel";
 import { LockedStateBanner } from "@/components/predictions/locked-state-banner";
+import { QualifierAdjustmentBanner } from "@/components/predictions/qualifier-adjustment-banner";
 import { SubmittedEditableBanner } from "@/components/predictions/submitted-editable-banner";
 import { SubmissionSummary } from "@/components/predictions/submission-summary";
 import { countProgress } from "@/lib/predictions/helpers";
@@ -51,8 +52,11 @@ export function PronosticosShell({
   const progress = countProgress(groupMatchIds, knockoutMatchIds, data.predictions);
 
   const deadlinePassed = data.deadlinePassed;
-  const paidChangeMode = !isViewMode && data.isSubmitted && deadlinePassed;
-  const freeEditBlocked = isViewMode || paidChangeMode;
+  const postDeadlineLocked = !isViewMode && data.isSubmitted && deadlinePassed;
+  const qualifierAdjustmentActive =
+    postDeadlineLocked && data.qualifierAdjustment?.active === true;
+  const paidChangeMode = postDeadlineLocked;
+  const freeEditBlocked = isViewMode || postDeadlineLocked;
   const groupComplete = progress.groupDone >= progress.groupTotal && progress.groupTotal > 0;
   const knockoutUnlocked = groupComplete || isViewMode;
   const changesExhausted = data.changesUsedToday >= maxChangesPerDay;
@@ -119,6 +123,12 @@ export function PronosticosShell({
         </div>
       )}
 
+      {!isViewMode && qualifierAdjustmentActive && (
+        <QualifierAdjustmentBanner
+          firstKnockoutKickoff={data.qualifierAdjustment.firstKnockoutKickoff}
+        />
+      )}
+
       {!isViewMode && data.isSubmitted && deadlinePassed && (
         <LockedStateBanner
           submittedAt={data.submittedAt}
@@ -181,6 +191,8 @@ export function PronosticosShell({
           disabled={freeEditBlocked}
           knockoutUnlocked={knockoutUnlocked || data.isSubmitted}
           paidChangeMode={paidChangeMode}
+          qualifierAdjustmentActive={qualifierAdjustmentActive}
+          qualifierAdjustmentAffectedByMatchId={data.qualifierAdjustmentAffectedByMatchId}
           paidChangeEligibleByMatchId={data.paidChangeEligibleByMatchId}
           paidChangeBlockReasonByMatchId={data.paidChangeBlockReasonByMatchId}
           changeCosts={changeCosts}
@@ -219,9 +231,11 @@ export function PronosticosShell({
           groupResults={data.groupResults}
           advancingThirdGroups={data.advancingThirdGroups}
           knockoutDefs={data.knockoutDefs}
-          disabled={isViewMode}
+          disabled={freeEditBlocked}
           unlocked={knockoutUnlocked || data.isSubmitted}
           paidChangeMode={paidChangeMode}
+          qualifierAdjustmentActive={qualifierAdjustmentActive}
+          qualifierAdjustmentAffectedByMatchId={data.qualifierAdjustmentAffectedByMatchId}
           paidChangeEligibleByMatchId={data.paidChangeEligibleByMatchId}
           paidChangeBlockReasonByMatchId={data.paidChangeBlockReasonByMatchId}
           changeCosts={changeCosts}

@@ -16,6 +16,9 @@ interface TeamRow {
   name_es: string;
   flag_emoji: string | null;
   group_letter: string;
+  fifa_ranking?: number | null;
+  team_conduct_score?: number | null;
+  manual_tie_break_rank?: number | null;
 }
 
 interface MatchRow {
@@ -132,6 +135,9 @@ export function SubmissionSummary({
       id: t.id,
       fifaCode: t.fifa_code,
       groupLetter: t.group_letter,
+      fifaRanking: t.fifa_ranking ?? null,
+      teamConductScore: t.team_conduct_score ?? 0,
+      manualTieBreakRank: t.manual_tie_break_rank ?? null,
     }));
 
     return resolveTournamentPodium(

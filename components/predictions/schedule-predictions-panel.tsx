@@ -3,9 +3,10 @@
 import { useMemo } from "react";
 import { MatchPredictionCard } from "@/components/predictions/match-prediction-card";
 import { resolveAllKnockoutMatches } from "@/lib/bracket/knockout-resolver";
-import type { BracketSlot, GroupMatchResult, KnockoutMatchDef, TeamRef } from "@/lib/bracket/types";
+import type { GroupMatchResult, KnockoutMatchDef, TeamRef } from "@/lib/bracket/types";
 import { getJornadaKey, sortJornadaKeys, type JornadaMeta } from "@/lib/jornada/build-jornada-meta";
 import { es } from "@/lib/i18n/es";
+import { formatBracketSlotLabel } from "@/lib/matches/slot-label";
 import { formatMatchDateHeader } from "@/lib/matches/format-datetime";
 import type { PaidChangeBlockReason } from "@/lib/predictions/paid-change-eligibility";
 import type { MatchPhase } from "@/types/database";
@@ -16,6 +17,9 @@ interface TeamRow {
   name_es: string;
   flag_emoji: string | null;
   group_letter: string;
+  fifa_ranking?: number | null;
+  team_conduct_score?: number | null;
+  manual_tie_break_rank?: number | null;
 }
 
 interface MatchRow {
@@ -53,27 +57,13 @@ interface SchedulePredictionsPanelProps {
   disabled: boolean;
   knockoutUnlocked: boolean;
   paidChangeMode?: boolean;
+  qualifierAdjustmentActive?: boolean;
+  qualifierAdjustmentAffectedByMatchId?: Record<string, boolean>;
   paidChangeEligibleByMatchId?: Record<string, boolean>;
   paidChangeBlockReasonByMatchId?: Record<string, PaidChangeBlockReason>;
   changeCosts?: Partial<Record<MatchPhase, number>>;
   changesExhausted?: boolean;
   onSaved?: () => void;
-}
-
-function slotLabel(slot: BracketSlot): string {
-  if (slot.type === "group_rank") {
-    return `${slot.rank === 1 ? "1º" : "2º"} Grupo ${slot.group}`;
-  }
-  if (slot.type === "third_best") {
-    return `3º (${slot.eligible_groups.join("/")})`;
-  }
-  if (slot.type === "match_winner") {
-    return `Ganador P${slot.match_number}`;
-  }
-  if (slot.type === "match_loser") {
-    return `Perdedor P${slot.match_number}`;
-  }
-  return "—";
 }
 
 export function SchedulePredictionsPanel({
@@ -87,6 +77,8 @@ export function SchedulePredictionsPanel({
   disabled,
   knockoutUnlocked,
   paidChangeMode,
+  qualifierAdjustmentActive,
+  qualifierAdjustmentAffectedByMatchId,
   paidChangeEligibleByMatchId,
   paidChangeBlockReasonByMatchId,
   changeCosts,
@@ -119,6 +111,9 @@ export function SchedulePredictionsPanel({
     id: t.id,
     fifaCode: t.fifa_code,
     groupLetter: t.group_letter,
+    fifaRanking: t.fifa_ranking ?? null,
+    teamConductScore: t.team_conduct_score ?? 0,
+    manualTieBreakRank: t.manual_tie_break_rank ?? null,
   }));
 
   const resolved = useMemo(() => {
@@ -209,6 +204,16 @@ export function SchedulePredictionsPanel({
                   meta.eligible && meta.predictedTopScorerMatchId === m.id;
                 const topScorerGoals = isTopScorer ? meta.predictedTopScorerGoals : null;
 
+                const isKnockout = m.phase !== "group_stage";
+                const matchQualifierMode = Boolean(
+                  isKnockout &&
+                    qualifierAdjustmentActive &&
+                    qualifierAdjustmentAffectedByMatchId?.[m.id]
+                );
+                const cardDisabled = isKnockout
+                  ? knockoutBlocked || (disabled && !matchQualifierMode)
+                  : disabled && !paidChangeMode;
+
                 return (
                   <MatchPredictionCard
                     key={m.id}
@@ -221,17 +226,22 @@ export function SchedulePredictionsPanel({
                     home={homeTeam}
                     away={awayTeam}
                     homeLabel={
-                      m.phase !== "group_stage" && def ? slotLabel(def.homeSource) : undefined
+                      isKnockout && def
+                        ? formatBracketSlotLabel(def.homeSource)
+                        : undefined
                     }
                     awayLabel={
-                      m.phase !== "group_stage" && def ? slotLabel(def.awaySource) : undefined
+                      isKnockout && def
+                        ? formatBracketSlotLabel(def.awaySource)
+                        : undefined
                     }
                     initialHome={pred ? pred.predicted_home : ""}
                     initialAway={pred ? pred.predicted_away : ""}
                     initialAdvancesTeamId={pred?.predicted_advances_team_id ?? null}
                     predictionId={pred?.id}
-                    disabled={(disabled && !paidChangeMode) || knockoutBlocked}
-                    paidChangeMode={paidChangeMode}
+                    disabled={cardDisabled}
+                    paidChangeMode={paidChangeMode && !matchQualifierMode}
+                    qualifierAdjustmentMode={matchQualifierMode}
                     paidChangeEligible={paidChangeEligibleByMatchId?.[m.id] ?? false}
                     paidChangeBlockReason={paidChangeBlockReasonByMatchId?.[m.id]}
                     changesExhausted={changesExhausted}

@@ -7,7 +7,10 @@ import {
   parseKnockoutDefs,
   type OfficialFinishedMatch,
 } from "@/lib/bracket/official-knockout-resolver";
-import { computeAdvancingThirdGroups } from "@/lib/bracket/third-place-advancement";
+import {
+  computeAdvancingThirdGroups,
+  resolveThirdPlaceScenarioTeams,
+} from "@/lib/bracket/third-place-advancement";
 import type { TeamRef } from "@/lib/bracket/types";
 import { buildOfficialGroupResults } from "@/lib/matches/official-results";
 
@@ -34,7 +37,9 @@ export async function resolveOfficialBracket(
   admin: SupabaseClient
 ): Promise<ResolveOfficialBracketResult> {
   const [{ data: teams }, { data: matches }] = await Promise.all([
-    admin.from("teams").select("id, fifa_code, group_letter"),
+    admin
+      .from("teams")
+      .select("*"),
     admin
       .from("matches")
       .select(
@@ -51,11 +56,15 @@ export async function resolveOfficialBracket(
     id: t.id,
     fifaCode: t.fifa_code,
     groupLetter: t.group_letter,
+    fifaRanking: t.fifa_ranking ?? null,
+    teamConductScore: t.team_conduct_score ?? 0,
+    manualTieBreakRank: t.manual_tie_break_rank ?? null,
   }));
 
   const groupResults = buildOfficialGroupResults(matches as MatchRow[]);
   const standings = computeAllGroupStandings(teamRefs, groupResults);
   const thirdGroups = computeAdvancingThirdGroups(standings);
+  const thirdPlaceTeamByMatch = resolveThirdPlaceScenarioTeams(standings, thirdGroups);
 
   const finishedByNumber = new Map<number, OfficialFinishedMatch>();
   for (const m of matches as MatchRow[]) {
@@ -96,7 +105,7 @@ export async function resolveOfficialBracket(
       thirdGroups,
       winners,
       losers,
-      { requireOfficialGroupCompletion: true }
+      { requireOfficialGroupCompletion: true, thirdPlaceTeamByMatch }
     );
 
     if (resolved.unresolved) {

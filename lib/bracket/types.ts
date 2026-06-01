@@ -8,6 +8,12 @@ export interface TeamRef {
   id: number;
   fifaCode: string;
   groupLetter: string;
+  /** FIFA team conduct score. Higher is better; card deductions make this negative. */
+  teamConductScore?: number;
+  /** FIFA/Coca-Cola men's ranking position. Lower is better. */
+  fifaRanking?: number | null;
+  /** Admin-controlled fallback for FIFA drawing of lots or unresolved data. Lower is better. */
+  manualTieBreakRank?: number | null;
 }
 
 export interface GroupMatchResult {
@@ -29,6 +35,9 @@ export interface StandingRow {
   gc: number;
   gd: number;
   pts: number;
+  teamConductScore: number;
+  fifaRanking: number | null;
+  manualTieBreakRank: number | null;
 }
 
 export interface GroupStanding {

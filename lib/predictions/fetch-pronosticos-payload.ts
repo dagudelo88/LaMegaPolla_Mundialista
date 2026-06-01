@@ -6,6 +6,11 @@ import { buildJornadaMetaByKey } from "@/lib/jornada/build-jornada-meta";
 import { isGlobalDeadlinePassed } from "@/lib/predictions/global-deadline";
 import { buildGroupResultsFromPredictions, resolveAdvancingThirdGroups } from "@/lib/predictions/helpers";
 import { canPaidChangeMatch } from "@/lib/predictions/paid-change-eligibility";
+import {
+  loadQualifierAdjustmentWindowState,
+  officialAdvancingThirdGroupsForWindow,
+  qualifierAdjustmentAffectedByMatchId as buildQualifierAdjustmentAffectedByMatchId,
+} from "@/lib/predictions/qualifier-adjustment-window";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export async function fetchPronosticosPayload(supabase: SupabaseClient, userId: string) {
@@ -14,14 +19,14 @@ export async function fetchPronosticosPayload(supabase: SupabaseClient, userId: 
 
   const { data: teams } = await supabase
     .from("teams")
-    .select("id, fifa_code, name_es, name_en, group_letter, flag_emoji")
+    .select("*")
     .order("group_letter")
     .order("fifa_code");
 
   const { data: matchesRaw } = await supabase
     .from("matches")
     .select(
-      "id, fifa_match_number, phase, group_letter, home_team_id, away_team_id, home_source, away_source, kickoff_at, prediction_deadline, status, venue, matchday_key"
+      "id, fifa_match_number, phase, group_letter, home_team_id, away_team_id, home_source, away_source, kickoff_at, prediction_deadline, status, home_score, away_score, venue, matchday_key"
     )
     .order("fifa_match_number");
 
@@ -91,12 +96,22 @@ export async function fetchPronosticosPayload(supabase: SupabaseClient, userId: 
     .filter((m) => m.phase === "group_stage")
     .map((m) => m.id);
 
-  const advancingThirdGroups = resolveAdvancingThirdGroups(
+  const predictedAdvancingThirdGroups = resolveAdvancingThirdGroups(
     teams ?? [],
     groupResults,
     groupMatchIds,
     (predictions ?? []) as Parameters<typeof resolveAdvancingThirdGroups>[3]
   );
+
+  const qualifierAdjustment = await loadQualifierAdjustmentWindowState(supabase, userId);
+  const qualifierAdjustmentAffectedByMatchId = buildQualifierAdjustmentAffectedByMatchId(
+    qualifierAdjustment
+  );
+
+  const groupMatchesOfficial = (matchesRaw ?? []).filter((m) => m.phase === "group_stage");
+  const advancingThirdGroups = qualifierAdjustment.active
+    ? officialAdvancingThirdGroupsForWindow(teams ?? [], groupMatchesOfficial)
+    : predictedAdvancingThirdGroups;
 
   return {
     globalDeadline,
@@ -105,6 +120,9 @@ export async function fetchPronosticosPayload(supabase: SupabaseClient, userId: 
     matches: matches ?? [],
     predictions: predictions ?? [],
     advancingThirdGroups,
+    predictedAdvancingThirdGroups,
+    qualifierAdjustment,
+    qualifierAdjustmentAffectedByMatchId,
     isSubmitted: submission?.is_complete ?? false,
     submittedAt: submission?.submitted_at ?? null,
     totalPoints: profile?.total_points ?? 0,

@@ -2,16 +2,16 @@ import type { BracketSlot } from "@/lib/bracket/types";
 
 export function formatBracketSlotLabel(slot: BracketSlot): string {
   if (slot.type === "group_rank") {
-    return `${slot.rank === 1 ? "1º" : "2º"} Grupo ${slot.group}`;
+    return `${slot.rank}${slot.group}`;
   }
   if (slot.type === "third_best") {
-    return `3º (${slot.eligible_groups.join("/")})`;
+    return `3${slot.eligible_groups.join("")}`;
   }
   if (slot.type === "match_winner") {
-    return `Ganador P${slot.match_number}`;
+    return `W${slot.match_number}`;
   }
   if (slot.type === "match_loser") {
-    return `Perdedor P${slot.match_number}`;
+    return `RU${slot.match_number}`;
   }
   return "Por definir";
 }

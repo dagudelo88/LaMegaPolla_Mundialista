@@ -13,6 +13,9 @@ const teams: {
   name_en: string;
   group_letter: string;
   flag_emoji: string;
+  fifa_ranking?: number | null;
+  team_conduct_score?: number | null;
+  manual_tie_break_rank?: number | null;
 }[] = JSON.parse(readFileSync(resolve(dataDir, "teams.json"), "utf8"));
 
 const groupMatches: {
@@ -41,8 +44,12 @@ function esc(s: string) {
 const lines: string[] = ["BEGIN;"];
 
 for (const t of teams) {
+  const fifaRanking = t.fifa_ranking == null ? "NULL" : String(t.fifa_ranking);
+  const teamConductScore = t.team_conduct_score == null ? "0" : String(t.team_conduct_score);
+  const manualTieBreakRank =
+    t.manual_tie_break_rank == null ? "NULL" : String(t.manual_tie_break_rank);
   lines.push(
-    `INSERT INTO public.teams (fifa_code, name_es, name_en, group_letter, flag_emoji) VALUES ('${esc(t.fifa_code)}', '${esc(t.name_es)}', '${esc(t.name_en)}', '${esc(t.group_letter)}', '${esc(t.flag_emoji)}') ON CONFLICT (fifa_code) DO UPDATE SET name_es = EXCLUDED.name_es, name_en = EXCLUDED.name_en, group_letter = EXCLUDED.group_letter, flag_emoji = EXCLUDED.flag_emoji;`
+    `INSERT INTO public.teams (fifa_code, name_es, name_en, group_letter, flag_emoji, fifa_ranking, team_conduct_score, manual_tie_break_rank) VALUES ('${esc(t.fifa_code)}', '${esc(t.name_es)}', '${esc(t.name_en)}', '${esc(t.group_letter)}', '${esc(t.flag_emoji)}', ${fifaRanking}, ${teamConductScore}, ${manualTieBreakRank}) ON CONFLICT (fifa_code) DO UPDATE SET name_es = EXCLUDED.name_es, name_en = EXCLUDED.name_en, group_letter = EXCLUDED.group_letter, flag_emoji = EXCLUDED.flag_emoji, fifa_ranking = EXCLUDED.fifa_ranking, team_conduct_score = EXCLUDED.team_conduct_score, manual_tie_break_rank = EXCLUDED.manual_tie_break_rank;`
   );
 }
 

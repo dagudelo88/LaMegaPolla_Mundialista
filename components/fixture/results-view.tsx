@@ -24,10 +24,23 @@ interface StandingsGroup {
   }>;
 }
 
+interface OfficialQualifiedTeam {
+  code: string;
+  qualification: string;
+  fifaCode: string;
+  name: string;
+  played: number;
+  pts: number;
+  gd: number;
+  gf: number;
+}
+
 interface ResultsViewProps {
   matches: MatchWithTeams[];
   standings: StandingsGroup[];
   advancingThirdGroups: Set<string>;
+  qualifiedTeams: OfficialQualifiedTeam[];
+  officialQualifiersValidated: boolean;
   stats: { finished: number; live: number; scheduled: number; total: number };
 }
 
@@ -48,7 +61,14 @@ const KNOCKOUT_ORDER: MatchPhase[] = [
   "final",
 ];
 
-export function ResultsView({ matches, standings, advancingThirdGroups, stats }: ResultsViewProps) {
+export function ResultsView({
+  matches,
+  standings,
+  advancingThirdGroups,
+  qualifiedTeams,
+  officialQualifiersValidated,
+  stats,
+}: ResultsViewProps) {
   const groupMatches = matches.filter((m) => m.phase === "group_stage");
 
   const knockoutByPhase = new Map<MatchPhase, MatchWithTeams[]>();
@@ -142,6 +162,57 @@ export function ResultsView({ matches, standings, advancingThirdGroups, stats }:
                 </table>
               </div>
             ))}
+          </div>
+        </section>
+      )}
+
+      {officialQualifiersValidated && qualifiedTeams.length > 0 && (
+        <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-4">
+          <h2 className="text-xl font-semibold">{es.fixture.qualifiedTitle}</h2>
+          <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
+            {es.fixture.qualifiedHint}
+          </p>
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-[var(--color-border)] text-left text-[var(--color-muted-foreground)]">
+                  <th className="pb-2 pr-3">Código</th>
+                  <th className="pb-2 pr-3">{es.pronosticos.team}</th>
+                  <th className="pb-2 pr-3">Vía</th>
+                  <th className="pb-2 pr-3">{es.pronosticos.pg}</th>
+                  <th className="pb-2 pr-3">{es.pronosticos.pts}</th>
+                  <th className="pb-2 pr-3">{es.pronosticos.dg}</th>
+                  <th className="pb-2">GF</th>
+                </tr>
+              </thead>
+              <tbody>
+                {qualifiedTeams.map((team) => (
+                  <tr
+                    key={team.code}
+                    className="border-b border-[var(--color-border)]/60"
+                  >
+                    <td className="py-2 pr-3">
+                      <span className="rounded-full bg-[var(--color-muted)] px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-[var(--color-muted-foreground)]">
+                        {team.code}
+                      </span>
+                    </td>
+                    <td className="py-2 pr-3 font-medium">
+                      <span className="inline-flex items-center gap-1.5">
+                        <TeamFlag fifaCode={team.fifaCode} name={team.name} />
+                        {team.name}
+                      </span>
+                    </td>
+                    <td className="py-2 pr-3 text-[var(--color-muted-foreground)]">
+                      {team.qualification}
+                    </td>
+                    <td className="py-2 pr-3 tabular-nums">{team.played}</td>
+                    <td className="py-2 pr-3 tabular-nums">{team.pts}</td>
+                    <td className="py-2 pr-3 tabular-nums">{team.gd}</td>
+                    <td className="py-2 tabular-nums">{team.gf}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </section>
       )}

@@ -1,11 +1,127 @@
 import type { GroupMatchResult, GroupStanding, StandingRow, TeamRef } from "./types";
 
-/** FIFA tie-break: points → GD → GF → alphabetical by code (simplified). */
-function compareStanding(a: StandingRow, b: StandingRow): number {
-  if (b.pts !== a.pts) return b.pts - a.pts;
+interface HeadToHeadRow {
+  row: StandingRow;
+  pts: number;
+  gd: number;
+  gf: number;
+}
+
+function compareOverallTieBreak(a: StandingRow, b: StandingRow): number {
   if (b.gd !== a.gd) return b.gd - a.gd;
   if (b.gf !== a.gf) return b.gf - a.gf;
+  if (b.teamConductScore !== a.teamConductScore) {
+    return b.teamConductScore - a.teamConductScore;
+  }
+
+  const aRanking = a.fifaRanking ?? Number.POSITIVE_INFINITY;
+  const bRanking = b.fifaRanking ?? Number.POSITIVE_INFINITY;
+  if (aRanking !== bRanking) return aRanking - bRanking;
+
+  const aManual = a.manualTieBreakRank ?? Number.POSITIVE_INFINITY;
+  const bManual = b.manualTieBreakRank ?? Number.POSITIVE_INFINITY;
+  if (aManual !== bManual) return aManual - bManual;
+
   return a.fifaCode.localeCompare(b.fifaCode);
+}
+
+function groupByMetric(
+  rows: HeadToHeadRow[],
+  metric: keyof Pick<HeadToHeadRow, "pts" | "gd" | "gf">
+): HeadToHeadRow[][] {
+  const sorted = [...rows].sort((a, b) => b[metric] - a[metric]);
+  const groups: HeadToHeadRow[][] = [];
+
+  for (const row of sorted) {
+    const last = groups.at(-1);
+    if (last && last[0]![metric] === row[metric]) {
+      last.push(row);
+    } else {
+      groups.push([row]);
+    }
+  }
+
+  return groups;
+}
+
+function computeHeadToHeadRows(
+  rows: StandingRow[],
+  results: GroupMatchResult[]
+): HeadToHeadRow[] {
+  const tiedIds = new Set(rows.map((row) => row.teamId));
+  const byId = new Map(
+    rows.map((row) => [
+      row.teamId,
+      {
+        row,
+        pts: 0,
+        gd: 0,
+        gf: 0,
+      },
+    ])
+  );
+
+  for (const result of results) {
+    if (!tiedIds.has(result.homeTeamId) || !tiedIds.has(result.awayTeamId)) continue;
+
+    const home = byId.get(result.homeTeamId);
+    const away = byId.get(result.awayTeamId);
+    if (!home || !away) continue;
+
+    home.gf += result.homeGoals;
+    home.gd += result.homeGoals - result.awayGoals;
+    away.gf += result.awayGoals;
+    away.gd += result.awayGoals - result.homeGoals;
+
+    if (result.homeGoals > result.awayGoals) {
+      home.pts += 3;
+    } else if (result.homeGoals < result.awayGoals) {
+      away.pts += 3;
+    } else {
+      home.pts += 1;
+      away.pts += 1;
+    }
+  }
+
+  return [...byId.values()];
+}
+
+function rankHeadToHeadBuckets(
+  rows: StandingRow[],
+  results: GroupMatchResult[]
+): StandingRow[][] {
+  if (rows.length <= 1) return [rows];
+
+  const headToHeadRows = computeHeadToHeadRows(rows, results);
+  for (const metric of ["pts", "gd", "gf"] as const) {
+    const groups = groupByMetric(headToHeadRows, metric);
+    if (groups.length > 1) {
+      return groups.flatMap((group) =>
+        rankHeadToHeadBuckets(
+          group.map((entry) => entry.row),
+          results
+        )
+      );
+    }
+  }
+
+  return [rows];
+}
+
+function rankByOfficialTieBreakers(
+  rows: StandingRow[],
+  groupResults: GroupMatchResult[]
+): StandingRow[] {
+  const pointsGroups = groupByMetric(
+    rows.map((row) => ({ row, pts: row.pts, gd: row.gd, gf: row.gf })),
+    "pts"
+  );
+
+  return pointsGroups.flatMap((pointsGroup) => {
+    const tiedRows = pointsGroup.map((entry) => entry.row);
+    const headToHeadBuckets = rankHeadToHeadBuckets(tiedRows, groupResults);
+    return headToHeadBuckets.flatMap((bucket) => [...bucket].sort(compareOverallTieBreak));
+  });
 }
 
 function initRow(team: TeamRef): StandingRow {
@@ -21,6 +137,9 @@ function initRow(team: TeamRef): StandingRow {
     gc: 0,
     gd: 0,
     pts: 0,
+    teamConductScore: team.teamConductScore ?? 0,
+    fifaRanking: team.fifaRanking ?? null,
+    manualTieBreakRank: team.manualTieBreakRank ?? null,
   };
 }
 
@@ -66,7 +185,7 @@ export function computeGroupStanding(
     applyResult(rows, r);
   }
 
-  const sorted = [...rows.values()].sort(compareStanding);
+  const sorted = rankByOfficialTieBreakers([...rows.values()], results);
   sorted.forEach((row, i) => {
     row.rank = i + 1;
   });

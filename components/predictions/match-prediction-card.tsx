@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { savePredictionDraft, applyPaidPredictionChange } from "@/app/actions/predictions";
+import { savePredictionDraft, applyPaidPredictionChange, saveQualifierAdjustment } from "@/app/actions/predictions";
 import { TeamWithFlag } from "@/components/predictions/team-flag";
 import { es } from "@/lib/i18n/es";
 import { formatMatchTime } from "@/lib/matches/format-datetime";
@@ -35,6 +35,7 @@ export interface MatchCardProps {
   predictionId?: string;
   disabled: boolean;
   paidChangeMode?: boolean;
+  qualifierAdjustmentMode?: boolean;
   paidChangeEligible?: boolean;
   paidChangeBlockReason?: PaidChangeBlockReason;
   changesExhausted?: boolean;
@@ -54,18 +55,27 @@ function paidChangeBlockMessage(reason: PaidChangeBlockReason): string {
 function PredictionTeamSide({
   team,
   label,
+  sourceLabel,
 }: {
   team: MatchCardTeam | null;
   label: string;
+  sourceLabel?: string;
 }) {
   if (team?.fifa_code) {
     return (
-      <TeamWithFlag
-        name={team.name_es}
-        fifaCode={team.fifa_code}
-        align="center"
-        flagSize="sm"
-      />
+      <div className="flex flex-col items-center gap-1 text-center">
+        {sourceLabel && (
+          <span className="rounded-full bg-[var(--color-muted)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--color-muted-foreground)]">
+            {sourceLabel}
+          </span>
+        )}
+        <TeamWithFlag
+          name={team.name_es}
+          fifaCode={team.fifa_code}
+          align="center"
+          flagSize="sm"
+        />
+      </div>
     );
   }
 
@@ -215,6 +225,7 @@ export function MatchPredictionCard({
   predictionId,
   disabled,
   paidChangeMode,
+  qualifierAdjustmentMode,
   paidChangeEligible = true,
   paidChangeBlockReason,
   changesExhausted,
@@ -238,8 +249,11 @@ export function MatchPredictionCard({
   const isDraw =
     homeScore !== "" && awayScore !== "" && Number(homeScore) === Number(awayScore);
   const canEditPaidChange = paidChangeMode && editingPaidChange && !changesExhausted;
-  const inputsDisabled =
-    paidChangeMode ? !canEditPaidChange : disabled;
+  const inputsDisabled = qualifierAdjustmentMode
+    ? disabled
+    : paidChangeMode
+      ? !canEditPaidChange
+      : disabled;
 
   useEffect(() => {
     if (editingPaidChange) return;
@@ -323,7 +337,8 @@ export function MatchPredictionCard({
 
   const persistDraft = useCallback(
     async (h: string, a: string, adv: number | null) => {
-      if (disabled || paidChangeMode) return;
+      if (disabled) return;
+      if (paidChangeMode && !qualifierAdjustmentMode) return;
       if (h === "" || a === "") return;
       const hn = Number(h);
       const an = Number(a);
@@ -335,25 +350,31 @@ export function MatchPredictionCard({
 
       setStatus("saving");
       try {
-        await savePredictionDraft(matchId, hn, an, {
-          predictedAdvancesTeamId: hn === an ? adv : null,
-        });
+        if (qualifierAdjustmentMode) {
+          await saveQualifierAdjustment(matchId, hn, an, {
+            predictedAdvancesTeamId: hn === an ? adv : null,
+          });
+        } else {
+          await savePredictionDraft(matchId, hn, an, {
+            predictedAdvancesTeamId: hn === an ? adv : null,
+          });
+        }
         setStatus("saved");
         onSaved?.();
       } catch {
         setStatus("error");
       }
     },
-    [disabled, paidChangeMode, matchId, phase, isKnockout, onSaved]
+    [disabled, paidChangeMode, qualifierAdjustmentMode, matchId, isKnockout, onSaved]
   );
 
   const scheduleSave = useCallback(
     (h: string, a: string, adv: number | null) => {
-      if (paidChangeMode) return;
+      if (paidChangeMode && !qualifierAdjustmentMode) return;
       if (timer.current) clearTimeout(timer.current);
       timer.current = setTimeout(() => persistDraft(h, a, adv), 500);
     },
-    [persistDraft, paidChangeMode]
+    [persistDraft, paidChangeMode, qualifierAdjustmentMode]
   );
 
   const onHomeChange = (v: string) => {
@@ -394,9 +415,11 @@ export function MatchPredictionCard({
   return (
     <article
       className={`rounded-lg border px-3 py-2.5 ${
-        isJornadaTopScorer
+        qualifierAdjustmentMode
           ? "border-emerald-500/45 bg-emerald-500/[0.08] shadow-sm shadow-emerald-500/10"
-          : "border-[var(--color-border)] bg-[var(--color-card)]"
+          : isJornadaTopScorer
+            ? "border-emerald-500/45 bg-emerald-500/[0.08] shadow-sm shadow-emerald-500/10"
+            : "border-[var(--color-border)] bg-[var(--color-card)]"
       }`}
     >
       <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-[var(--color-muted-foreground)]">
@@ -405,6 +428,11 @@ export function MatchPredictionCard({
             {es.fixture.matchNumber} {matchNumber}
             {groupLetter ? ` · Grupo ${groupLetter}` : ` · ${PHASE_LABELS[phase]}`}
           </span>
+          {qualifierAdjustmentMode && (
+            <span className="inline-flex items-center rounded-full bg-emerald-500/20 px-2 py-0.5 text-[11px] font-semibold text-emerald-800 dark:text-emerald-200">
+              {es.pronosticos.qualifierAdjustmentMatchBadge}
+            </span>
+          )}
           {isJornadaTopScorer && (
             <span
               className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[11px] font-semibold text-emerald-800 dark:text-emerald-200"
@@ -432,7 +460,7 @@ export function MatchPredictionCard({
 
       <div className="mt-2 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1 sm:gap-2">
         <div className="flex min-w-0 justify-center">
-          <PredictionTeamSide team={home} label={homeName} />
+          <PredictionTeamSide team={home} label={homeName} sourceLabel={homeLabel} />
         </div>
 
         <div className="flex shrink-0 items-center justify-center gap-0.5 sm:gap-1.5">
@@ -456,7 +484,7 @@ export function MatchPredictionCard({
         </div>
 
         <div className="flex min-w-0 justify-center">
-          <PredictionTeamSide team={away} label={awayName} />
+          <PredictionTeamSide team={away} label={awayName} sourceLabel={awayLabel} />
         </div>
       </div>
 
@@ -502,7 +530,7 @@ export function MatchPredictionCard({
           </span>
         </div>
 
-        {paidChangeMode && (
+        {paidChangeMode && !qualifierAdjustmentMode && (
           <div className="flex flex-col items-end gap-2">
             {changesExhausted && (
               <span className="max-w-full text-right text-xs text-amber-700 dark:text-amber-300">

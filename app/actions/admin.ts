@@ -25,6 +25,7 @@ const REVALIDATE_PATHS = [
 function revalidatePublicPaths() {
   revalidateTag(CACHE_TAGS.leaderboard);
   revalidateTag(CACHE_TAGS.fixture);
+  revalidateTag(CACHE_TAGS.appConfig);
   for (const path of REVALIDATE_PATHS) {
     revalidatePath(path);
   }
@@ -217,6 +218,149 @@ export async function resolveOfficialKnockoutBracket() {
 
   revalidatePublicPaths();
   return result;
+}
+
+export async function validateOfficialQualifiers() {
+  const { user } = await requireAdmin();
+  const admin = createAdminClient();
+
+  const { data: groupMatches, error: groupError } = await admin
+    .from("matches")
+    .select("id, status, home_score, away_score")
+    .eq("phase", "group_stage");
+
+  if (groupError) throw new Error(groupError.message);
+
+  const groupStageComplete =
+    (groupMatches ?? []).length === 72 &&
+    (groupMatches ?? []).every(
+      (match) =>
+        match.status === "finished" &&
+        match.home_score != null &&
+        match.away_score != null
+    );
+
+  if (!groupStageComplete) {
+    throw new Error("group_stage_not_complete");
+  }
+
+  const bracket = await resolveOfficialBracket(admin);
+  const validatedAt = new Date().toISOString();
+
+  const { error: configError } = await admin.from("app_config").upsert(
+    [
+      {
+        key: "results.official_qualifiers_validated",
+        value: true,
+        description: "Indica si el administrador validó la lista oficial de clasificados a eliminatorias",
+        updated_at: validatedAt,
+      },
+      {
+        key: "results.official_qualifiers_validated_at",
+        value: validatedAt,
+        description: "Fecha de validación admin de clasificados oficiales a eliminatorias",
+        updated_at: validatedAt,
+      },
+    ],
+    { onConflict: "key" }
+  );
+
+  if (configError) throw new Error(configError.message);
+
+  await admin.from("admin_actions").insert({
+    admin_id: user.id,
+    action: "validate_official_qualifiers",
+    target_type: "app_config",
+    target_id: "results.official_qualifiers_validated",
+    details: { validatedAt, bracket },
+  });
+
+  revalidatePublicPaths();
+  return { validatedAt, bracket };
+}
+
+function nullableInteger(value: number | null | undefined): number | null {
+  if (value == null || !Number.isFinite(value)) return null;
+  return Math.round(value);
+}
+
+export async function updateTeamTieBreakMetadata(
+  teamId: number,
+  input: {
+    teamConductScore?: number | null;
+    fifaRanking?: number | null;
+    manualTieBreakRank?: number | null;
+  }
+) {
+  const { user } = await requireAdmin();
+  const admin = createAdminClient();
+
+  const { data: team, error: fetchErr } = await admin
+    .from("teams")
+    .select("id, fifa_code, name_es, team_conduct_score, fifa_ranking, manual_tie_break_rank")
+    .eq("id", teamId)
+    .maybeSingle();
+
+  if (fetchErr || !team) throw new Error(fetchErr?.message ?? "team_not_found");
+
+  const next = {
+    team_conduct_score:
+      input.teamConductScore === undefined
+        ? (team.team_conduct_score ?? 0)
+        : (nullableInteger(input.teamConductScore) ?? 0),
+    fifa_ranking:
+      input.fifaRanking === undefined
+        ? (team.fifa_ranking ?? null)
+        : nullableInteger(input.fifaRanking),
+    manual_tie_break_rank:
+      input.manualTieBreakRank === undefined
+        ? (team.manual_tie_break_rank ?? null)
+        : nullableInteger(input.manualTieBreakRank),
+  };
+
+  const { error } = await admin
+    .from("teams")
+    .update(next)
+    .eq("id", teamId);
+
+  if (error) throw new Error(error.message);
+
+  const now = new Date().toISOString();
+  const { error: configError } = await admin.from("app_config").upsert(
+    {
+      key: "results.official_qualifiers_validated",
+      value: false,
+      description: "Indica si el administrador validó la lista oficial de clasificados a eliminatorias",
+      updated_at: now,
+    },
+    { onConflict: "key" }
+  );
+
+  if (configError) throw new Error(configError.message);
+
+  await admin.from("admin_actions").insert({
+    admin_id: user.id,
+    action: "update_team_tiebreak_metadata",
+    target_type: "teams",
+    target_id: String(teamId),
+    details: {
+      team: { fifaCode: team.fifa_code, name: team.name_es },
+      previous: {
+        teamConductScore: team.team_conduct_score,
+        fifaRanking: team.fifa_ranking,
+        manualTieBreakRank: team.manual_tie_break_rank,
+      },
+      current: {
+        teamConductScore: next.team_conduct_score,
+        fifaRanking: next.fifa_ranking,
+        manualTieBreakRank: next.manual_tie_break_rank,
+      },
+    },
+  });
+
+  revalidatePublicPaths();
+  revalidatePath("/admin/resultados");
+  return next;
 }
 
 export async function setPublicPredictionsEnabled(enabled: boolean) {

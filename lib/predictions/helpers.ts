@@ -162,7 +162,14 @@ export function computePredictionSummary(
 }
 
 export function resolveAdvancingThirdGroups(
-  teams: { id: number; fifa_code: string; group_letter: string }[],
+  teams: {
+    id: number;
+    fifa_code: string;
+    group_letter: string;
+    fifa_ranking?: number | null;
+    team_conduct_score?: number | null;
+    manual_tie_break_rank?: number | null;
+  }[],
   groupResults: GroupMatchResult[],
   groupMatchIds: string[],
   predictions: DbPrediction[]
@@ -176,6 +183,9 @@ export function resolveAdvancingThirdGroups(
     id: t.id,
     fifaCode: t.fifa_code,
     groupLetter: t.group_letter,
+    fifaRanking: t.fifa_ranking ?? null,
+    teamConductScore: t.team_conduct_score ?? 0,
+    manualTieBreakRank: t.manual_tie_break_rank ?? null,
   }));
   const standings = computeAllGroupStandings(teamRefs, groupResults);
   return computeAdvancingThirdGroups(standings);

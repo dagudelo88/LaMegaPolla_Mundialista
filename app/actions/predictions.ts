@@ -14,6 +14,7 @@ import { syncUserPredictionLockState } from "@/lib/predictions/sync-submission-l
 import { buildGroupResultsFromPredictions, resolveAdvancingThirdGroups } from "@/lib/predictions/helpers";
 import { fetchPronosticosPayload } from "@/lib/predictions/fetch-pronosticos-payload";
 import { canPaidChangeMatch } from "@/lib/predictions/paid-change-eligibility";
+import { loadQualifierAdjustmentWindowState, isQualifierAdjustmentMatch } from "@/lib/predictions/qualifier-adjustment-window";
 import { validateFullSubmission } from "@/lib/predictions/submission-validator";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -129,7 +130,7 @@ export async function submitFullTournament() {
 
   const { data: teams } = await supabase
     .from("teams")
-    .select("id, fifa_code, group_letter");
+    .select("*");
 
   const groupResults = buildGroupResultsFromPredictions(
     groupMatches as Parameters<typeof buildGroupResultsFromPredictions>[0],
@@ -320,6 +321,115 @@ export async function applyPaidPredictionChange(
   } else {
     await recalculateUserTotalPoints(admin, user.id);
   }
+
+  revalidateTag(CACHE_TAGS.leaderboard);
+  revalidatePath("/dashboard");
+  revalidatePath("/pronosticos");
+  revalidatePath("/transparencia");
+}
+
+/** REGLAS §5 — free knockout adjustments when official third-place order differs */
+export async function saveQualifierAdjustment(
+  matchId: string,
+  newHome: number,
+  newAway: number,
+  opts?: { predictedAdvancesTeamId?: number | null }
+) {
+  const user = await requireUser();
+  const supabase = await createClient();
+
+  const globalDeadline = await getGlobalDeadlineIso();
+  if (!isGlobalDeadlinePassed(globalDeadline)) {
+    throw new Error("before_global_deadline");
+  }
+
+  const submitted = await getSubmissionState(user.id);
+  if (!submitted) throw new Error("not_submitted_yet");
+
+  const windowState = await loadQualifierAdjustmentWindowState(supabase, user.id);
+  if (!windowState.active) {
+    throw new Error("qualifier_adjustment_closed");
+  }
+  if (!isQualifierAdjustmentMatch(windowState, matchId)) {
+    throw new Error("match_not_affected");
+  }
+
+  const home = clampScore(newHome);
+  const away = clampScore(newAway);
+
+  const { data: match } = await supabase
+    .from("matches")
+    .select("id, phase, status, kickoff_at, prediction_deadline")
+    .eq("id", matchId)
+    .maybeSingle();
+
+  if (!match) throw new Error("match_not_found");
+  if (match.phase === "group_stage") throw new Error("group_stage_not_allowed");
+
+  const eligibility = canPaidChangeMatch(match);
+  if (!eligibility.allowed) {
+    throw new Error(eligibility.reason ?? "match_locked");
+  }
+
+  const isKnockout = true;
+  const isDraw = home === away;
+  let advancesId = opts?.predictedAdvancesTeamId ?? null;
+  if (isKnockout && isDraw && advancesId == null) {
+    throw new Error("advance_team_required");
+  }
+  if (!isDraw) advancesId = null;
+
+  const { data: prediction } = await supabase
+    .from("predictions")
+    .select(
+      "id, predicted_home, predicted_away, predicted_advances_team_id, locked"
+    )
+    .eq("user_id", user.id)
+    .eq("match_id", matchId)
+    .maybeSingle();
+
+  if (!prediction) throw new Error("prediction_not_found");
+  if (!prediction.locked) throw new Error("prediction_not_locked");
+
+  const unchanged =
+    prediction.predicted_home === home &&
+    prediction.predicted_away === away &&
+    (prediction.predicted_advances_team_id ?? null) === advancesId;
+  if (unchanged) throw new Error("unchanged");
+
+  const today = getTournamentTodayKey();
+
+  const { error: changeErr } = await supabase.from("prediction_changes").insert({
+    user_id: user.id,
+    prediction_id: prediction.id,
+    match_id: matchId,
+    old_home: prediction.predicted_home,
+    old_away: prediction.predicted_away,
+    old_advances_team_id: prediction.predicted_advances_team_id,
+    new_home: home,
+    new_away: away,
+    new_advances_team_id: advancesId,
+    points_spent: 0,
+    change_date: today,
+  });
+
+  if (changeErr) throw new Error(changeErr.message);
+
+  const admin = createAdminClient();
+
+  const { error: predErr } = await admin
+    .from("predictions")
+    .update({
+      predicted_home: home,
+      predicted_away: away,
+      predicted_is_draw: isDraw,
+      predicted_advances_team_id: advancesId,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", prediction.id)
+    .eq("user_id", user.id);
+
+  if (predErr) throw new Error(predErr.message);
 
   revalidateTag(CACHE_TAGS.leaderboard);
   revalidatePath("/dashboard");

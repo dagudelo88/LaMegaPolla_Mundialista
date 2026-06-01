@@ -46,12 +46,19 @@ function statusClass(status: string): string {
 function TeamSide({ team }: { team: FixtureTeamSide }) {
   if (team.fifa_code) {
     return (
-      <TeamWithFlag
-        name={team.name_es}
-        fifaCode={team.fifa_code}
-        align="center"
-        flagSize="md"
-      />
+      <div className="flex flex-col items-center gap-1 text-center">
+        {team.sourceLabel && (
+          <span className="rounded-full bg-[var(--color-muted)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--color-muted-foreground)]">
+            {team.sourceLabel}
+          </span>
+        )}
+        <TeamWithFlag
+          name={team.name_es}
+          fifaCode={team.fifa_code}
+          align="center"
+          flagSize="md"
+        />
+      </div>
     );
   }
 

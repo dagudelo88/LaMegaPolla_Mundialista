@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AdminResultsPanel } from "@/components/admin/admin-results-panel";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { es } from "@/lib/i18n/es";
+import { buildOfficialStandings } from "@/lib/matches/build-standings";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { MatchPhase, MatchWithTeams } from "@/types/database";
 
@@ -15,7 +16,7 @@ export default async function AdminResultadosPage() {
   const [{ data: teams }, { data: matchesRaw }] = await Promise.all([
     admin
       .from("teams")
-      .select("id, fifa_code, name_es, group_letter, flag_emoji")
+      .select("*")
       .order("group_letter")
       .order("fifa_code"),
     admin.from("matches").select(MATCH_SELECT).order("fifa_match_number"),
@@ -28,6 +29,17 @@ export default async function AdminResultadosPage() {
     home_team: m.home_team_id ? teamMap.get(m.home_team_id) ?? null : null,
     away_team: m.away_team_id ? teamMap.get(m.away_team_id) ?? null : null,
   }));
+  const { qualifiedTeams, thirdPlaceTeams } = buildOfficialStandings(teams ?? [], matches);
+  const groupStageComplete =
+    matches.filter((match) => match.phase === "group_stage").length === 72 &&
+    matches
+      .filter((match) => match.phase === "group_stage")
+      .every(
+        (match) =>
+          match.status === "finished" &&
+          match.home_score != null &&
+          match.away_score != null
+      );
 
   return (
     <section className="space-y-6">
@@ -59,7 +71,12 @@ export default async function AdminResultadosPage() {
         </p>
       </header>
 
-      <AdminResultsPanel matches={matches} />
+      <AdminResultsPanel
+        matches={matches}
+        officialQualifiedTeams={qualifiedTeams}
+        officialThirdPlaceTeams={thirdPlaceTeams}
+        groupStageComplete={groupStageComplete}
+      />
     </section>
   );
 }

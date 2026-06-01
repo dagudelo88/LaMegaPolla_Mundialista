@@ -13,6 +13,7 @@ export async function countPaidChangesToday(
     .from("prediction_changes")
     .select("*", { count: "exact", head: true })
     .eq("user_id", userId)
+    .gt("points_spent", 0)
     .gte("created_at", start)
     .lt("created_at", end);
 

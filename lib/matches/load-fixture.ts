@@ -11,7 +11,7 @@ async function fetchOfficialFixture() {
 
   const { data: teams, error: teamsError } = await supabase
     .from("teams")
-    .select("id, fifa_code, name_es, group_letter, flag_emoji")
+    .select("*")
     .order("group_letter")
     .order("fifa_code");
 

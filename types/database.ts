@@ -37,6 +37,9 @@ export interface Team {
   group_letter: string;
   flag_emoji: string | null;
   confederation?: string | null;
+  fifa_ranking?: number | null;
+  team_conduct_score?: number;
+  manual_tie_break_rank?: number | null;
 }
 
 export interface Match {

@@ -27,6 +27,9 @@ interface TeamRow {
   name_en: string;
   group_letter: string;
   flag_emoji: string;
+  fifa_ranking?: number | null;
+  team_conduct_score?: number | null;
+  manual_tie_break_rank?: number | null;
 }
 
 interface GroupMatchRow {

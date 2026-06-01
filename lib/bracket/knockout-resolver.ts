@@ -3,7 +3,7 @@ import {
   isGroupStageCompleteForGroup,
 } from "./group-completion";
 import { computeAllGroupStandings, getTeamAtRank } from "./group-standings";
-import { pickBestThirdForSlot } from "./third-place-advancement";
+import { resolveThirdPlaceScenarioTeams } from "./third-place-advancement";
 import type {
   BracketSlot,
   GroupMatchResult,
@@ -17,15 +17,17 @@ import type {
 export interface KnockoutResolveOptions {
   /** Only resolve group/third slots after official group-stage results are complete. */
   requireOfficialGroupCompletion?: boolean;
+  /** Precomputed FIFA Annex C assignments: match number -> third-place team id. */
+  thirdPlaceTeamByMatch?: Map<number, number>;
 }
 
 function resolveSlot(
   slot: BracketSlot,
+  matchNumber: number,
   standings: ReturnType<typeof computeAllGroupStandings>,
   advancingThirdGroups: string[],
   winners: Map<number, number>,
   losers: Map<number, number>,
-  usedThirdTeamIds: Set<number>,
   teams: TeamRef[],
   groupResults: GroupMatchResult[],
   options?: KnockoutResolveOptions
@@ -49,14 +51,7 @@ function resolveSlot(
       ) {
         return null;
       }
-      const pick = pickBestThirdForSlot(
-        standings,
-        advancingThirdGroups,
-        slot.eligible_groups,
-        usedThirdTeamIds
-      );
-      if (pick) usedThirdTeamIds.add(pick.teamId);
-      return pick?.teamId ?? null;
+      return options?.thirdPlaceTeamByMatch?.get(matchNumber) ?? null;
     }
     case "match_winner":
       return winners.get(slot.match_number) ?? null;
@@ -121,28 +116,30 @@ export function resolveKnockoutMatch(
   options?: KnockoutResolveOptions
 ): ResolvedMatchTeams {
   const standings = computeAllGroupStandings(teams, groupResults);
-  const usedThirdTeamIds = new Set<number>();
+  const thirdPlaceTeamByMatch =
+    options?.thirdPlaceTeamByMatch ??
+    resolveThirdPlaceScenarioTeams(standings, advancingThirdGroups);
   const homeTeamId = resolveSlot(
     def.homeSource,
+    def.fifaMatchNumber,
     standings,
     advancingThirdGroups,
     winners,
     losers,
-    usedThirdTeamIds,
     teams,
     groupResults,
-    options
+    { ...options, thirdPlaceTeamByMatch }
   );
   const awayTeamId = resolveSlot(
     def.awaySource,
+    def.fifaMatchNumber,
     standings,
     advancingThirdGroups,
     winners,
     losers,
-    usedThirdTeamIds,
     teams,
     groupResults,
-    options
+    { ...options, thirdPlaceTeamByMatch }
   );
 
   return {
@@ -217,6 +214,11 @@ export function resolveAllKnockoutMatches(
 ): Map<number, ResolvedMatchTeams> {
   const resolved = new Map<number, ResolvedMatchTeams>();
   const sorted = [...knockoutDefs].sort((a, b) => a.fifaMatchNumber - b.fifaMatchNumber);
+  const standings = computeAllGroupStandings(teams, groupResults);
+  const thirdPlaceTeamByMatch = resolveThirdPlaceScenarioTeams(
+    standings,
+    advancingThirdGroups
+  );
 
   const winners = new Map<number, number>();
   const losers = new Map<number, number>();
@@ -228,7 +230,8 @@ export function resolveAllKnockoutMatches(
       groupResults,
       advancingThirdGroups,
       winners,
-      losers
+      losers,
+      { thirdPlaceTeamByMatch }
     );
     resolved.set(def.fifaMatchNumber, teamsForMatch);
 

@@ -4,10 +4,19 @@ import { buildOfficialStandings } from "@/lib/matches/build-standings";
 import { loadOfficialFixture } from "@/lib/matches/load-fixture";
 import { countOfficialResults } from "@/lib/matches/official-results";
 import { es } from "@/lib/i18n/es";
+import { getConfigBoolean } from "@/lib/config/get-config";
 
 export default async function ResultadosPage() {
   const { teams, matches } = await loadOfficialFixture();
-  const { groups: standings, advancingThirdGroups } = buildOfficialStandings(teams, matches);
+  const {
+    groups: standings,
+    advancingThirdGroups,
+    qualifiedTeams,
+  } = buildOfficialStandings(teams, matches);
+  const officialQualifiersValidated = await getConfigBoolean(
+    "results.official_qualifiers_validated",
+    false
+  );
   const stats = countOfficialResults(matches);
 
   return (
@@ -34,6 +43,8 @@ export default async function ResultadosPage() {
         matches={matches}
         standings={standings}
         advancingThirdGroups={advancingThirdGroups}
+        qualifiedTeams={qualifiedTeams}
+        officialQualifiersValidated={officialQualifiersValidated}
         stats={stats}
       />
     </section>

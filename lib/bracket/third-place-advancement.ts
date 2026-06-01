@@ -1,4 +1,8 @@
 import type { GroupStanding, StandingRow } from "./types";
+import {
+  THIRD_PLACE_SCENARIOS,
+  THIRD_PLACE_SCENARIO_SLOT_MATCH_NUMBERS,
+} from "./third-place-scenarios";
 
 export const REQUIRED_THIRD_PLACE_COUNT = 8;
 
@@ -13,10 +17,23 @@ function compareThirdPlaceRows(a: StandingRow, b: StandingRow): number {
   if (b.pts !== a.pts) return b.pts - a.pts;
   if (b.gd !== a.gd) return b.gd - a.gd;
   if (b.gf !== a.gf) return b.gf - a.gf;
+
+  const aManual = a.manualTieBreakRank ?? Number.POSITIVE_INFINITY;
+  const bManual = b.manualTieBreakRank ?? Number.POSITIVE_INFINITY;
+  if (aManual !== bManual) return aManual - bManual;
+
+  if (b.teamConductScore !== a.teamConductScore) {
+    return b.teamConductScore - a.teamConductScore;
+  }
+
+  const aRanking = a.fifaRanking ?? Number.POSITIVE_INFINITY;
+  const bRanking = b.fifaRanking ?? Number.POSITIVE_INFINITY;
+  if (aRanking !== bRanking) return aRanking - bRanking;
+
   return a.fifaCode.localeCompare(b.fifaCode);
 }
 
-/** Rank all 12 third-place teams; top 8 advance (FIFA: pts → GD → GF). */
+/** Rank all 12 third-place teams; top 8 advance using FIFA 2026 criteria. */
 export function rankAllThirdPlaceTeams(standings: GroupStanding[]): RankedThirdPlace[] {
   const thirds: { group: string; row: StandingRow }[] = [];
 
@@ -59,7 +76,7 @@ export function validateThirdPlaceSelection(selectedGroups: string[]): {
   return { valid: true };
 }
 
-/** Rank third-place teams among advancing groups (FIFA: pts → GD → GF). */
+/** Rank third-place teams among advancing groups using FIFA 2026 criteria. */
 export function rankThirdPlaceTeams(
   standings: GroupStanding[],
   advancingThirdGroups: string[]
@@ -74,6 +91,47 @@ export function rankThirdPlaceTeams(
   }
 
   return thirds.sort((a, b) => compareThirdPlaceRows(a, b));
+}
+
+function scenarioKey(groups: string[]): string {
+  return [...new Set(groups)].sort().join("");
+}
+
+export function resolveThirdPlaceScenarioGroups(
+  advancingThirdGroups: string[]
+): Map<number, string> {
+  if (advancingThirdGroups.length !== REQUIRED_THIRD_PLACE_COUNT) return new Map();
+
+  const slots = THIRD_PLACE_SCENARIOS[scenarioKey(advancingThirdGroups)];
+  if (!slots) return new Map();
+
+  return new Map(
+    THIRD_PLACE_SCENARIO_SLOT_MATCH_NUMBERS.map((matchNumber, index) => [
+      matchNumber,
+      slots[index]!,
+    ])
+  );
+}
+
+export function resolveThirdPlaceScenarioTeams(
+  standings: GroupStanding[],
+  advancingThirdGroups: string[]
+): Map<number, number> {
+  const scenarioGroups = resolveThirdPlaceScenarioGroups(advancingThirdGroups);
+  const thirdByGroup = new Map<string, StandingRow>();
+
+  for (const standing of standings) {
+    const third = standing.positions.find((position) => position.rank === 3);
+    if (third) thirdByGroup.set(standing.group, third);
+  }
+
+  const assignments = new Map<number, number>();
+  for (const [matchNumber, group] of scenarioGroups) {
+    const third = thirdByGroup.get(group);
+    if (third) assignments.set(matchNumber, third.teamId);
+  }
+
+  return assignments;
 }
 
 export function pickBestThirdForSlot(
