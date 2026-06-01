@@ -94,10 +94,11 @@ export function AdminParticipantsTable({ participants }: AdminParticipantsTableP
         </p>
       ) : (
         <div className="mt-4 overflow-x-auto">
-          <table className="w-full min-w-[640px] text-left text-sm">
+          <table className="w-full min-w-[860px] text-left text-sm">
             <thead>
               <tr className="border-b border-[var(--color-border)]">
                 <th className="py-2 pr-4">{es.admin.participantColumn}</th>
+                <th className="py-2 pr-4">{es.admin.participantEmailColumn}</th>
                 <th className="py-2 pr-4">{es.landing.leaderboardPoints}</th>
                 <th className="py-2 pr-4">{es.admin.participantPredictionColumn}</th>
                 <th className="py-2 pr-4">{es.admin.participantPaidColumn}</th>
@@ -154,10 +155,10 @@ export function AdminParticipantsTable({ participants }: AdminParticipantsTableP
                           </span>
                         )}
                       </p>
-                      {!registered && p.email && (
-                        <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
-                          {p.email}
-                        </p>
+                    </td>
+                    <td className="py-3 pr-4 text-[var(--color-muted-foreground)]">
+                      {p.email ?? (
+                        <span className="text-xs text-[var(--color-muted-foreground)]">—</span>
                       )}
                     </td>
                     <td className="py-3 pr-4 tabular-nums">

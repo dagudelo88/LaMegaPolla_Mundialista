@@ -423,6 +423,7 @@ export const es = {
     participantsHint:
       "Marca el aporte recibido para incluir al jugador en el pool y la tabla (plazo: 10 jun 2026, 23:59 hora Colombia). También verás cuentas creadas que aún no completaron el registro con código y nickname.",
     participantColumn: "Participante",
+    participantEmailColumn: "Correo",
     participantPredictionColumn: "Pronóstico",
     participantPredictionYes: "Enviado",
     participantPredictionNo: "Pendiente",
