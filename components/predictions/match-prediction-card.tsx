@@ -91,6 +91,14 @@ function PredictionTeamSide({
 const SCORE_MIN = 0;
 const SCORE_MAX = 20;
 
+function displayScore(value: number | ""): string {
+  return value === "" ? String(SCORE_MIN) : String(value);
+}
+
+function hasSavedScore(value: number | ""): boolean {
+  return value !== "";
+}
+
 const scoreInputClass =
   "min-w-[1.5rem] w-7 border-0 bg-transparent p-0 text-center text-lg font-bold tabular-nums focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none sm:min-w-[2.5rem] sm:w-10 sm:text-3xl";
 
@@ -122,7 +130,7 @@ function ScoreStepper({
   if (!editable) {
     return (
       <span className="min-w-[2.25rem] text-center text-2xl font-bold tabular-nums sm:min-w-[2.5rem] sm:text-3xl">
-        {value !== "" ? value : "—"}
+        {value !== "" ? value : String(SCORE_MIN)}
       </span>
     );
   }
@@ -133,7 +141,7 @@ function ScoreStepper({
 
   const onInputChange = (raw: string) => {
     if (raw === "") {
-      onChange("");
+      onChange(String(SCORE_MIN));
       return;
     }
     const n = Number(raw);
@@ -234,12 +242,8 @@ export function MatchPredictionCard({
   jornadaTopScorerGoals,
   onSaved,
 }: MatchCardProps) {
-  const [homeScore, setHomeScore] = useState<string>(
-    initialHome === "" ? "" : String(initialHome)
-  );
-  const [awayScore, setAwayScore] = useState<string>(
-    initialAway === "" ? "" : String(initialAway)
-  );
+  const [homeScore, setHomeScore] = useState<string>(() => displayScore(initialHome));
+  const [awayScore, setAwayScore] = useState<string>(() => displayScore(initialAway));
   const [advancesId, setAdvancesId] = useState<number | null>(initialAdvancesTeamId);
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [editingPaidChange, setEditingPaidChange] = useState(false);
@@ -257,15 +261,15 @@ export function MatchPredictionCard({
 
   useEffect(() => {
     if (editingPaidChange) return;
-    setHomeScore(initialHome === "" ? "" : String(initialHome));
-    setAwayScore(initialAway === "" ? "" : String(initialAway));
+    setHomeScore(displayScore(initialHome));
+    setAwayScore(displayScore(initialAway));
     setAdvancesId(initialAdvancesTeamId);
     setEditingPaidChange(false);
   }, [initialHome, initialAway, initialAdvancesTeamId, editingPaidChange]);
 
   const resetPaidChangeDraft = useCallback(() => {
-    setHomeScore(initialHome === "" ? "" : String(initialHome));
-    setAwayScore(initialAway === "" ? "" : String(initialAway));
+    setHomeScore(displayScore(initialHome));
+    setAwayScore(displayScore(initialAway));
     setAdvancesId(initialAdvancesTeamId);
     setEditingPaidChange(false);
     setStatus("idle");
@@ -273,7 +277,6 @@ export function MatchPredictionCard({
 
   const applyPaidChange = useCallback(async () => {
     if (!paidChangeMode || changesExhausted || !predictionId) return;
-    if (homeScore === "" || awayScore === "") return;
 
     const hn = Number(homeScore);
     const an = Number(awayScore);
@@ -339,7 +342,6 @@ export function MatchPredictionCard({
     async (h: string, a: string, adv: number | null) => {
       if (disabled) return;
       if (paidChangeMode && !qualifierAdjustmentMode) return;
-      if (h === "" || a === "") return;
       const hn = Number(h);
       const an = Number(a);
       if (!Number.isInteger(hn) || !Number.isInteger(an) || hn < 0 || hn > 20 || an < 0 || an > 20) {
@@ -376,6 +378,26 @@ export function MatchPredictionCard({
     },
     [persistDraft, paidChangeMode, qualifierAdjustmentMode]
   );
+
+  const seededDefaultRef = useRef(false);
+
+  useEffect(() => {
+    if (seededDefaultRef.current) return;
+    if (disabled || paidChangeMode || qualifierAdjustmentMode) return;
+    if (hasSavedScore(initialHome) || hasSavedScore(initialAway)) return;
+    if (isKnockout) return;
+
+    seededDefaultRef.current = true;
+    void persistDraft("0", "0", null);
+  }, [
+    disabled,
+    paidChangeMode,
+    qualifierAdjustmentMode,
+    initialHome,
+    initialAway,
+    isKnockout,
+    persistDraft,
+  ]);
 
   const onHomeChange = (v: string) => {
     setHomeScore(v);
@@ -581,8 +603,6 @@ export function MatchPredictionCard({
                   variant="outline"
                   disabled={
                     status === "saving" ||
-                    homeScore === "" ||
-                    awayScore === "" ||
                     unchangedPaidChange
                   }
                   onClick={applyPaidChange}
