@@ -442,6 +442,39 @@ export const es = {
     participantIncompleteBadge: "Registro incompleto",
     participantIncompletePaid: "Debe completar /join",
     participantActionError: "No se pudo completar la acción.",
+    submitUserButton: "Enviar pronóstico completo",
+    submitUserSectionTitle: "Estado del envío",
+    submitUserSectionHint:
+      "Marca el pronóstico como enviado cuando todos los partidos estén completos.",
+    submitUserStatusSubmitted: "Enviado",
+    submitUserStatusReady: "Listo para enviar",
+    submitUserStatusDraft: "Borrador",
+    submitUserGroupsProgress: "Fase de grupos",
+    submitUserKnockoutProgress: "Eliminatorias",
+    submitUserSubmittedAt: "Enviado el {date}",
+    submitUserMissingGroups: "Faltan marcadores en fase de grupos.",
+    submitUserMissingKnockout: "Faltan marcadores en eliminatorias.",
+    submitUserMissingAdvances:
+      "Hay empates en eliminatorias sin indicar qué equipo avanza.",
+    submitUserMissingThirds:
+      "Faltan definir los mejores terceros según la clasificación simulada.",
+    submitUserConfirm:
+      "¿Enviar el pronóstico completo de {user} en su nombre? Quedará marcado como enviado.",
+    submitUserSuccess: "Pronóstico enviado correctamente.",
+    submitUserError: "No se pudo enviar el pronóstico.",
+    submitUserAlreadySubmitted: "Este jugador ya envió su pronóstico.",
+    submitUserIncompleteHint:
+      "Aún faltan partidos, empates sin desempate o datos incompletos para poder enviar.",
+    submitUserReadyTitle: "Pronóstico listo para enviar",
+    submitUserReadyHint:
+      "Todos los partidos están completos. Puedes enviarlo en nombre del jugador.",
+    submitAllTitle: "{count} jugador(es) con pronóstico completo pendiente de envío",
+    submitAllHint:
+      "Estos participantes tienen todos los marcadores pero aún no confirmaron el envío.",
+    submitAllButton: "Enviar todos los pronósticos completos",
+    submitAllConfirm:
+      "¿Enviar el pronóstico de {count} jugador(es)? Participantes: {users}",
+    submitAllSuccess: "Se enviaron {count} pronóstico(s) correctamente.",
     bugReports: {
       title: "Reportes de errores",
       navLabel: "Reportes",

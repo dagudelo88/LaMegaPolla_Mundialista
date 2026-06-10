@@ -1,9 +1,13 @@
 import {
   loadAdminPredictionsPageData,
   loadAdminUserPredictions,
+  loadAdminSubmitReadyUsers,
 } from "@/app/actions/admin-predictions";
 import { AdminPlayerPicker } from "@/components/admin/admin-player-picker";
 import { AdminUserPredictionsPanel } from "@/components/admin/admin-user-predictions-panel";
+import {
+  AdminSubmitAllCompleteButton,
+} from "@/components/admin/admin-submit-predictions-actions";
 import { es } from "@/lib/i18n/es";
 import type { MatchPhase, MatchWithTeams } from "@/types/database";
 
@@ -19,12 +23,20 @@ export async function AdminPlayerPredictionsSection({
   const { participants } = await loadAdminPredictionsPageData();
 
   let userData: Awaited<ReturnType<typeof loadAdminUserPredictions>> | null = null;
+  let readyToSubmitUsers: Awaited<ReturnType<typeof loadAdminSubmitReadyUsers>> = [];
+
   if (selectedPlayerId) {
     try {
       userData = await loadAdminUserPredictions(selectedPlayerId);
     } catch {
       userData = null;
     }
+  }
+
+  try {
+    readyToSubmitUsers = await loadAdminSubmitReadyUsers();
+  } catch {
+    readyToSubmitUsers = [];
   }
 
   const matches: MatchWithTeams[] | null = userData
@@ -62,13 +74,22 @@ export async function AdminPlayerPredictionsSection({
         </p>
       )}
 
+      <AdminSubmitAllCompleteButton readyUsers={readyToSubmitUsers} />
+
       {userData && matches && selectedPlayerId && (
         <AdminUserPredictionsPanel
           userId={selectedPlayerId}
           username={userData.profile.username}
           matches={matches}
           predictions={userData.predictions}
+          teams={userData.teams}
+          groupResults={userData.groupResults}
+          advancingThirdGroups={userData.advancingThirdGroups}
+          knockoutDefs={userData.knockoutDefs}
           overrideHistory={userData.overrideHistory}
+          submissionReadiness={userData.submissionReadiness}
+          submissionProgress={userData.submissionProgress}
+          submittedAt={userData.submittedAt}
         />
       )}
     </section>

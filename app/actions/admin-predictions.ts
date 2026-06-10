@@ -5,7 +5,13 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import type { MatchPhase } from "@/lib/scoring/calculate-match-points";
 import { recalculateUserMatchPoints } from "@/lib/scoring/process-user-match-points";
 import type { BracketSlot } from "@/lib/bracket/types";
-import { buildGroupResultsFromPredictions, resolveAdvancingThirdGroups } from "@/lib/predictions/helpers";
+import { getConfig } from "@/lib/config/get-config";
+import { DEFAULT_GLOBAL_DEADLINE } from "@/lib/config/tournament-deadline";
+import {
+  evaluateUserSubmissionReadiness,
+  loadUserSubmissionReadiness,
+} from "@/lib/predictions/submission-readiness";
+import { buildGroupResultsFromPredictions, countProgress, resolveAdvancingThirdGroups } from "@/lib/predictions/helpers";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { CACHE_TAGS } from "@/lib/cache/tags";
 
@@ -37,6 +43,10 @@ function validateAdminNote(note: string): string {
     throw new Error("admin_note_too_short");
   }
   return trimmed;
+}
+
+async function getGlobalDeadline(): Promise<string> {
+  return (await getConfig<string>("tournament.global_deadline")) ?? DEFAULT_GLOBAL_DEADLINE;
 }
 
 export async function loadAdminPredictionsPageData() {
@@ -134,18 +144,40 @@ export async function loadAdminUserPredictions(userId: string) {
     (predictions ?? []) as Parameters<typeof resolveAdvancingThirdGroups>[3]
   );
 
+  const globalDeadline = await getGlobalDeadline();
+  const submissionReadiness = evaluateUserSubmissionReadiness({
+    matches: matches as Parameters<typeof evaluateUserSubmissionReadiness>[0]["matches"],
+    predictions: (predictions ?? []) as Parameters<
+      typeof evaluateUserSubmissionReadiness
+    >[0]["predictions"],
+    teams: teams ?? [],
+    globalDeadline,
+    alreadySubmitted: submission?.is_complete ?? false,
+    skipDeadlineCheck: true,
+  });
+
+  const submissionProgress = countProgress(
+    groupMatchIds,
+    (matches ?? []).filter((m) => m.phase !== "group_stage").map((m) => m.id),
+    (predictions ?? []) as Parameters<typeof countProgress>[2]
+  );
+
   return {
     profile: {
       id: profile.id,
       username: profile.username ?? "—",
       totalPoints: profile.total_points,
     },
+    teams: teams ?? [],
     matches,
     predictions: predictions ?? [],
+    groupResults,
     isSubmitted: submission?.is_complete ?? false,
     submittedAt: submission?.submitted_at ?? null,
     advancingThirdGroups,
     overrideHistory: overrideHistory ?? [],
+    submissionReadiness,
+    submissionProgress,
     knockoutDefs: (matches ?? [])
       .filter((m) => m.phase !== "group_stage")
       .map((m) => ({
@@ -306,4 +338,147 @@ export async function adminOverridePrediction(input: {
 
   revalidateAll();
   return { pointsRecalculated };
+}
+
+export async function adminSubmitUserPredictions(userId: string) {
+  await requireAdmin();
+  const admin = createAdminClient();
+  const globalDeadline = await getGlobalDeadline();
+
+  const readiness = await loadUserSubmissionReadiness(admin, userId, globalDeadline, {
+    skipDeadlineCheck: true,
+  });
+
+  if (readiness.alreadySubmitted) {
+    throw new Error("already_submitted");
+  }
+
+  if (!readiness.ready) {
+    throw new Error(readiness.validation.errors[0] ?? "submission_incomplete");
+  }
+
+  const now = new Date().toISOString();
+  const { error } = await admin.from("user_tournament_submissions").upsert(
+    {
+      user_id: userId,
+      is_complete: true,
+      submitted_at: now,
+    },
+    { onConflict: "user_id" }
+  );
+
+  if (error) throw new Error(error.message);
+
+  revalidateAll();
+  return { submittedAt: now };
+}
+
+export async function adminSubmitAllCompletePredictions(): Promise<{
+  submitted: { userId: string; username: string }[];
+  skipped: { userId: string; username: string; reason: string }[];
+}> {
+  await requireAdmin();
+  const admin = createAdminClient();
+  const globalDeadline = await getGlobalDeadline();
+
+  const [{ data: profiles }, { data: submissions }] = await Promise.all([
+    admin
+      .from("profiles")
+      .select("id, username")
+      .not("invite_redeemed_at", "is", null)
+      .not("username", "is", null),
+    admin.from("user_tournament_submissions").select("user_id, is_complete"),
+  ]);
+
+  const submittedIds = new Set(
+    (submissions ?? []).filter((s) => s.is_complete).map((s) => s.user_id)
+  );
+
+  const pending = (profiles ?? []).filter((p) => !submittedIds.has(p.id));
+  const submitted: { userId: string; username: string }[] = [];
+  const skipped: { userId: string; username: string; reason: string }[] = [];
+
+  for (const profile of pending) {
+    const username = profile.username ?? "—";
+    try {
+      const readiness = await loadUserSubmissionReadiness(admin, profile.id, globalDeadline, {
+        skipDeadlineCheck: true,
+      });
+
+      if (!readiness.ready) {
+        skipped.push({
+          userId: profile.id,
+          username,
+          reason: readiness.validation.errors[0] ?? "submission_incomplete",
+        });
+        continue;
+      }
+
+      const now = new Date().toISOString();
+      const { error } = await admin.from("user_tournament_submissions").upsert(
+        {
+          user_id: profile.id,
+          is_complete: true,
+          submitted_at: now,
+        },
+        { onConflict: "user_id" }
+      );
+
+      if (error) {
+        skipped.push({ userId: profile.id, username, reason: error.message });
+        continue;
+      }
+
+      submitted.push({ userId: profile.id, username });
+    } catch (e) {
+      skipped.push({
+        userId: profile.id,
+        username,
+        reason: e instanceof Error ? e.message : "unknown_error",
+      });
+    }
+  }
+
+  if (submitted.length > 0) {
+    revalidateAll();
+  }
+
+  return { submitted, skipped };
+}
+
+export async function loadAdminSubmitReadyUsers(): Promise<
+  { userId: string; username: string }[]
+> {
+  await requireAdmin();
+  const admin = createAdminClient();
+  const globalDeadline = await getGlobalDeadline();
+
+  const [{ data: profiles }, { data: submissions }] = await Promise.all([
+    admin
+      .from("profiles")
+      .select("id, username")
+      .not("invite_redeemed_at", "is", null)
+      .not("username", "is", null),
+    admin.from("user_tournament_submissions").select("user_id, is_complete"),
+  ]);
+
+  const submittedIds = new Set(
+    (submissions ?? []).filter((s) => s.is_complete).map((s) => s.user_id)
+  );
+
+  const ready: { userId: string; username: string }[] = [];
+
+  for (const profile of profiles ?? []) {
+    if (submittedIds.has(profile.id) || !profile.username) continue;
+
+    const readiness = await loadUserSubmissionReadiness(admin, profile.id, globalDeadline, {
+      skipDeadlineCheck: true,
+    });
+
+    if (readiness.ready) {
+      ready.push({ userId: profile.id, username: profile.username });
+    }
+  }
+
+  return ready;
 }

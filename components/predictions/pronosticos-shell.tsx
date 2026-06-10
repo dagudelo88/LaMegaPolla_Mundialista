@@ -13,7 +13,7 @@ import { SubmittedEditableBanner } from "@/components/predictions/submitted-edit
 import { SubmissionSummary } from "@/components/predictions/submission-summary";
 import { countProgress } from "@/lib/predictions/helpers";
 import { es } from "@/lib/i18n/es";
-import { formatAppDateTime } from "@/lib/matches/format-datetime";
+import { formatDeadlineWithLocalHint } from "@/lib/matches/format-datetime";
 import { Button } from "@/components/ui/button";
 import type { MatchPhase } from "@/types/database";
 
@@ -112,7 +112,7 @@ export function PronosticosShell({
         <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-4">
           <p className="text-sm text-[var(--color-muted-foreground)]">
             {es.pronosticos.deadline}:{" "}
-            <strong>{formatAppDateTime(data.globalDeadline)}</strong>
+            <strong>{formatDeadlineWithLocalHint(data.globalDeadline)}</strong>
           </p>
           <p className="mt-2 text-sm">
             {es.pronosticos.progress}: {progress.groupDone}/{progress.groupTotal}{" "}

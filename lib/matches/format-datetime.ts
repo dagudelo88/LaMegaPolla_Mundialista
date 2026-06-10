@@ -54,3 +54,23 @@ export function formatAppDateTime(value: string | Date): string {
     hour12: false,
   }).format(date);
 }
+
+/** Same instant in the viewer's local timezone (browser / server runtime). */
+export function formatViewerLocalDateTime(value: string | Date): string {
+  const date = value instanceof Date ? value : new Date(value);
+  return new Intl.DateTimeFormat(APP_LOCALE, {
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(date);
+}
+
+export function formatDeadlineWithLocalHint(value: string | Date): string {
+  const colombia = formatAppDateTime(value);
+  const local = formatViewerLocalDateTime(value);
+  if (local === colombia) return colombia;
+  return `${colombia} (tu hora local: ${local})`;
+}

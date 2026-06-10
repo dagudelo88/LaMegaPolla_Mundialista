@@ -30,7 +30,10 @@ function isCompleteScore(h: number | undefined, a: number | undefined): boolean 
   );
 }
 
-export function validateFullSubmission(input: SubmissionValidationInput): SubmissionValidationResult {
+export function validateFullSubmission(
+  input: SubmissionValidationInput,
+  options?: { skipDeadlineCheck?: boolean }
+): SubmissionValidationResult {
   const errors: string[] = [];
   const now = input.now ?? new Date();
   const expectedGroup = input.expectedGroupCount ?? 72;
@@ -40,7 +43,7 @@ export function validateFullSubmission(input: SubmissionValidationInput): Submis
     errors.push("already_submitted");
   }
 
-  if (now >= new Date(input.globalDeadline)) {
+  if (!options?.skipDeadlineCheck && now >= new Date(input.globalDeadline)) {
     errors.push("deadline_passed");
   }
 

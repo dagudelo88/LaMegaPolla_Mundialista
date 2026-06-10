@@ -1,7 +1,7 @@
 "use client";
 
 import { es } from "@/lib/i18n/es";
-import { formatAppDateTime } from "@/lib/matches/format-datetime";
+import { formatAppDateTime, formatDeadlineWithLocalHint } from "@/lib/matches/format-datetime";
 import { GLOBAL_DEADLINE_LABEL } from "@/lib/config/tournament-deadline";
 
 interface SubmittedEditableBannerProps {
@@ -24,7 +24,7 @@ export function SubmittedEditableBanner({
       <p className="mt-2 text-sm">
         {es.pronosticos.submittedEditableBanner.replace(
           "{deadline}",
-          formatAppDateTime(globalDeadline)
+          formatDeadlineWithLocalHint(globalDeadline)
         )}
       </p>
       <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
