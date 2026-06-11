@@ -523,7 +523,6 @@ export const es = {
     viewingLabel: "Pronósticos de",
     rankLabel: "Posición",
     pointsLabel: "Puntos",
-    notSubmitted: "Polla no enviada aún",
   },
   transparency: {
     title: "Historial de cambios",

@@ -99,11 +99,6 @@ export function PronosticosShell({
           <p className="mt-2 text-sm">
             {es.playerPredictions.pointsLabel}:{" "}
             <strong className="tabular-nums">{data.totalPoints}</strong>
-            {!data.isSubmitted && (
-              <span className="ml-2 text-[var(--color-muted-foreground)]">
-                ({es.playerPredictions.notSubmitted})
-              </span>
-            )}
           </p>
         </div>
       )}
