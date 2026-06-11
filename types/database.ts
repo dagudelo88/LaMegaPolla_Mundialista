@@ -53,6 +53,7 @@ export interface Match {
   home_source: unknown;
   away_source: unknown;
   kickoff_at: string;
+  fifa_schedule_date: string;
   prediction_deadline: string;
   venue: string | null;
   matchday_key: string | null;

@@ -7,7 +7,7 @@ import type { GroupMatchResult, KnockoutMatchDef, TeamRef } from "@/lib/bracket/
 import { getJornadaKey, sortJornadaKeys, type JornadaMeta } from "@/lib/jornada/build-jornada-meta";
 import { es } from "@/lib/i18n/es";
 import { formatBracketSlotLabel } from "@/lib/matches/slot-label";
-import { formatMatchDateHeader } from "@/lib/matches/format-datetime";
+import { formatFifaScheduleDateHeader } from "@/lib/matches/format-datetime";
 import type { PaidChangeBlockReason } from "@/lib/predictions/paid-change-eligibility";
 import type { MatchPhase } from "@/types/database";
 
@@ -28,6 +28,7 @@ interface MatchRow {
   phase: MatchPhase;
   group_letter: string | null;
   kickoff_at: string;
+  fifa_schedule_date: string;
   venue: string | null;
   home_team_id: number | null;
   away_team_id: number | null;
@@ -130,7 +131,7 @@ export function SchedulePredictionsPanel({
   const byJornada = useMemo(() => {
     const map = new Map<string, MatchRow[]>();
     for (const match of matches) {
-      const key = getJornadaKey(match.kickoff_at);
+      const key = getJornadaKey(match);
       const list = map.get(key) ?? [];
       list.push(match);
       map.set(key, list);
@@ -175,7 +176,7 @@ export function SchedulePredictionsPanel({
         return (
           <section key={jornadaKey} className="space-y-4">
             <h2 className="text-lg font-semibold">
-              {formatMatchDateHeader(dayMatches[0]!.kickoff_at)}
+              {formatFifaScheduleDateHeader(jornadaKey)}
             </h2>
 
             <div className="grid gap-3 sm:grid-cols-2">

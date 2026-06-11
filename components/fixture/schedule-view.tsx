@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { FixtureMatchRow } from "@/components/fixture/fixture-match-row";
 import { matchToFixtureSides } from "@/lib/matches/fixture-sides";
-import { formatMatchDateHeader, formatMatchDateSortKey } from "@/lib/matches/format-datetime";
+import { formatFifaScheduleDateHeader, getFifaScheduleDateKey } from "@/lib/matches/format-datetime";
 import { es } from "@/lib/i18n/es";
 import { PHASE_LABELS, type MatchPhase, type MatchWithTeams } from "@/types/database";
 
@@ -40,7 +40,7 @@ export function ScheduleView({ matches }: ScheduleViewProps) {
   const byDate = useMemo(() => {
     const map = new Map<string, MatchWithTeams[]>();
     for (const match of filtered) {
-      const key = formatMatchDateSortKey(match.kickoff_at);
+      const key = getFifaScheduleDateKey(match);
       const list = map.get(key) ?? [];
       list.push(match);
       map.set(key, list);
@@ -90,7 +90,7 @@ export function ScheduleView({ matches }: ScheduleViewProps) {
         byDate.map(([dateKey, dayMatches]) => (
           <section key={dateKey}>
             <h2 className="mb-3 text-lg font-semibold">
-              {formatMatchDateHeader(dayMatches[0]!.kickoff_at)}
+              {formatFifaScheduleDateHeader(dateKey)}
             </h2>
             <div className="grid gap-3 sm:grid-cols-2">
               {dayMatches.map((match) => {

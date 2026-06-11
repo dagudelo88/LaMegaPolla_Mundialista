@@ -1,13 +1,14 @@
-import { formatMatchDateSortKey } from "@/lib/matches/format-datetime";
+import { getFifaScheduleDateKey } from "@/lib/matches/format-datetime";
 
 export interface JornadaMatchRef {
   id: string;
   kickoff_at: string;
+  fifa_schedule_date: string;
   status: string;
 }
 
-export function getJornadaKey(kickoffAt: string): string {
-  return formatMatchDateSortKey(kickoffAt);
+export function getJornadaKey(match: Pick<JornadaMatchRef, "fifa_schedule_date">): string {
+  return getFifaScheduleDateKey(match);
 }
 
 export function groupMatchesByJornada<T extends JornadaMatchRef>(
@@ -15,7 +16,7 @@ export function groupMatchesByJornada<T extends JornadaMatchRef>(
 ): Map<string, T[]> {
   const map = new Map<string, T[]>();
   for (const match of matches) {
-    const key = getJornadaKey(match.kickoff_at);
+    const key = getJornadaKey(match);
     const list = map.get(key) ?? [];
     list.push(match);
     map.set(key, list);

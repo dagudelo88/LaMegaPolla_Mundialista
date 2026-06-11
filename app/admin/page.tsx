@@ -57,6 +57,12 @@ export default async function AdminPage({ searchParams }: PageProps) {
           {es.admin.resultsLink} →
         </Link>
         <Link
+          href="/admin/programacion"
+          className="inline-flex rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-3 text-sm font-medium hover:border-[var(--color-accent)]"
+        >
+          {es.admin.scheduleLink} →
+        </Link>
+        <Link
           href="/admin#corregir-pronosticos"
           className="inline-flex rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-3 text-sm font-medium hover:border-[var(--color-accent)]"
         >

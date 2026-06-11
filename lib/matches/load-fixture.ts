@@ -4,7 +4,7 @@ import { createPublicSupabase } from "@/lib/supabase/public";
 import type { MatchPhase, MatchWithTeams } from "@/types/database";
 
 const MATCH_SELECT =
-  "id, fifa_match_number, phase, group_letter, home_team_id, away_team_id, home_source, away_source, kickoff_at, prediction_deadline, status, venue, matchday_key, home_score, away_score";
+  "id, fifa_match_number, phase, group_letter, home_team_id, away_team_id, home_source, away_source, kickoff_at, fifa_schedule_date, prediction_deadline, status, venue, matchday_key, home_score, away_score";
 
 async function fetchOfficialFixture() {
   const supabase = createPublicSupabase();

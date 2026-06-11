@@ -54,7 +54,7 @@ export async function processJornadaBonus(
 ): Promise<ProcessJornadaBonusResult> {
   const { data: triggerMatch, error: matchErr } = await admin
     .from("matches")
-    .select("id, kickoff_at, home_score, away_score, status")
+    .select("id, kickoff_at, fifa_schedule_date, home_score, away_score, status")
     .eq("id", matchId)
     .single();
 
@@ -62,16 +62,16 @@ export async function processJornadaBonus(
     throw new Error(matchErr?.message ?? "Partido no encontrado");
   }
 
-  const jornadaKey = getJornadaKey(triggerMatch.kickoff_at);
+  const jornadaKey = getJornadaKey(triggerMatch);
 
   const { data: allMatchesRaw, error: jornadaErr } = await admin
     .from("matches")
-    .select("id, fifa_match_number, kickoff_at, status, home_score, away_score");
+    .select("id, fifa_match_number, kickoff_at, fifa_schedule_date, status, home_score, away_score");
 
   if (jornadaErr) throw new Error(jornadaErr.message);
 
   const allMatches = (allMatchesRaw ?? []).filter(
-    (m) => getJornadaKey(m.kickoff_at) === jornadaKey
+    (m) => getJornadaKey(m) === jornadaKey
   );
 
   if (!isJornadaEligible(allMatches)) {

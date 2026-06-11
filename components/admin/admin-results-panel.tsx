@@ -10,8 +10,8 @@ import {
 import { AdminMatchResultForm } from "@/components/admin/admin-match-result-form";
 import { Button } from "@/components/ui/button";
 import {
-  formatMatchDateHeader,
-  formatMatchDateSortKey,
+  formatFifaScheduleDateHeader,
+  getFifaScheduleDateKey,
 } from "@/lib/matches/format-datetime";
 import { es } from "@/lib/i18n/es";
 import { TeamFlag } from "@/components/predictions/team-flag";
@@ -183,7 +183,7 @@ export function AdminResultsPanel({
   const byDate = useMemo(() => {
     const map = new Map<string, MatchWithTeams[]>();
     for (const match of filtered) {
-      const key = formatMatchDateSortKey(match.kickoff_at);
+      const key = getFifaScheduleDateKey(match);
       const list = map.get(key) ?? [];
       list.push(match);
       map.set(key, list);
@@ -392,7 +392,7 @@ export function AdminResultsPanel({
         byDate.map(([dateKey, dayMatches]) => (
           <section key={dateKey} className="space-y-3">
             <h2 className="text-lg font-semibold">
-              {formatMatchDateHeader(dayMatches[0]!.kickoff_at)}
+              {formatFifaScheduleDateHeader(dateKey)}
             </h2>
             {dayMatches.map((match) => (
               <AdminMatchResultForm key={match.id} match={match} />

@@ -181,7 +181,7 @@ export async function loadDashboardData(
     supabase
       .from("matches")
       .select(
-        "id, fifa_match_number, phase, kickoff_at, home_score, away_score, home_team_id, away_team_id"
+        "id, fifa_match_number, phase, kickoff_at, fifa_schedule_date, home_score, away_score, home_team_id, away_team_id"
       )
       .in("id", matchIds),
     supabase
@@ -196,12 +196,12 @@ export async function loadDashboardData(
     ? await supabase
         .from("matches")
         .select(
-          "id, fifa_match_number, kickoff_at, status, home_score, away_score"
+          "id, fifa_match_number, kickoff_at, fifa_schedule_date, status, home_score, away_score"
         )
     : { data: [] };
 
   const jornadaMatches = (jornadaMatchesRaw ?? []).filter((m) =>
-    jornadaKeys.includes(getJornadaKey(m.kickoff_at))
+    jornadaKeys.includes(getJornadaKey(m))
   );
 
   const { data: jornadaResults, error: jornadaResultsErr } = jornadaKeys.length

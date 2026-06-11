@@ -21,6 +21,11 @@ const links = [
     match: (path: string) => path.startsWith("/admin/resultados"),
   },
   {
+    href: "/admin/programacion",
+    label: es.admin.scheduleTitle,
+    match: (path: string) => path.startsWith("/admin/programacion"),
+  },
+  {
     href: "/admin#corregir-pronosticos",
     label: es.admin.predictionsLink,
     match: (path: string, jugador: string | null) =>

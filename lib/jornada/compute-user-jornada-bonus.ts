@@ -117,7 +117,7 @@ export function computeJornadaBonusByMatchId(input: {
 }
 
 export function collectJornadaKeysFromMatches(
-  matches: { kickoff_at: string }[]
+  matches: { fifa_schedule_date: string }[]
 ): string[] {
-  return [...new Set(matches.map((m) => getJornadaKey(m.kickoff_at)))];
+  return [...new Set(matches.map((m) => getJornadaKey(m)))];
 }

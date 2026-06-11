@@ -32,6 +32,24 @@ export function formatMatchDateHeader(iso: string): string {
   return formatted.charAt(0).toUpperCase() + formatted.slice(1);
 }
 
+/** Header for FIFA official schedule day (YYYY-MM-DD, venue-local calendar). */
+export function formatFifaScheduleDateHeader(dateKey: string): string {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  const noonUtc = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+  const formatted = new Intl.DateTimeFormat(APP_LOCALE, {
+    timeZone: "UTC",
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(noonUtc);
+  return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+}
+
+export function getFifaScheduleDateKey(match: { fifa_schedule_date: string }): string {
+  return match.fifa_schedule_date;
+}
+
 export function formatMatchTime(iso: string): string {
   return new Intl.DateTimeFormat(APP_LOCALE, {
     timeZone: APP_TIMEZONE,

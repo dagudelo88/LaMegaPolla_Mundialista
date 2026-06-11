@@ -7,7 +7,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import type { MatchPhase, MatchWithTeams } from "@/types/database";
 
 const MATCH_SELECT =
-  "id, fifa_match_number, phase, group_letter, home_team_id, away_team_id, home_source, away_source, kickoff_at, prediction_deadline, status, venue, matchday_key, home_score, away_score, result_advances_team_id";
+  "id, fifa_match_number, phase, group_letter, home_team_id, away_team_id, home_source, away_source, kickoff_at, fifa_schedule_date, prediction_deadline, status, venue, matchday_key, home_score, away_score, result_advances_team_id";
 
 export default async function AdminResultadosPage() {
   await requireAdmin();

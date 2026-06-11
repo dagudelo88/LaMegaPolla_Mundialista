@@ -38,6 +38,7 @@ interface GroupMatchRow {
   home_code: string;
   away_code: string;
   matchday_key: string;
+  fifa_schedule_date: string;
   kickoff_at: string;
   venue: string;
 }
@@ -45,6 +46,7 @@ interface GroupMatchRow {
 interface KnockoutMatchRow {
   fifa_match_number: number;
   phase: string;
+  fifa_schedule_date: string;
   kickoff_at: string;
   venue: string;
   home_source: unknown;
@@ -114,6 +116,7 @@ async function main() {
         home_source: null,
         away_source: null,
         kickoff_at: kickoff.toISOString(),
+        fifa_schedule_date: m.fifa_schedule_date,
         prediction_deadline: deadline.toISOString(),
         venue: m.venue,
         matchday_key: m.matchday_key,
@@ -141,6 +144,7 @@ async function main() {
         home_source: m.home_source,
         away_source: m.away_source,
         kickoff_at: kickoff.toISOString(),
+        fifa_schedule_date: m.fifa_schedule_date,
         prediction_deadline: deadline.toISOString(),
         venue: m.venue,
         matchday_key: `knockout_${m.phase}_${m.fifa_match_number}`,

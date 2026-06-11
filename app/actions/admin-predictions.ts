@@ -98,7 +98,7 @@ export async function loadAdminUserPredictions(userId: string) {
       admin
         .from("matches")
         .select(
-          "id, fifa_match_number, phase, group_letter, home_team_id, away_team_id, home_source, away_source, kickoff_at, prediction_deadline, status, venue, matchday_key, home_score, away_score"
+          "id, fifa_match_number, phase, group_letter, home_team_id, away_team_id, home_source, away_source, kickoff_at, fifa_schedule_date, prediction_deadline, status, venue, matchday_key, home_score, away_score"
         )
         .order("fifa_match_number"),
       admin

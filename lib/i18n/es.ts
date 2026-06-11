@@ -339,6 +339,23 @@ export const es = {
     resultsNotPredictionsHint:
       "Esta página es solo para los marcadores reales del torneo. Para corregir lo que predijo un participante, usa el editor de pronósticos.",
     resultsLink: "Gestionar resultados",
+    scheduleTitle: "Editar programación",
+    scheduleLink: "Editar programación",
+    scheduleSubtitle:
+      "Corrige fecha de jornada FIFA, fecha y hora de inicio (Colombia) por partido. Los cambios se reflejan en Programación y Pronósticos; el plazo de predicción se recalcula automáticamente.",
+    scheduleFifaDateLabel: "Fecha jornada FIFA",
+    scheduleKickoffDateLabel: "Fecha inicio (Colombia)",
+    scheduleKickoffTimeLabel: "Hora inicio (Colombia)",
+    scheduleSave: "Guardar programación",
+    scheduleSaved: "Programación actualizada.",
+    scheduleNoChangesError: "La programación no cambió.",
+    schedulePreview: "Vista previa: {header} · {time} (cierre pronósticos: {deadline})",
+    scheduleCurrentKickoff: "Hora actual en Colombia: {time}",
+    scheduleSearchLabel: "N.º partido FIFA",
+    scheduleSearchPlaceholder: "Ej. 73",
+    scheduleKnockoutFilter: "Eliminatorias",
+    scheduleWarningStatus:
+      "Este partido está «{status}». Cambiar fecha u hora puede afectar pronósticos cerrados o bonus de jornada.",
     dashboardHint:
       "Resultados oficiales: marcadores del torneo. Corrección de pronósticos: edita las predicciones de cualquier participante.",
     editAllPredictions: "Ver y editar pronósticos →",

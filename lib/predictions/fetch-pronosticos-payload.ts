@@ -27,7 +27,7 @@ export async function fetchPronosticosPayload(supabase: SupabaseClient, userId: 
   const { data: matchesRaw } = await supabase
     .from("matches")
     .select(
-      "id, fifa_match_number, phase, group_letter, home_team_id, away_team_id, home_source, away_source, kickoff_at, prediction_deadline, status, home_score, away_score, venue, matchday_key"
+      "id, fifa_match_number, phase, group_letter, home_team_id, away_team_id, home_source, away_source, kickoff_at, fifa_schedule_date, prediction_deadline, status, home_score, away_score, venue, matchday_key"
     )
     .order("fifa_match_number");
 

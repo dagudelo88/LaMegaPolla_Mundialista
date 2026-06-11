@@ -14,7 +14,9 @@
     "seed-test-users": "tsx scripts/seed-test-users.ts",
     "reset-for-production": "tsx scripts/reset-for-production.ts",
     "recalculate-scores": "tsx scripts/recalculate-scores.ts",
-    "generate-fifa-json": "tsx scripts/generate-fifa-json.ts"
+    "generate-fifa-json": "tsx scripts/generate-fifa-json.ts",
+    "verify-fifa-kickoffs": "tsx scripts/verify-fifa-kickoffs.ts",
+    "verify-fifa-schedule-days": "tsx scripts/verify-fifa-schedule-days.ts"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.3",

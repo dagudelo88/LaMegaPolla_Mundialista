@@ -8,14 +8,14 @@ export async function recalculateAllJornadaBonuses(
 ): Promise<{ jornadasProcessed: number; usersScored: number }> {
   const { data: finishedMatches, error } = await admin
     .from("matches")
-    .select("id, kickoff_at")
+    .select("id, kickoff_at, fifa_schedule_date")
     .eq("status", "finished");
 
   if (error) throw new Error(error.message);
 
   const triggerByJornada = new Map<string, string>();
   for (const match of finishedMatches ?? []) {
-    const key = getJornadaKey(match.kickoff_at);
+    const key = getJornadaKey(match);
     if (!triggerByJornada.has(key)) {
       triggerByJornada.set(key, match.id);
     }

@@ -9,10 +9,20 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { CACHE_TAGS } from "@/lib/cache/tags";
 import { grantLateSubmissionAccess } from "@/lib/predictions/late-submission-access";
+import {
+  computePredictionDeadline,
+  parseDeadlineOffsetMinutes,
+} from "@/lib/matches/compute-prediction-deadline";
+import { bogotaLocalToUtc } from "@/lib/matches/venue-timezone";
+import {
+  isValidScheduleDate,
+  isValidScheduleTime,
+} from "@/lib/matches/validate-schedule-input";
 
 const REVALIDATE_PATHS = [
   "/admin",
   "/admin/resultados",
+  "/admin/programacion",
   "/admin/predicciones",
   "/transparencia",
   "/resultados",
@@ -97,6 +107,98 @@ export async function setMatchLive(matchId: string) {
     target_type: "matches",
     target_id: matchId,
     details: { previousStatus: existing.status },
+  });
+
+  revalidatePublicPaths();
+}
+
+export interface UpdateMatchScheduleInput {
+  fifaScheduleDate: string;
+  kickoffDateColombia: string;
+  kickoffTimeColombia: string;
+}
+
+export async function updateMatchSchedule(
+  matchId: string,
+  input: UpdateMatchScheduleInput
+) {
+  const { user } = await requireAdmin();
+  const admin = createAdminClient();
+
+  const { fifaScheduleDate, kickoffDateColombia, kickoffTimeColombia } = input;
+
+  if (!isValidScheduleDate(fifaScheduleDate)) {
+    throw new Error("Fecha de jornada FIFA inválida (usa YYYY-MM-DD).");
+  }
+  if (!isValidScheduleDate(kickoffDateColombia)) {
+    throw new Error("Fecha de inicio en Colombia inválida (usa YYYY-MM-DD).");
+  }
+  if (!isValidScheduleTime(kickoffTimeColombia)) {
+    throw new Error("Hora de inicio inválida (usa HH:mm en formato 24 h).");
+  }
+
+  const { data: existing, error: fetchErr } = await admin
+    .from("matches")
+    .select(
+      "fifa_match_number, kickoff_at, fifa_schedule_date, prediction_deadline, status"
+    )
+    .eq("id", matchId)
+    .single();
+
+  if (fetchErr || !existing) {
+    throw new Error(fetchErr?.message ?? "Partido no encontrado");
+  }
+
+  const kickoffAtIso = bogotaLocalToUtc(kickoffDateColombia, kickoffTimeColombia);
+  const kickoffAt = new Date(kickoffAtIso);
+
+  const { data: offsetRow } = await admin
+    .from("app_config")
+    .select("value")
+    .eq("key", "tournament.deadline_offset_minutes")
+    .maybeSingle();
+
+  const offsetMinutes = parseDeadlineOffsetMinutes(offsetRow?.value);
+  const predictionDeadline = computePredictionDeadline(kickoffAt, offsetMinutes);
+
+  const unchanged =
+    existing.kickoff_at === kickoffAtIso &&
+    existing.fifa_schedule_date === fifaScheduleDate;
+
+  if (unchanged) {
+    throw new Error("La programación no cambió.");
+  }
+
+  const { error: updateErr } = await admin
+    .from("matches")
+    .update({
+      kickoff_at: kickoffAtIso,
+      fifa_schedule_date: fifaScheduleDate,
+      prediction_deadline: predictionDeadline.toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", matchId);
+
+  if (updateErr) throw new Error(updateErr.message);
+
+  await admin.from("admin_actions").insert({
+    admin_id: user.id,
+    action: "update_match_schedule",
+    target_type: "matches",
+    target_id: matchId,
+    details: {
+      fifaMatchNumber: existing.fifa_match_number,
+      previous: {
+        kickoffAt: existing.kickoff_at,
+        fifaScheduleDate: existing.fifa_schedule_date,
+        predictionDeadline: existing.prediction_deadline,
+      },
+      current: {
+        kickoffAt: kickoffAtIso,
+        fifaScheduleDate,
+        predictionDeadline: predictionDeadline.toISOString(),
+      },
+    },
   });
 
   revalidatePublicPaths();

@@ -7,8 +7,8 @@ import type { GroupMatchResult, KnockoutMatchDef, TeamRef } from "@/lib/bracket/
 import { es } from "@/lib/i18n/es";
 import {
   formatAppDateTime,
-  formatMatchDateHeader,
-  formatMatchDateSortKey,
+  formatFifaScheduleDateHeader,
+  getFifaScheduleDateKey,
 } from "@/lib/matches/format-datetime";
 import type { MatchWithTeams, Prediction, PredictionAdminOverride, Team } from "@/types/database";
 import type { UserSubmissionReadiness } from "@/lib/predictions/submission-readiness";
@@ -113,7 +113,7 @@ export function AdminUserPredictionsPanel({
   const byDate = useMemo(() => {
     const map = new Map<string, MatchWithTeams[]>();
     for (const match of filtered) {
-      const key = formatMatchDateSortKey(match.kickoff_at);
+      const key = getFifaScheduleDateKey(match);
       const list = map.get(key) ?? [];
       list.push(match);
       map.set(key, list);
@@ -175,7 +175,7 @@ export function AdminUserPredictionsPanel({
       {byDate.map(([dateKey, dayMatches]) => (
         <section key={dateKey} className="space-y-3">
           <h2 className="text-lg font-semibold">
-            {formatMatchDateHeader(dayMatches[0]!.kickoff_at)}
+            {formatFifaScheduleDateHeader(dateKey)}
           </h2>
           {dayMatches.map((match) => (
             <AdminPredictionOverrideForm
