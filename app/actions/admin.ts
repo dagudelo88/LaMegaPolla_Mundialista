@@ -8,6 +8,7 @@ import type { MatchPhase } from "@/lib/scoring/calculate-match-points";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { CACHE_TAGS } from "@/lib/cache/tags";
+import { grantLateSubmissionAccess } from "@/lib/predictions/late-submission-access";
 
 const REVALIDATE_PATHS = [
   "/admin",
@@ -486,4 +487,52 @@ export async function withdrawParticipant(userId: string) {
 
   revalidatePublicPaths();
   revalidatePath("/admin");
+}
+
+/** Grant a player extra time to save and submit after the global deadline. */
+export async function grantLateSubmission(userId: string, untilIso?: string) {
+  const { user } = await requireAdmin();
+  const admin = createAdminClient();
+
+  const { data: target, error: fetchErr } = await admin
+    .from("profiles")
+    .select("id, username, withdrawn_at")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (fetchErr || !target) throw new Error(fetchErr?.message ?? "participant_not_found");
+  if (target.withdrawn_at) throw new Error("participant_withdrawn");
+
+  const until =
+    untilIso ??
+    new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  await grantLateSubmissionAccess(userId, until);
+
+  await admin
+    .from("profiles")
+    .update({ late_submission_until: until })
+    .eq("id", userId)
+    .then(({ error }) => {
+      if (error) {
+        /* column may not exist until migration is applied */
+      }
+    });
+
+  await admin.from("admin_actions").insert({
+    admin_id: user.id,
+    action: "grant_late_submission",
+    target_type: "profiles",
+    target_id: userId,
+    details: {
+      username: target.username,
+      late_submission_until: until,
+    },
+  });
+
+  revalidatePublicPaths();
+  revalidatePath("/admin");
+  revalidatePath("/pronosticos");
+
+  return { until };
 }

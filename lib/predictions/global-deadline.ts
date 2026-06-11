@@ -11,3 +11,21 @@ export function isGlobalDeadlinePassed(
 ): boolean {
   return now >= new Date(deadlineIso);
 }
+
+/** Player-specific extension after the tournament global deadline (admin-granted). */
+export function isLateSubmissionWindowOpen(
+  lateSubmissionUntil: string | null | undefined,
+  now: Date = new Date()
+): boolean {
+  if (!lateSubmissionUntil) return false;
+  return now < new Date(lateSubmissionUntil);
+}
+
+export function isPredictionEditingClosed(
+  globalDeadlineIso: string,
+  lateSubmissionUntil: string | null | undefined,
+  now: Date = new Date()
+): boolean {
+  if (isLateSubmissionWindowOpen(lateSubmissionUntil, now)) return false;
+  return isGlobalDeadlinePassed(globalDeadlineIso, now);
+}

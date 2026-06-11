@@ -21,6 +21,7 @@ export interface Profile {
   entry_fee_paid: boolean;
   withdrawn_at: string | null;
   joined_at: string;
+  late_submission_until?: string | null;
 }
 
 export interface AppConfigRow {

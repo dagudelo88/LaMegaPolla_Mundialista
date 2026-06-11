@@ -3,7 +3,8 @@ import { countPaidChangesToday } from "@/lib/changes/count-paid-changes-today";
 import { DEFAULT_GLOBAL_DEADLINE } from "@/lib/config/tournament-deadline";
 import { getConfig } from "@/lib/config/get-config";
 import { buildJornadaMetaByKey } from "@/lib/jornada/build-jornada-meta";
-import { isGlobalDeadlinePassed } from "@/lib/predictions/global-deadline";
+import { isPredictionEditingClosed } from "@/lib/predictions/global-deadline";
+import { getUserLateSubmissionUntil } from "@/lib/predictions/late-submission-access";
 import { buildGroupResultsFromPredictions, resolveAdvancingThirdGroups } from "@/lib/predictions/helpers";
 import { canPaidChangeMatch } from "@/lib/predictions/paid-change-eligibility";
 import {
@@ -69,6 +70,8 @@ export async function fetchPronosticosPayload(supabase: SupabaseClient, userId: 
     .eq("id", userId)
     .single();
 
+  const lateSubmissionUntil = await getUserLateSubmissionUntil(userId);
+
   const changesToday = await countPaidChangesToday(supabase, userId);
 
   const { data: jornadaResults } = await supabase
@@ -115,7 +118,7 @@ export async function fetchPronosticosPayload(supabase: SupabaseClient, userId: 
 
   return {
     globalDeadline,
-    deadlinePassed: isGlobalDeadlinePassed(globalDeadline),
+    deadlinePassed: isPredictionEditingClosed(globalDeadline, lateSubmissionUntil),
     teams: teams ?? [],
     matches: matches ?? [],
     predictions: predictions ?? [],

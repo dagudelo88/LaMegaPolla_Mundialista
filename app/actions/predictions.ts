@@ -9,7 +9,10 @@ import { DEFAULT_GLOBAL_DEADLINE } from "@/lib/config/tournament-deadline";
 import {
   getGlobalDeadlineIso,
   isGlobalDeadlinePassed,
+  isLateSubmissionWindowOpen,
+  isPredictionEditingClosed,
 } from "@/lib/predictions/global-deadline";
+import { getUserLateSubmissionUntil } from "@/lib/predictions/late-submission-access";
 import { syncUserPredictionLockState } from "@/lib/predictions/sync-submission-lock-state";
 import { buildGroupResultsFromPredictions, resolveAdvancingThirdGroups } from "@/lib/predictions/helpers";
 import { fetchPronosticosPayload } from "@/lib/predictions/fetch-pronosticos-payload";
@@ -41,6 +44,10 @@ async function getSubmissionState(userId: string) {
   return data?.is_complete ?? false;
 }
 
+async function getUserLateSubmissionUntilForUser(userId: string): Promise<string | null> {
+  return getUserLateSubmissionUntil(userId);
+}
+
 /** Auto-save draft prediction (REGLAS §3, before final submit) */
 export async function savePredictionDraft(
   matchId: string,
@@ -55,7 +62,8 @@ export async function savePredictionDraft(
   const supabase = await createClient();
 
   const globalDeadline = await getGlobalDeadlineIso();
-  if (isGlobalDeadlinePassed(globalDeadline)) {
+  const lateSubmissionUntil = await getUserLateSubmissionUntilForUser(user.id);
+  if (isPredictionEditingClosed(globalDeadline, lateSubmissionUntil)) {
     throw new Error("deadline_passed");
   }
 
@@ -113,6 +121,7 @@ export async function submitFullTournament() {
   if (submitted) throw new Error("already_submitted");
 
   const globalDeadline = (await getConfig<string>("tournament.global_deadline")) ?? DEFAULT_GLOBAL_DEADLINE;
+  const lateSubmissionUntil = await getUserLateSubmissionUntilForUser(user.id);
 
   const { data: matches } = await supabase
     .from("matches")
@@ -165,15 +174,18 @@ export async function submitFullTournament() {
       predictedAdvancesTeamId: p.predicted_advances_team_id,
     }));
 
-  const validation = validateFullSubmission({
-    globalDeadline,
-    alreadySubmitted: false,
-    groupPredictions: groupPreds,
-    knockoutPredictions: knockoutPreds,
-    advancingThirdGroups,
-    expectedGroupCount: groupMatches.length,
-    expectedKnockoutCount: knockoutMatches.length,
-  });
+  const validation = validateFullSubmission(
+    {
+      globalDeadline,
+      alreadySubmitted: false,
+      groupPredictions: groupPreds,
+      knockoutPredictions: knockoutPreds,
+      advancingThirdGroups,
+      expectedGroupCount: groupMatches.length,
+      expectedKnockoutCount: knockoutMatches.length,
+    },
+    { skipDeadlineCheck: isLateSubmissionWindowOpen(lateSubmissionUntil) }
+  );
 
   if (!validation.valid) {
     throw new Error(validation.errors[0] ?? "validation_failed");
