@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { colombiaTodayAt11Iso } from "./colombia-today-11am-iso";
+import { colombiaTodayAt11Iso } from "../lib/predictions/colombia-datetime";
 
 function loadEnv() {
   try {

@@ -7,6 +7,7 @@ import { validateInviteCode } from "@/lib/auth/validate-invite-code";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { mapAuthError } from "@/lib/auth/map-auth-error";
 import { validatePasswordPair } from "@/lib/auth/password";
+import { grantLateSubmissionOnRegistration } from "@/lib/predictions/late-submission-access";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { es } from "@/lib/i18n/es";
@@ -140,6 +141,8 @@ export async function registerWithInvite(
     return { error: mapRedeemError(redeemError.message) };
   }
 
+  await grantLateSubmissionOnRegistration(userId);
+
   revalidatePath("/", "layout");
   revalidatePath("/dashboard");
   revalidatePath("/pronosticos");
@@ -214,6 +217,8 @@ export async function redeemInvite(
     }
     return { error: mapRedeemError(msg) };
   }
+
+  await grantLateSubmissionOnRegistration(user.id);
 
   revalidatePath("/", "layout");
   revalidatePath("/dashboard");
