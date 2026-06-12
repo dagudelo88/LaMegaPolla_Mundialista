@@ -1,13 +1,17 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { MatchPhase } from "@/lib/scoring/calculate-match-points";
+import { loadBracketContext } from "@/lib/scoring/bracket-context";
 import { processMatchResult } from "@/lib/scoring/process-match-result";
+import { processAllCompletedRoundAdvancementBonuses } from "@/lib/scoring/process-round-advancement-bonus";
 
 export async function recalculateAllFinishedMatches(
   admin: SupabaseClient
 ): Promise<{ matchesProcessed: number; scoringPasses: number }> {
   const { data: matches, error } = await admin
     .from("matches")
-    .select("id, phase, home_score, away_score")
+    .select(
+      "id, phase, home_score, away_score, home_team_id, away_team_id, result_advances_team_id"
+    )
     .eq("status", "finished")
     .not("home_score", "is", null)
     .not("away_score", "is", null)
@@ -22,9 +26,15 @@ export async function recalculateAllFinishedMatches(
       phase: match.phase as MatchPhase,
       homeScore: match.home_score!,
       awayScore: match.away_score!,
+      homeTeamId: match.home_team_id,
+      awayTeamId: match.away_team_id,
+      resultAdvancesTeamId: match.result_advances_team_id,
     });
     scoringPasses += usersScored;
   }
+
+  const bracketCtx = await loadBracketContext(admin);
+  await processAllCompletedRoundAdvancementBonuses(admin, bracketCtx);
 
   return { matchesProcessed: matches?.length ?? 0, scoringPasses };
 }

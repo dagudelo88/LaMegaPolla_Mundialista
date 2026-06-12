@@ -32,6 +32,11 @@ const links = [
       path.startsWith("/admin/predicciones") || (path === "/admin" && !!jugador),
   },
   {
+    href: "/admin/puntos",
+    label: es.admin.pointsAudit.navLabel,
+    match: (path: string) => path.startsWith("/admin/puntos"),
+  },
+  {
     href: "/admin/reportes",
     label: es.admin.bugReports.navLabel,
     match: (path: string) => path.startsWith("/admin/reportes"),

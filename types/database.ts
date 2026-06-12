@@ -193,6 +193,15 @@ export interface UserJornadaBonusPoints {
   created_at: string;
 }
 
+export interface UserAdvancementBonusPoints {
+  id: number;
+  user_id: string;
+  bonus_key: string;
+  points: number;
+  breakdown: Record<string, unknown> | null;
+  created_at: string;
+}
+
 export const GROUP_LETTERS = [
   "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L",
 ] as const;

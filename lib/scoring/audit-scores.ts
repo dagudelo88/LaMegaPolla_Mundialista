@@ -3,11 +3,19 @@ import {
   calculateMatchPoints,
   type MatchPhase,
 } from "@/lib/scoring/calculate-match-points";
+import { matchAdvancementBonusKey } from "@/lib/scoring/advancement-bonus-keys";
+import { loadBracketContext } from "@/lib/scoring/bracket-context";
+import {
+  calculateMatchAdvancementBonus,
+} from "@/lib/scoring/calculate-match-advancement-bonus";
+import { loadAdvancementBonusPerTeam } from "@/lib/scoring/load-advancement-bonus-config";
 import { loadScoringConfig } from "@/lib/scoring/load-scoring-config";
+import { isKnockoutMatchScorableForUserByMatchNumber } from "@/lib/scoring/bracket-gate";
 import {
   loadActiveSubmittedUserIds,
   loadScorableMatchPredictions,
 } from "@/lib/scoring/scoring-eligibility";
+import { loadUserBracketCache } from "@/lib/scoring/user-bracket-cache";
 
 export interface MatchScoreDiscrepancy {
   matchId: string;
@@ -18,6 +26,16 @@ export interface MatchScoreDiscrepancy {
   predictedAway: number;
   actualHome: number;
   actualAway: number;
+  storedPoints: number | null;
+  expectedPoints: number;
+  issue: "missing_row" | "wrong_points";
+  gated?: boolean;
+}
+
+export interface AdvancementDiscrepancy {
+  username: string;
+  userId: string;
+  bonusKey: string;
   storedPoints: number | null;
   expectedPoints: number;
   issue: "missing_row" | "wrong_points";
@@ -33,6 +51,7 @@ export interface TotalPointsDiscrepancy {
 export interface ScoreAuditResult {
   finishedMatches: number;
   matchDiscrepancies: MatchScoreDiscrepancy[];
+  advancementDiscrepancies: AdvancementDiscrepancy[];
   totalDiscrepancies: TotalPointsDiscrepancy[];
   summaryByMatch: {
     matchId: string;
@@ -44,6 +63,9 @@ export interface ScoreAuditResult {
 
 export async function auditScores(admin: SupabaseClient): Promise<ScoreAuditResult> {
   const config = await loadScoringConfig(admin);
+  const bonusPerTeam = await loadAdvancementBonusPerTeam(admin);
+  const bracketCtx = await loadBracketContext(admin);
+  const userBracketCache = await loadUserBracketCache(admin, bracketCtx);
   const eligibleIds = await loadActiveSubmittedUserIds(admin);
 
   const { data: profiles } = await admin
@@ -57,7 +79,9 @@ export async function auditScores(admin: SupabaseClient): Promise<ScoreAuditResu
 
   const { data: finishedMatches, error: matchErr } = await admin
     .from("matches")
-    .select("id, fifa_match_number, phase, home_score, away_score")
+    .select(
+      "id, fifa_match_number, phase, home_score, away_score, home_team_id, away_team_id, result_advances_team_id"
+    )
     .eq("status", "finished")
     .not("home_score", "is", null)
     .not("away_score", "is", null)
@@ -66,10 +90,18 @@ export async function auditScores(admin: SupabaseClient): Promise<ScoreAuditResu
   if (matchErr) throw new Error(matchErr.message);
 
   const matchDiscrepancies: MatchScoreDiscrepancy[] = [];
+  const advancementDiscrepancies: AdvancementDiscrepancy[] = [];
   const summaryByMatch: ScoreAuditResult["summaryByMatch"] = [];
 
   for (const match of finishedMatches ?? []) {
-    const scorable = await loadScorableMatchPredictions(admin, match.id);
+    const phase = match.phase as MatchPhase;
+    const eligibilityOpts = {
+      bracketCtx,
+      userBracketCache,
+      phase,
+    };
+
+    const scorable = await loadScorableMatchPredictions(admin, match.id, eligibilityOpts);
     const { data: storedRows } = await admin
       .from("user_match_points")
       .select("user_id, points")
@@ -79,12 +111,18 @@ export async function auditScores(admin: SupabaseClient): Promise<ScoreAuditResu
     let scored = 0;
 
     for (const pred of scorable) {
-      const expectedPoints = calculateMatchPoints(
-        match.phase as MatchPhase,
+      const rawPoints = calculateMatchPoints(
+        phase,
         { home: match.home_score!, away: match.away_score! },
         { home: pred.predictedHome, away: pred.predictedAway },
         config
       );
+
+      const userResolved = userBracketCache.get(pred.userId);
+      const gate = userResolved
+        ? isKnockoutMatchScorableForUserByMatchNumber(bracketCtx, userResolved, match.id)
+        : { scorable: true };
+      const expectedPoints = gate.scorable ? rawPoints : 0;
 
       const storedPoints = storedByUser.get(pred.userId) ?? null;
       if (storedPoints == null) {
@@ -100,6 +138,7 @@ export async function auditScores(admin: SupabaseClient): Promise<ScoreAuditResu
           storedPoints: null,
           expectedPoints,
           issue: "missing_row",
+          gated: !gate.scorable,
         });
       } else {
         scored += 1;
@@ -115,6 +154,59 @@ export async function auditScores(admin: SupabaseClient): Promise<ScoreAuditResu
             actualAway: match.away_score!,
             storedPoints,
             expectedPoints,
+            issue: "wrong_points",
+            gated: !gate.scorable,
+          });
+        }
+      }
+
+      if (
+        phase !== "group_stage" &&
+        match.home_team_id != null &&
+        match.away_team_id != null
+      ) {
+        const expectedAdvancement = gate.scorable
+          ? calculateMatchAdvancementBonus(
+              {
+                phase,
+                homeTeamId: match.home_team_id,
+                awayTeamId: match.away_team_id,
+                predictedHome: pred.predictedHome,
+                predictedAway: pred.predictedAway,
+                predictedAdvancesTeamId: pred.predictedAdvancesTeamId,
+                actualHome: match.home_score!,
+                actualAway: match.away_score!,
+                resultAdvancesTeamId: match.result_advances_team_id,
+              },
+              bonusPerTeam
+            )
+          : 0;
+
+        const bonusKey = matchAdvancementBonusKey(match.id);
+        const { data: storedAdv } = await admin
+          .from("user_advancement_bonus_points")
+          .select("points")
+          .eq("user_id", pred.userId)
+          .eq("bonus_key", bonusKey)
+          .maybeSingle();
+
+        const storedAdvPoints = storedAdv?.points ?? null;
+        if (storedAdvPoints == null && expectedAdvancement > 0) {
+          advancementDiscrepancies.push({
+            username: usernameById.get(pred.userId) ?? pred.userId,
+            userId: pred.userId,
+            bonusKey,
+            storedPoints: null,
+            expectedPoints: expectedAdvancement,
+            issue: "missing_row",
+          });
+        } else if (storedAdvPoints != null && storedAdvPoints !== expectedAdvancement) {
+          advancementDiscrepancies.push({
+            username: usernameById.get(pred.userId) ?? pred.userId,
+            userId: pred.userId,
+            bonusKey,
+            storedPoints: storedAdvPoints,
+            expectedPoints: expectedAdvancement,
             issue: "wrong_points",
           });
         }
@@ -132,16 +224,26 @@ export async function auditScores(admin: SupabaseClient): Promise<ScoreAuditResu
   const totalDiscrepancies: TotalPointsDiscrepancy[] = [];
 
   for (const profile of profiles ?? []) {
-    const [{ data: matchPts }, { data: bonusPts }, { data: changes }] = await Promise.all([
+    const [
+      { data: matchPts },
+      { data: advancementPts },
+      { data: bonusPts },
+      { data: changes },
+    ] = await Promise.all([
       admin.from("user_match_points").select("points").eq("user_id", profile.id),
+      admin
+        .from("user_advancement_bonus_points")
+        .select("points")
+        .eq("user_id", profile.id),
       admin.from("user_jornada_bonus_points").select("points").eq("user_id", profile.id),
       admin.from("prediction_changes").select("points_spent").eq("user_id", profile.id),
     ]);
 
     const earned = (matchPts ?? []).reduce((s, r) => s + r.points, 0);
+    const advancement = (advancementPts ?? []).reduce((s, r) => s + r.points, 0);
     const bonus = (bonusPts ?? []).reduce((s, r) => s + r.points, 0);
     const spent = (changes ?? []).reduce((s, r) => s + r.points_spent, 0);
-    const expectedTotal = earned + bonus - spent;
+    const expectedTotal = earned + advancement + bonus - spent;
 
     if (profile.total_points !== expectedTotal) {
       totalDiscrepancies.push({
@@ -156,6 +258,7 @@ export async function auditScores(admin: SupabaseClient): Promise<ScoreAuditResu
   return {
     finishedMatches: finishedMatches?.length ?? 0,
     matchDiscrepancies,
+    advancementDiscrepancies,
     totalDiscrepancies,
     summaryByMatch,
   };
@@ -181,6 +284,16 @@ export function formatAuditReport(result: ScoreAuditResult): string {
       lines.push(
         `  #${d.fifaMatchNumber} @${d.username}: pred ${d.predictedHome}-${d.predictedAway}, ` +
           `actual ${d.actualHome}-${d.actualAway}, stored=${d.storedPoints ?? "null"}, ` +
+          `expected=${d.expectedPoints} (${d.issue}${d.gated ? ", gated" : ""})`
+      );
+    }
+  }
+
+  if (result.advancementDiscrepancies.length) {
+    lines.push("", "Advancement bonus discrepancies:");
+    for (const d of result.advancementDiscrepancies) {
+      lines.push(
+        `  @${d.username} ${d.bonusKey}: stored=${d.storedPoints ?? "null"}, ` +
           `expected=${d.expectedPoints} (${d.issue})`
       );
     }
@@ -195,7 +308,11 @@ export function formatAuditReport(result: ScoreAuditResult): string {
     }
   }
 
-  if (!result.matchDiscrepancies.length && !result.totalDiscrepancies.length) {
+  if (
+    !result.matchDiscrepancies.length &&
+    !result.advancementDiscrepancies.length &&
+    !result.totalDiscrepancies.length
+  ) {
     lines.push("", "No discrepancies found.");
   }
 

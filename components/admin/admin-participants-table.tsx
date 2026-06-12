@@ -122,12 +122,20 @@ export function AdminParticipantsTable({ participants }: AdminParticipantsTableP
                   <tr key={p.id} className="border-b border-[var(--color-border)]">
                     <td className="py-3 pr-4">
                       {registered && p.username ? (
-                        <Link
-                          href={`/admin?jugador=${p.id}#corregir-pronosticos`}
-                          className="font-medium hover:text-[var(--color-accent)] hover:underline"
-                        >
-                          @{p.username}
-                        </Link>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                          <Link
+                            href={`/admin?jugador=${p.id}#corregir-pronosticos`}
+                            className="font-medium hover:text-[var(--color-accent)] hover:underline"
+                          >
+                            @{p.username}
+                          </Link>
+                          <Link
+                            href={`/admin/puntos?jugador=${p.id}`}
+                            className="text-xs text-[var(--color-muted-foreground)] hover:text-[var(--color-accent)] hover:underline"
+                          >
+                            {es.admin.pointsAudit.viewPoints}
+                          </Link>
+                        </div>
                       ) : (
                         <span className="font-medium">{displayName}</span>
                       )}

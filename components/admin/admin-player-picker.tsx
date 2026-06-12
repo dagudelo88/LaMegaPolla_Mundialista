@@ -14,12 +14,14 @@ interface AdminPlayerPickerProps {
   participants: AdminPlayerOption[];
   selectedId: string;
   basePath?: string;
+  hashAnchor?: string;
 }
 
 export function AdminPlayerPicker({
   participants,
   selectedId,
   basePath = "/admin",
+  hashAnchor = "#corregir-pronosticos",
 }: AdminPlayerPickerProps) {
   const router = useRouter();
 
@@ -36,7 +38,9 @@ export function AdminPlayerPicker({
         value={selectedId}
         onChange={(e) => {
           const id = e.target.value;
-          const url = id ? `${basePath}?jugador=${id}#corregir-pronosticos` : `${basePath}#corregir-pronosticos`;
+          const url = id
+            ? `${basePath}?jugador=${id}${hashAnchor}`
+            : `${basePath}${hashAnchor}`;
           router.push(url);
         }}
         className="mt-3 w-full max-w-md rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2.5 text-base font-medium"

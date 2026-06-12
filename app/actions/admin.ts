@@ -2,8 +2,10 @@
 
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { resolveOfficialBracket } from "@/lib/bracket/resolve-official-bracket";
+import { loadBracketContext } from "@/lib/scoring/bracket-context";
 import { processMatchResult } from "@/lib/scoring/process-match-result";
 import { processJornadaBonus } from "@/lib/scoring/process-jornada-bonus";
+import { processCompletedRoundAdvancementBonuses } from "@/lib/scoring/process-completed-rounds";
 import type { MatchPhase } from "@/lib/scoring/calculate-match-points";
 import { syncAllSubmittedPredictionLocks } from "@/lib/predictions/prediction-lock-sync";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -22,6 +24,7 @@ import {
 
 const REVALIDATE_PATHS = [
   "/admin",
+  "/admin/puntos",
   "/admin/resultados",
   "/admin/programacion",
   "/admin/predicciones",
@@ -274,6 +277,9 @@ export async function setMatchResult(
     phase: existing.phase as MatchPhase,
     homeScore: home,
     awayScore: away,
+    homeTeamId: existing.home_team_id,
+    awayTeamId: existing.away_team_id,
+    resultAdvancesTeamId: resultAdvancesTeamId,
   });
 
   if (usersScored !== eligibleCount) {
@@ -283,6 +289,9 @@ export async function setMatchResult(
   }
 
   const jornadaBonus = await processJornadaBonus(admin, matchId);
+
+  const bracketCtx = await loadBracketContext(admin);
+  const roundAdvancement = await processCompletedRoundAdvancementBonuses(admin, bracketCtx);
 
   const bracket = await resolveOfficialBracket(admin);
 
@@ -307,12 +316,13 @@ export async function setMatchResult(
       usersScored,
       eligibleCount,
       jornadaBonus,
+      roundAdvancement,
       bracket,
     },
   });
 
   revalidatePublicPaths();
-  return { usersScored, isCorrection, bracket, jornadaBonus };
+  return { usersScored, isCorrection, bracket, jornadaBonus, roundAdvancement };
 }
 
 export async function resolveOfficialKnockoutBracket() {
@@ -647,4 +657,32 @@ export async function grantLateSubmission(userId: string, untilIso?: string) {
   revalidatePath("/pronosticos");
 
   return { until };
+}
+
+export async function recalculatePlayerPoints(userId: string) {
+  await requireAdmin();
+  const admin = createAdminClient();
+  const { recalculateUserAllPoints } = await import(
+    "@/lib/scoring/recalculate-user-all-points"
+  );
+  await recalculateUserAllPoints(admin, userId);
+  revalidatePublicPaths();
+  revalidatePath("/admin/puntos");
+}
+
+export async function recalculateAllPlayerPoints() {
+  await requireAdmin();
+  const admin = createAdminClient();
+  const { recalculateAllFinishedMatches } = await import(
+    "@/lib/scoring/recalculate-all-finished-matches"
+  );
+  const { recalculateAllJornadaBonuses } = await import(
+    "@/lib/scoring/recalculate-all-jornada-bonuses"
+  );
+
+  await recalculateAllFinishedMatches(admin);
+  await recalculateAllJornadaBonuses(admin);
+
+  revalidatePublicPaths();
+  revalidatePath("/admin/puntos");
 }

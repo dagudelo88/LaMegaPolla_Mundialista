@@ -13,6 +13,9 @@ function createMockAdmin(overrides?: {
     predicted_home: number;
     predicted_away: number;
     locked?: boolean;
+    predicted_advances_team_id?: number | null;
+    predicted_is_draw?: boolean;
+    id?: string;
   }>;
 }): SupabaseClient {
   const submissions = [{ user_id: USER_SUBMITTED }];
@@ -28,15 +31,34 @@ function createMockAdmin(overrides?: {
     overrides?.predictions ??
     [
       {
+        id: "pred-1",
         user_id: USER_SUBMITTED,
         match_id: MATCH_ID,
         predicted_home: 2,
         predicted_away: 0,
+        predicted_is_draw: false,
+        predicted_advances_team_id: null,
         locked: false,
       },
     ];
 
   const upsertedPoints: Array<{ user_id: string; match_id: string; points: number }> = [];
+
+  const matchRow = {
+    id: MATCH_ID,
+    fifa_match_number: 1,
+    phase: "group_stage",
+    group_letter: "A",
+    home_team_id: 1,
+    away_team_id: 2,
+    home_source: null,
+    away_source: null,
+    home_score: 2,
+    away_score: 0,
+    status: "finished",
+    result_advances_team_id: null,
+    kickoff_at: "2026-06-15T18:00:00Z",
+  };
 
   const from = vi.fn((table: string) => {
     const chain: Record<string, unknown> = {};
@@ -47,6 +69,7 @@ function createMockAdmin(overrides?: {
     chain.in = vi.fn(builder);
     chain.or = vi.fn(builder);
     chain.is = vi.fn(builder);
+    chain.order = vi.fn(builder);
     chain.upsert = vi.fn(async (row: { user_id: string; match_id: string; points: number }) => {
       if (table === "user_match_points") upsertedPoints.push(row);
       return { error: null };
@@ -65,7 +88,10 @@ function createMockAdmin(overrides?: {
         if (table === "app_config") return [];
         if (table === "user_match_points") return [];
         if (table === "user_jornada_bonus_points") return [];
+        if (table === "user_advancement_bonus_points") return [];
         if (table === "prediction_changes") return [];
+        if (table === "teams") return [];
+        if (table === "matches") return [matchRow];
         return [];
       },
     });
@@ -92,6 +118,15 @@ function createMockAdmin(overrides?: {
       if (table === "prediction_changes") {
         return { data: [], error: null };
       }
+      if (table === "user_advancement_bonus_points") {
+        return { data: [], error: null };
+      }
+      if (table === "teams") {
+        return { data: [], error: null };
+      }
+      if (table === "matches") {
+        return { data: [matchRow], error: null };
+      }
       if (table === "profiles" && chain.update) {
         return { error: null };
       }
@@ -104,6 +139,7 @@ function createMockAdmin(overrides?: {
       sel.in = vi.fn(() => sel);
       sel.or = vi.fn(() => sel);
       sel.is = vi.fn(() => sel);
+      sel.order = vi.fn(() => sel);
       sel.single = exec;
       sel.maybeSingle = exec;
       Object.assign(sel, { then: (resolve: (v: unknown) => void) => exec().then(resolve) });
