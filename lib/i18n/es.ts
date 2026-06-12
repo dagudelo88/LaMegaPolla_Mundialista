@@ -560,6 +560,7 @@ export const es = {
     typePaid: "Cambio pagado",
     typeAdmin: "Corrección admin",
     typeResult: "Resultado",
+    typeScoringCorrection: "Corrección puntuación",
     noCost: "Sin costo",
     pointsSpent: "−{count} pts",
     loadMore: "Cargar más",
@@ -571,6 +572,30 @@ export const es = {
     homeTeam: "Local",
     awayTeam: "Visitante",
     advancePick: "Equipo que avanza (penales)",
+    scoringCorrectionNotice: {
+      intro:
+        "Se detectó un error técnico: al cargar el resultado, el sistema solo puntuaba a jugadores que ya habían vuelto a entrar en «Pronósticos» después del cierre del plazo. Quienes enviaron la polla a tiempo pero no habían abierto esa pantalla quedaron sin puntos, aunque su pronóstico era correcto.",
+      fix:
+        "El 11 de junio de 2026 se corrigió el motor de puntuación y se recalcularon los puntos del partido #1 para los 32 participantes activos. A partir de ahora todos los jugadores con polla enviada se puntúan al registrar un resultado, sin depender de haber entrado antes a la app.",
+      correctedHeading: "Jugadores afectados por la corrección",
+      correctedGroups: [
+        {
+          label: "+10 pts (marcador exacto 2-0)",
+          players: "@ALEJO, @Julio, @Nicostradamus_Gonzalez",
+        },
+        {
+          label: "+5 pts (ganador correcto, marcador distinto)",
+          players:
+            "@Bruce_Wayne26, @CogotePitao, @El_Tio_Juan, @Martinator_Gonzalez, @Santiago110, @vicegopu",
+        },
+        {
+          label: "0 pts (registrados en el cómputo; antes omitidos)",
+          players: "@Alberto, @Zury",
+        },
+      ],
+      footer:
+        "Los demás participantes del partido #1 ya tenían sus puntos correctos y no requirieron ajuste.",
+    },
   },
   errors: {
     generic: "Algo salió mal. Inténtalo de nuevo.",

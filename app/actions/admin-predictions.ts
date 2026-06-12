@@ -11,6 +11,7 @@ import {
   evaluateUserSubmissionReadiness,
   loadUserSubmissionReadiness,
 } from "@/lib/predictions/submission-readiness";
+import { syncUserPredictionLockStateWithAdmin } from "@/lib/predictions/prediction-lock-sync";
 import { buildGroupResultsFromPredictions, countProgress, resolveAdvancingThirdGroups } from "@/lib/predictions/helpers";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { CACHE_TAGS } from "@/lib/cache/tags";
@@ -369,6 +370,8 @@ export async function adminSubmitUserPredictions(userId: string) {
 
   if (error) throw new Error(error.message);
 
+  await syncUserPredictionLockStateWithAdmin(admin, userId);
+
   revalidateAll();
   return { submittedAt: now };
 }
@@ -429,6 +432,7 @@ export async function adminSubmitAllCompletePredictions(): Promise<{
         continue;
       }
 
+      await syncUserPredictionLockStateWithAdmin(admin, profile.id);
       submitted.push({ userId: profile.id, username });
     } catch (e) {
       skipped.push({

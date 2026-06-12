@@ -5,6 +5,7 @@ import { resolveOfficialBracket } from "@/lib/bracket/resolve-official-bracket";
 import { processMatchResult } from "@/lib/scoring/process-match-result";
 import { processJornadaBonus } from "@/lib/scoring/process-jornada-bonus";
 import type { MatchPhase } from "@/lib/scoring/calculate-match-points";
+import { syncAllSubmittedPredictionLocks } from "@/lib/predictions/prediction-lock-sync";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { CACHE_TAGS } from "@/lib/cache/tags";
@@ -266,12 +267,20 @@ export async function setMatchResult(
 
   if (updateErr) throw new Error(updateErr.message);
 
-  const { usersScored } = await processMatchResult(admin, {
+  await syncAllSubmittedPredictionLocks(admin);
+
+  const { usersScored, eligibleCount } = await processMatchResult(admin, {
     matchId,
     phase: existing.phase as MatchPhase,
     homeScore: home,
     awayScore: away,
   });
+
+  if (usersScored !== eligibleCount) {
+    throw new Error(
+      `Error de puntuación: ${usersScored}/${eligibleCount} participantes puntuados en este partido.`
+    );
+  }
 
   const jornadaBonus = await processJornadaBonus(admin, matchId);
 
@@ -296,6 +305,7 @@ export async function setMatchResult(
         resultAdvancesTeamId: resultAdvancesTeamId,
       },
       usersScored,
+      eligibleCount,
       jornadaBonus,
       bracket,
     },

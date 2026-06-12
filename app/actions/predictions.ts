@@ -204,6 +204,8 @@ export async function submitFullTournament() {
 
   if (subErr) throw new Error(subErr.message);
 
+  await syncUserPredictionLockState(user.id);
+
   revalidatePath("/pronosticos");
   revalidatePath("/dashboard");
 }

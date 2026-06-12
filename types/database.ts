@@ -117,7 +117,8 @@ export interface PredictionAdminOverride {
 export type TransparencyEntryKind =
   | "paid_change"
   | "admin_prediction"
-  | "result_correction";
+  | "result_correction"
+  | "scoring_correction";
 
 export interface TransparencyMatchTeam {
   name: string;

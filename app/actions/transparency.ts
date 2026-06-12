@@ -2,6 +2,7 @@
 
 import { requireUser } from "@/lib/auth/require-admin";
 import { createClient } from "@/lib/supabase/server";
+import { buildScoringCorrectionEntry } from "@/lib/transparency/build-scoring-correction-entry";
 import type {
   TransparencyEntry,
   TransparencyEntryKind,
@@ -239,6 +240,16 @@ export async function loadTransparencyHistory(options?: {
   entries.sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
+
+  if ((filter === "all" || filter === "admin") && page === 0) {
+    const correctionEntry = await buildScoringCorrectionEntry(supabase);
+    if (correctionEntry && !entries.some((e) => e.id === correctionEntry.id)) {
+      entries.push(correctionEntry);
+      entries.sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+    }
+  }
 
   const start = page * PAGE_SIZE;
   const slice = entries.slice(start, start + PAGE_SIZE + 1);

@@ -1,5 +1,4 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { ACTIVE_PARTICIPANT_OR_FILTER } from "@/lib/participants/is-active-participant";
 import {
   getJornadaKey,
   isJornadaComplete,
@@ -13,6 +12,7 @@ import {
   type JornadaBonusConfig,
 } from "@/lib/scoring/calculate-jornada-bonus";
 import { recalculateUsersTotalPoints } from "@/lib/scoring/recalculate-total-points";
+import { loadScorablePredictionsForMatchIds } from "@/lib/scoring/scoring-eligibility";
 
 async function loadJornadaBonusConfig(admin: SupabaseClient): Promise<JornadaBonusConfig> {
   const keys = ["scoring.jornada_bonus.match", "scoring.jornada_bonus.exact"] as const;
@@ -104,49 +104,31 @@ export async function processJornadaBonus(
 
   if (resultErr) throw new Error(resultErr.message);
 
-  const { data: predictions, error: predErr } = await admin
-    .from("predictions")
-    .select("user_id, match_id, predicted_home, predicted_away")
-    .in("match_id", jornadaMatchIds)
-    .eq("locked", true);
-
-  if (predErr) throw new Error(predErr.message);
+  const scorablePredictions = await loadScorablePredictionsForMatchIds(
+    admin,
+    jornadaMatchIds
+  );
 
   const predsByUser = new Map<
     string,
     { matchId: string; fifaMatchNumber: number; predictedTotalGoals: number }[]
   >();
 
-  for (const pred of predictions ?? []) {
-    const match = allMatches.find((m) => m.id === pred.match_id);
+  for (const pred of scorablePredictions) {
+    const match = allMatches.find((m) => m.id === pred.matchId);
     if (!match) continue;
-    const list = predsByUser.get(pred.user_id) ?? [];
+    const list = predsByUser.get(pred.userId) ?? [];
     list.push({
-      matchId: pred.match_id,
+      matchId: pred.matchId,
       fifaMatchNumber: match.fifa_match_number ?? 0,
-      predictedTotalGoals: pred.predicted_home + pred.predicted_away,
+      predictedTotalGoals: pred.predictedHome + pred.predictedAway,
     });
-    predsByUser.set(pred.user_id, list);
+    predsByUser.set(pred.userId, list);
   }
 
-  const candidateUserIds = [...predsByUser.keys()];
-  const { data: eligibleProfiles, error: eligibleErr } = await admin
-    .from("profiles")
-    .select("id")
-    .in(
-      "id",
-      candidateUserIds.length ? candidateUserIds : ["00000000-0000-0000-0000-000000000000"]
-    )
-    .or(ACTIVE_PARTICIPANT_OR_FILTER)
-    .is("withdrawn_at", null);
-
-  if (eligibleErr) throw new Error(eligibleErr.message);
-
-  const eligibleIds = new Set((eligibleProfiles ?? []).map((p) => p.id));
   const scoredUserIds: string[] = [];
 
-  for (const userId of candidateUserIds) {
-    if (!eligibleIds.has(userId)) continue;
+  for (const userId of predsByUser.keys()) {
 
     const userPreds = predsByUser.get(userId) ?? [];
     const topScorer = resolveUserPredictedTopScorer(userPreds);

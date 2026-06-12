@@ -7,6 +7,7 @@ import {
 } from "@/app/actions/transparency";
 import { TeamWithFlag } from "@/components/predictions/team-flag";
 import { ScoreChangeDisplay } from "@/components/transparency/score-change-display";
+import { ScoringCorrectionCardBody } from "@/components/transparency/scoring-correction-card-body";
 import { es } from "@/lib/i18n/es";
 import { formatAppDateTime } from "@/lib/matches/format-datetime";
 import type { TransparencyEntry } from "@/types/database";
@@ -22,12 +23,14 @@ const FILTERS: { key: TransparencyFilter; label: string }[] = [
 function kindLabel(kind: TransparencyEntry["kind"]): string {
   if (kind === "paid_change") return es.transparency.typePaid;
   if (kind === "admin_prediction") return es.transparency.typeAdmin;
+  if (kind === "scoring_correction") return es.transparency.typeScoringCorrection;
   return es.transparency.typeResult;
 }
 
 function kindBadgeClass(kind: TransparencyEntry["kind"]): string {
   if (kind === "paid_change") return "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200";
   if (kind === "admin_prediction") return "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200";
+  if (kind === "scoring_correction") return "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200";
   return "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200";
 }
 
@@ -139,7 +142,7 @@ export function CorrectionsHistory({
                 </span>
               </div>
 
-              {entry.kind !== "result_correction" && (
+              {entry.kind !== "result_correction" && entry.kind !== "scoring_correction" && (
                 <p className="mt-2 text-sm">
                   <strong>@{entry.playerUsername}</strong>
                 </p>
@@ -147,11 +150,15 @@ export function CorrectionsHistory({
 
               <MatchHeader entry={entry} />
 
-              <ScoreChangeDisplay
-                homeTeam={entry.homeTeam}
-                awayTeam={entry.awayTeam}
-                scoreChange={entry.scoreChange}
-              />
+              {entry.kind === "scoring_correction" ? (
+                <ScoringCorrectionCardBody />
+              ) : (
+                <ScoreChangeDisplay
+                  homeTeam={entry.homeTeam}
+                  awayTeam={entry.awayTeam}
+                  scoreChange={entry.scoreChange}
+                />
+              )}
 
               <p className="mt-3 text-sm">
                 {entry.kind === "paid_change" && entry.pointsSpent != null ? (
@@ -165,13 +172,17 @@ export function CorrectionsHistory({
                       ? ` · ${es.transparency.byAdmin.replace("{username}", entry.actorUsername)}`
                       : ""}
                   </span>
+                ) : entry.kind === "scoring_correction" ? (
+                  entry.reason ? (
+                    <span className="text-[var(--color-muted-foreground)]">{entry.reason}</span>
+                  ) : null
                 ) : entry.actorUsername ? (
                   <span className="text-[var(--color-muted-foreground)]">
                     {es.transparency.byAdmin.replace("{username}", entry.actorUsername)}
                   </span>
                 ) : null}
               </p>
-              {entry.reason && (
+              {entry.reason && entry.kind !== "scoring_correction" && (
                 <p className="mt-2 text-sm text-[var(--color-muted-foreground)]">{entry.reason}</p>
               )}
             </li>
