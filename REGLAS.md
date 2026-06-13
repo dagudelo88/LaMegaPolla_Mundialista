@@ -88,6 +88,26 @@ Sin embargo, puedes **gastar puntos** para modificar pronósticos de partidos qu
 
 Esta mecánica te permite corregir errores, pero te penaliza por hacerlo (especialmente en las rondas finales).
 
+### ¿Qué afecta un cambio pago?
+
+Cada cambio pago modifica **únicamente el marcador de un partido concreto**. No es un pago para rehacer toda la polla ni para actualizar automáticamente todos los pronósticos de eliminatorias.
+
+Sin embargo, como la aplicación calcula tu tabla de grupos y tu simulación de llave a partir de tus pronósticos de fase de grupos, **un cambio en un solo partido puede tener efectos en cadena** en tu bracket personal:
+
+- Puede cambiar la **posición** de equipos en tu tabla simulada de grupos.
+- Puede cambiar **quién clasifica** en tu llave (1.º, 2.º o mejor tercero).
+- Puede cambiar **los cruces** de eliminatorias según tu simulación (qué equipos ocupan cada slot).
+- Puede afectar los **bonos por avance de equipos** (§4) y la **regla de avance** (§7), porque ambos usan tu bracket recalculado.
+
+**Ejemplo:** si tenías **Colombia 1-0** en un partido de grupo y, con eso, Colombia quedaba 2.º en tu tabla, y gastas 3 puntos para cambiarlo a **Colombia 3-1**:
+
+- Solo pagaste por **ese partido**.
+- Tu tabla de grupo puede cambiar (Colombia sube o baja; otro equipo puede perder el 2.º puesto).
+- En tu simulación, el cruce de eliminatorias puede ser **con otro rival** (según los slots de la llave).
+- Tu marcador de octavos (por ejemplo, un **2-1** que ya habías enviado) **no se modifica solo**: sigue siendo 2-1, pero ahora aplica al cruce que resulte con tu nueva clasificación.
+
+Tus pronósticos de **eliminatorias** (octavos, cuartos, semifinal, final) **permanecen como los enviaste** hasta que realices **otro cambio pago** por cada partido (9 puntos desde octavos), o hasta que uses la ventana de ajustes gratis por clasificación oficial (abajo), si te aplica.
+
 ### Ventana de Ajustes por Clasificación Oficial (Mejores Terceros)
 
 Cuando termine la fase de grupos y el administrador publique la **lista oficial de clasificados** y el **orden oficial de clasificación** (incluidos los 8 mejores terceros), se abrirá una ventana especial **sin costo en puntos**:
@@ -108,10 +128,10 @@ Durante esa ventana, **solo los jugadores cuyos cruces de eliminatorias cambian*
 
 Por cada jornada (día con **2 o más partidos**, hora Colombia) se compara tu pronóstico con el resultado real:
 
-- Tu **partido más goleador** de la jornada es el que tiene **más goles totales** en tu pronóstico (`local + visitante`). Si empatas en el máximo, se usa el de **menor número de partido FIFA**.
+- Tu **partido más goleador** de la jornada es el que tiene **más goles totales** en tu pronóstico (`local + visitante`). 
 - Si aciertas **qué partido** fue el más goleador real de la jornada → **+3 puntos**.
 - Si además aciertas la **cantidad exacta de goles totales** de ese partido → **+5 puntos** (en lugar de 3).
-- Si **varios partidos reales** empatan en el máximo de goles de la jornada → **nadie** recibe bonus ese día.
+- Si **varios partidos reales** empatan en el máximo de goles de la jornada → **No** recibes bonus ese día.
 
 No hay selección aparte: se usa tu pronóstico ya enviado (incluye cambios pagos válidos antes de cada partido).
 
