@@ -99,8 +99,8 @@ describe("FIFA 2026 schedule dates", () => {
     expect(m71.fifa_schedule_date).toBe("2026-06-27");
   });
 
-  it("knockout 2026-06-29 has M74 and M76", () => {
-    expect(scheduleByDay["2026-06-29"]).toEqual([74, 76]);
+  it("knockout 2026-06-29 has M74 and M75", () => {
+    expect(scheduleByDay["2026-06-29"]).toEqual([74, 75]);
   });
 
   it("formatFifaScheduleDateHeader uses calendar date without timezone shift", () => {
