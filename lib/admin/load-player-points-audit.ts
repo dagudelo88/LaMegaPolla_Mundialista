@@ -440,7 +440,7 @@ export async function loadAdminPlayerPointsAudit(
 
       if (expected.points > 0) {
         ledgerParts.push({
-          timestamp: stored?.created_at ?? roundKey,
+          timestamp: stored?.created_at ?? "",
           type: "round_advancement",
           label: `Avance ronda ${roundKey} +${expected.points}`,
           delta: expected.points,

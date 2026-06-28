@@ -59,6 +59,11 @@ export function formatMatchTime(iso: string): string {
   }).format(new Date(iso));
 }
 
+export function isParseableInstant(value: string | Date): boolean {
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isFinite(date.getTime());
+}
+
 /** Full date + time in Colombia for UI timestamps (history, deadlines, kickoffs). */
 export function formatAppDateTime(value: string | Date): string {
   const date = value instanceof Date ? value : new Date(value);
