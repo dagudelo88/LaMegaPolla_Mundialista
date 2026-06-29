@@ -8,6 +8,7 @@ import { getJornadaKey } from "@/lib/jornada/helpers";
 import { parseAdvancementBonusKey } from "@/lib/scoring/advancement-bonus-keys";
 import {
   loadBracketContext,
+  isRoundComplete,
   resolveUserKnockoutTeams,
 } from "@/lib/scoring/bracket-context";
 import { isKnockoutMatchScorableForUserByMatchNumber } from "@/lib/scoring/bracket-gate";
@@ -30,6 +31,23 @@ import { loadAdvancementBonusPerTeam } from "@/lib/scoring/load-advancement-bonu
 import { loadScoringConfig } from "@/lib/scoring/load-scoring-config";
 import { teamsInPhase } from "@/lib/scoring/bracket-context";
 import type { DbMatchWithTeams, DbPrediction } from "@/lib/predictions/helpers";
+import type { BracketContext } from "@/lib/scoring/bracket-context";
+
+/** Round keys audited for +2 advancement bonuses (player admin audit). */
+export const ADVANCEMENT_AUDIT_ROUND_KEYS = [
+  "group_stage",
+  "round_of_32",
+  "round_of_16",
+  "quarter_final",
+  "semi_final",
+  "third_place",
+  "final",
+] as const;
+
+/** Only rounds officially complete are shown in advancement audit (matches liquidation). */
+export function eligibleAdvancementAuditRoundKeys(ctx: BracketContext): string[] {
+  return ADVANCEMENT_AUDIT_ROUND_KEYS.filter((roundKey) => isRoundComplete(ctx, roundKey));
+}
 
 export type LedgerEntryType =
   | "match"
@@ -361,15 +379,7 @@ export async function loadAdminPlayerPointsAudit(
     ])
   );
 
-  const roundKeys = [
-    "group_stage",
-    "round_of_32",
-    "round_of_16",
-    "quarter_final",
-    "semi_final",
-    "third_place",
-    "final",
-  ];
+  const roundKeys = eligibleAdvancementAuditRoundKeys(bracketCtx);
 
   for (const roundKey of roundKeys) {
     const nextPhase = nextKnockoutPhaseAfterRound(roundKey);

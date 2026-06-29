@@ -561,7 +561,8 @@ export const es = {
       expected: "Calculado",
       expectedHint: "Puntos que debería tener según REGLAS y el motor de scoring",
       difference: "Diferencia",
-      differenceHint: "Registrado menos calculado; si no es 0, hay un error",
+      differenceHint:
+        "Registrado menos calculado; si no es 0, revisa liquidación o recálculo (no es una penalización al jugador).",
       match: "Partido",
       bonusCol: "Bono jorn.",
       ledgerTitle: "Ledger de puntos",
@@ -588,7 +589,8 @@ export const es = {
       gatedBadge: "Bloqueado §7",
       editPredictionsLink: "Corregir pronósticos de este jugador →",
       advancementTitle: "Bonos de avance (+2)",
-      advancementHint: "Por partido de eliminatoria y al cerrar cada ronda.",
+      advancementHint:
+        "Por partido de eliminatoria y al cerrar cada ronda oficialmente. Los bonos de ronda solo aparecen cuando todos los partidos de esa fase terminaron; la columna Diferencia compara lo liquidado en BD vs. el recálculo.",
       advancementType: "Tipo",
       advancementTypeMatch: "Partido",
       advancementTypeRound: "Ronda",
