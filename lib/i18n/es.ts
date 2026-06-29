@@ -11,6 +11,11 @@ export const es = {
       `En tu llave aparece ${team} en ${phase}, pero no está entre los clasificados oficiales a esa ronda. Suele deberse a un orden distinto en grupos o en los mejores terceros en tu simulación (§7), no a que el país no juegue el Mundial.`,
     eliminatedBefore: (team: string, phase: string, lastPhase: string) =>
       `${team} sí llegó a ${lastPhase} en el cuadro oficial, pero fue eliminado antes de ${phase}; este cruce de tu llave no suma puntos.`,
+    slotMismatch:
+      "Tu simulación tiene un cruce distinto al oficial en este partido (§7). No suman puntos de marcador.",
+    officialPairing: (home: string, away: string) => `Cruce oficial: ${home} vs ${away}`,
+    partialAdvancementHint: (team: string) =>
+      `Puedes sumar +2 si acertaste que ${team} avanza en este partido.`,
     finishedNote:
       "Este partido ya terminó y quedó en 0 pts aunque acertaras el marcador.",
     canStillEdit: "Aún puedes cambiar este pronóstico con un cambio pago.",

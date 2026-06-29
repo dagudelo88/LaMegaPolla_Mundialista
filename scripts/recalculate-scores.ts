@@ -57,7 +57,11 @@ async function main() {
     .not("away_score", "is", null);
   console.log(`Recalculating ${finishedMatches?.length ?? 0} finished match(es)...`);
 
-  const result = await recalculateAllFinishedMatches(admin);
+  const result = await recalculateAllFinishedMatches(admin, (current, total) => {
+    if (current === 1 || current === total || current % 10 === 0) {
+      console.log(`  Match ${current}/${total}...`);
+    }
+  });
   console.log(
     `Recalculated ${result.matchesProcessed} finished match(es), ${result.scoringPasses} scoring pass(es).`
   );

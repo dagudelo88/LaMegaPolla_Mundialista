@@ -7,7 +7,10 @@ import {
   officialAdvancingTeamId,
 } from "@/lib/scoring/calculate-match-advancement-bonus";
 import type { BracketContext } from "@/lib/scoring/bracket-context";
-import { isKnockoutMatchScorableForUserByMatchNumber } from "@/lib/scoring/bracket-gate";
+import {
+  isKnockoutMatchScorableForUserByMatchNumber,
+  isPartialAdvancementBonusEligible,
+} from "@/lib/scoring/bracket-gate";
 import { loadAdvancementBonusPerTeam } from "@/lib/scoring/load-advancement-bonus-config";
 import { loadActiveSubmittedUserIds } from "@/lib/scoring/scoring-eligibility";
 
@@ -31,6 +34,8 @@ export async function processMatchAdvancementBonus(
 
   const bonusPerTeam = await loadAdvancementBonusPerTeam(admin);
   const eligibleIds = await loadActiveSubmittedUserIds(admin);
+  const matchRow = ctx.matchById.get(input.matchId);
+  const fifaNumber = matchRow?.fifa_match_number;
 
   const { data: predictions } = await admin
     .from("predictions")
@@ -48,6 +53,47 @@ export async function processMatchAdvancementBonus(
       ? isKnockoutMatchScorableForUserByMatchNumber(ctx, userResolved, input.matchId)
       : { scorable: true };
 
+    const userTeams =
+      fifaNumber != null && userResolved ? userResolved.get(fifaNumber) : undefined;
+    const officialPair =
+      fifaNumber != null ? ctx.officialKnockoutResolved.get(fifaNumber) : undefined;
+
+    const predictedAdvancer =
+      userTeams?.homeTeamId != null && userTeams.awayTeamId != null
+        ? predictedAdvancingTeamId({
+            homeTeamId: userTeams.homeTeamId,
+            awayTeamId: userTeams.awayTeamId,
+            predictedHome: pred.predicted_home,
+            predictedAway: pred.predicted_away,
+            predictedAdvancesTeamId: pred.predicted_advances_team_id,
+          })
+        : predictedAdvancingTeamId({
+            homeTeamId: input.homeTeamId,
+            awayTeamId: input.awayTeamId,
+            predictedHome: pred.predicted_home,
+            predictedAway: pred.predicted_away,
+            predictedAdvancesTeamId: pred.predicted_advances_team_id,
+          });
+
+    const officialAdvancer = officialAdvancingTeamId({
+      homeTeamId: input.homeTeamId,
+      awayTeamId: input.awayTeamId,
+      actualHome: input.homeScore,
+      actualAway: input.awayScore,
+      resultAdvancesTeamId: input.resultAdvancesTeamId,
+    });
+
+    const partialEligible =
+      !gate.scorable &&
+      userTeams != null &&
+      officialPair != null &&
+      isPartialAdvancementBonusEligible(
+        userTeams,
+        officialPair,
+        predictedAdvancer,
+        officialAdvancer
+      );
+
     const points = gate.scorable
       ? calculateMatchAdvancementBonus(
           {
@@ -63,22 +109,9 @@ export async function processMatchAdvancementBonus(
           },
           bonusPerTeam
         )
-      : 0;
-
-    const predictedAdvancer = predictedAdvancingTeamId({
-      homeTeamId: input.homeTeamId,
-      awayTeamId: input.awayTeamId,
-      predictedHome: pred.predicted_home,
-      predictedAway: pred.predicted_away,
-      predictedAdvancesTeamId: pred.predicted_advances_team_id,
-    });
-    const officialAdvancer = officialAdvancingTeamId({
-      homeTeamId: input.homeTeamId,
-      awayTeamId: input.awayTeamId,
-      actualHome: input.homeScore,
-      actualAway: input.awayScore,
-      resultAdvancesTeamId: input.resultAdvancesTeamId,
-    });
+      : partialEligible
+        ? bonusPerTeam
+        : 0;
 
     const { error } = await admin.from("user_advancement_bonus_points").upsert(
       {
@@ -91,8 +124,9 @@ export async function processMatchAdvancementBonus(
           phase: input.phase,
           predictedAdvancer,
           officialAdvancer,
-          gated: !gate.scorable,
+          gated: !gate.scorable && !partialEligible,
           gateReason: gate.reason,
+          partialAdvancement: partialEligible,
           blockedTeams: gate.blockedTeams,
         },
       },

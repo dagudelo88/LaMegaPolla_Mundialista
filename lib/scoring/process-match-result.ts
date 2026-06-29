@@ -2,8 +2,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   calculateMatchPoints,
   type MatchPhase,
+  type ScoringConfig,
 } from "@/lib/scoring/calculate-match-points";
-import { loadBracketContext } from "@/lib/scoring/bracket-context";
+import { loadBracketContext, type BracketContext } from "@/lib/scoring/bracket-context";
 import { loadScoringConfig } from "@/lib/scoring/load-scoring-config";
 import { processMatchAdvancementBonus } from "@/lib/scoring/process-match-advancement-bonus";
 import { resolveOfficialMatchTeamIds } from "@/lib/scoring/resolve-match-team-ids";
@@ -12,8 +13,16 @@ import {
   countScorableMatchPredictions,
   loadScorableMatchPredictions,
 } from "@/lib/scoring/scoring-eligibility";
-import { loadUserBracketCache } from "@/lib/scoring/user-bracket-cache";
+import { loadUserBracketCache, type UserResolvedMap } from "@/lib/scoring/user-bracket-cache";
 import { isKnockoutMatchScorableForUserByMatchNumber } from "@/lib/scoring/bracket-gate";
+
+export interface ProcessMatchResultOptions {
+  bracketCtx?: BracketContext;
+  userBracketCache?: UserResolvedMap;
+  config?: ScoringConfig;
+  /** Batch backfill: skip per-match profile total updates. */
+  deferTotalRecalc?: boolean;
+}
 
 export interface ProcessMatchResultInput {
   matchId: string;
@@ -32,11 +41,13 @@ export interface ProcessMatchResultOutput {
 
 export async function processMatchResult(
   admin: SupabaseClient,
-  input: ProcessMatchResultInput
+  input: ProcessMatchResultInput,
+  options?: ProcessMatchResultOptions
 ): Promise<ProcessMatchResultOutput> {
-  const config = await loadScoringConfig(admin);
-  const bracketCtx = await loadBracketContext(admin);
-  const userBracketCache = await loadUserBracketCache(admin, bracketCtx);
+  const config = options?.config ?? (await loadScoringConfig(admin));
+  const bracketCtx = options?.bracketCtx ?? (await loadBracketContext(admin));
+  const userBracketCache =
+    options?.userBracketCache ?? (await loadUserBracketCache(admin, bracketCtx));
 
   const eligibilityOpts = {
     bracketCtx,
@@ -157,7 +168,9 @@ export async function processMatchResult(
     for (const id of advancementUserIds) usersToRecalculate.add(id);
   }
 
-  await recalculateUsersTotalPoints(admin, [...usersToRecalculate]);
+  if (!options?.deferTotalRecalc) {
+    await recalculateUsersTotalPoints(admin, [...usersToRecalculate]);
+  }
   const eligibleCount = await countScorableMatchPredictions(
     admin,
     input.matchId,

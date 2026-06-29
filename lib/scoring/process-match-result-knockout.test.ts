@@ -38,6 +38,7 @@ vi.mock("@/lib/scoring/recalculate-total-points", () => ({
 
 vi.mock("@/lib/scoring/bracket-gate", () => ({
   isKnockoutMatchScorableForUserByMatchNumber: vi.fn(),
+  isPartialAdvancementBonusEligible: vi.fn(() => false),
 }));
 
 import { loadBracketContext } from "@/lib/scoring/bracket-context";

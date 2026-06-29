@@ -42,3 +42,14 @@ export function formatGateBlockedReasons(
     )
   );
 }
+
+export function formatSlotMismatchReasons(
+  officialHomeName: string | null,
+  officialAwayName: string | null
+): string[] {
+  const reasons = [es.gateBlocked.slotMismatch];
+  if (officialHomeName && officialAwayName) {
+    reasons.push(es.gateBlocked.officialPairing(officialHomeName, officialAwayName));
+  }
+  return reasons;
+}

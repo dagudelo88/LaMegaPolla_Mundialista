@@ -48,6 +48,9 @@ export interface MatchCardProps {
     blockedTeamNames: string[];
     blockedTeamReasons?: string[];
     phase: MatchPhase;
+    officialHomeName?: string;
+    officialAwayName?: string;
+    partialAdvancementHint?: string;
   };
   matchFinished?: boolean;
   onSaved?: () => void;
@@ -552,6 +555,11 @@ export function MatchPredictionCard({
                     PHASE_LABELS[scoringGate.phase] ?? scoringGate.phase
                   )
                 )
+          )}
+          {scoringGate.partialAdvancementHint && (
+            <span className="mt-1 block text-[var(--color-muted-foreground)]">
+              {scoringGate.partialAdvancementHint}
+            </span>
           )}
           {matchFinished && (
             <span className="mt-1 block">{es.pronosticos.scoringGateFinishedNote}</span>

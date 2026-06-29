@@ -35,7 +35,11 @@ interface ScoringGateInfo {
   scorable: boolean;
   blockedTeamIds: number[];
   blockedTeamNames: string[];
+  blockedTeamReasons?: string[];
   phase: MatchPhase;
+  officialHomeName?: string;
+  officialAwayName?: string;
+  partialAdvancementHint?: string;
 }
 
 interface PredictionRow {

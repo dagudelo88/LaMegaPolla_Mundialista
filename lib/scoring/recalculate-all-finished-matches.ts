@@ -1,13 +1,28 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { MatchPhase } from "@/lib/scoring/calculate-match-points";
 import { loadBracketContext } from "@/lib/scoring/bracket-context";
+import { KNOCKOUT_PHASES } from "@/lib/scoring/knockout-phase-order";
+import { loadScoringConfig } from "@/lib/scoring/load-scoring-config";
 import { processMatchResult } from "@/lib/scoring/process-match-result";
 import { processAllCompletedRoundAdvancementBonuses } from "@/lib/scoring/process-round-advancement-bonus";
+import { loadUserBracketCache } from "@/lib/scoring/user-bracket-cache";
 
-export async function recalculateAllFinishedMatches(
-  admin: SupabaseClient
+interface FinishedMatchRow {
+  id: string;
+  phase: string;
+  home_score: number;
+  away_score: number;
+  home_team_id: number | null;
+  away_team_id: number | null;
+  result_advances_team_id: number | null;
+}
+
+async function recalculateFinishedMatches(
+  admin: SupabaseClient,
+  phases: MatchPhase[] | null,
+  onProgress?: (current: number, total: number, matchId: string) => void
 ): Promise<{ matchesProcessed: number; scoringPasses: number }> {
-  const { data: matches, error } = await admin
+  let query = admin
     .from("matches")
     .select(
       "id, phase, home_score, away_score, home_team_id, away_team_id, result_advances_team_id"
@@ -17,26 +32,63 @@ export async function recalculateAllFinishedMatches(
     .not("away_score", "is", null)
     .order("fifa_match_number");
 
+  if (phases?.length) {
+    query = query.in("phase", phases);
+  }
+
+  const { data: matches, error } = await query;
   if (error) throw new Error(error.message);
 
+  const bracketCtx = await loadBracketContext(admin);
+  const [userBracketCache, config] = await Promise.all([
+    loadUserBracketCache(admin, bracketCtx),
+    loadScoringConfig(admin),
+  ]);
+
+  const batchOpts = { bracketCtx, userBracketCache, config, deferTotalRecalc: true };
+  const rows = (matches ?? []) as FinishedMatchRow[];
   let scoringPasses = 0;
-  for (const match of matches ?? []) {
-    const { usersScored } = await processMatchResult(admin, {
-      matchId: match.id,
-      phase: match.phase as MatchPhase,
-      homeScore: match.home_score!,
-      awayScore: match.away_score!,
-      homeTeamId: match.home_team_id,
-      awayTeamId: match.away_team_id,
-      resultAdvancesTeamId: match.result_advances_team_id,
-    });
+
+  for (let i = 0; i < rows.length; i++) {
+    const match = rows[i]!;
+    onProgress?.(i + 1, rows.length, match.id);
+
+    const { usersScored } = await processMatchResult(
+      admin,
+      {
+        matchId: match.id,
+        phase: match.phase as MatchPhase,
+        homeScore: match.home_score,
+        awayScore: match.away_score,
+        homeTeamId: match.home_team_id,
+        awayTeamId: match.away_team_id,
+        resultAdvancesTeamId: match.result_advances_team_id,
+      },
+      batchOpts
+    );
     scoringPasses += usersScored;
   }
 
-  const bracketCtx = await loadBracketContext(admin);
-  await processAllCompletedRoundAdvancementBonuses(admin, bracketCtx);
+  if (phases == null || phases.some((p) => KNOCKOUT_PHASES.includes(p))) {
+    await processAllCompletedRoundAdvancementBonuses(admin, bracketCtx);
+  }
 
-  return { matchesProcessed: matches?.length ?? 0, scoringPasses };
+  return { matchesProcessed: rows.length, scoringPasses };
+}
+
+export async function recalculateAllFinishedMatches(
+  admin: SupabaseClient,
+  onProgress?: (current: number, total: number, matchId: string) => void
+): Promise<{ matchesProcessed: number; scoringPasses: number }> {
+  return recalculateFinishedMatches(admin, null, onProgress);
+}
+
+/** Re-score finished knockout matches only (§7 slot gate, advancement +2). */
+export async function recalculateFinishedKnockoutMatches(
+  admin: SupabaseClient,
+  onProgress?: (current: number, total: number, matchId: string) => void
+): Promise<{ matchesProcessed: number; scoringPasses: number }> {
+  return recalculateFinishedMatches(admin, [...KNOCKOUT_PHASES], onProgress);
 }
 
 /** Dev/backfill: lock predictions + mark submission for active users who have picks. */
