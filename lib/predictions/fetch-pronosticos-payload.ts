@@ -12,6 +12,8 @@ import {
   officialAdvancingThirdGroupsForWindow,
   qualifierAdjustmentAffectedByMatchId as buildQualifierAdjustmentAffectedByMatchId,
 } from "@/lib/predictions/qualifier-adjustment-window";
+import type { DbPrediction } from "@/lib/predictions/helpers";
+import { loadScoringGateByMatchId } from "@/lib/scoring/load-scoring-gate-by-match";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export async function fetchPronosticosPayload(supabase: SupabaseClient, userId: string) {
@@ -116,6 +118,31 @@ export async function fetchPronosticosPayload(supabase: SupabaseClient, userId: 
     ? officialAdvancingThirdGroupsForWindow(teams ?? [], groupMatchesOfficial)
     : predictedAdvancingThirdGroups;
 
+  const scoringGateByMatchId = await loadScoringGateByMatchId(
+    supabase,
+    userId,
+    (predictions ?? []) as DbPrediction[]
+  );
+
+  const blockedTeamIds = [
+    ...new Set(
+      Object.values(scoringGateByMatchId).flatMap((g) => g.blockedTeamIds)
+    ),
+  ];
+  const teamNameById = new Map((teams ?? []).map((t) => [t.id, t.name_es]));
+
+  const scoringGateByMatchIdWithNames = Object.fromEntries(
+    Object.entries(scoringGateByMatchId).map(([matchId, gate]) => [
+      matchId,
+      {
+        ...gate,
+        blockedTeamNames: gate.blockedTeamIds.map(
+          (id) => teamNameById.get(id) ?? String(id)
+        ),
+      },
+    ])
+  );
+
   return {
     globalDeadline,
     deadlinePassed: isPredictionEditingClosed(globalDeadline, lateSubmissionUntil),
@@ -144,5 +171,6 @@ export async function fetchPronosticosPayload(supabase: SupabaseClient, userId: 
         homeSource: m.home_source as BracketSlot,
         awaySource: m.away_source as BracketSlot,
       })),
+    scoringGateByMatchId: scoringGateByMatchIdWithNames,
   };
 }

@@ -3,6 +3,7 @@
 import { requireUser } from "@/lib/auth/require-admin";
 import { createClient } from "@/lib/supabase/server";
 import { buildScoringCorrectionEntry } from "@/lib/transparency/build-scoring-correction-entry";
+import { buildAdvancementCorrectionEntry } from "@/lib/transparency/build-advancement-correction-entry";
 import type {
   TransparencyEntry,
   TransparencyEntryKind,
@@ -242,9 +243,16 @@ export async function loadTransparencyHistory(options?: {
   );
 
   if ((filter === "all" || filter === "admin") && page === 0) {
-    const correctionEntry = await buildScoringCorrectionEntry(supabase);
-    if (correctionEntry && !entries.some((e) => e.id === correctionEntry.id)) {
-      entries.push(correctionEntry);
+    const correctionEntries = await Promise.all([
+      buildScoringCorrectionEntry(supabase),
+      buildAdvancementCorrectionEntry(supabase),
+    ]);
+    for (const correctionEntry of correctionEntries) {
+      if (correctionEntry && !entries.some((e) => e.id === correctionEntry.id)) {
+        entries.push(correctionEntry);
+      }
+    }
+    if (correctionEntries.some(Boolean)) {
       entries.sort(
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );

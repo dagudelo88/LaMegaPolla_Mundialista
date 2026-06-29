@@ -8,7 +8,6 @@ import {
 import {
   type BracketContext,
   isRoundComplete,
-  resolveUserKnockoutTeams,
   teamsInPhase,
 } from "@/lib/scoring/bracket-context";
 import { loadAdvancementBonusPerTeam } from "@/lib/scoring/load-advancement-bonus-config";
@@ -18,7 +17,7 @@ import {
 } from "@/lib/scoring/knockout-phase-order";
 import { loadActiveSubmittedUserIds } from "@/lib/scoring/scoring-eligibility";
 import { recalculateUsersTotalPoints } from "@/lib/scoring/recalculate-total-points";
-import type { DbMatchWithTeams, DbPrediction } from "@/lib/predictions/helpers";
+import { loadUserBracketCache } from "@/lib/scoring/user-bracket-cache";
 
 function buildUserTeamsByPhase(
   ctx: BracketContext,
@@ -46,27 +45,13 @@ export async function processRoundAdvancementBonus(
   const eligibleIds = await loadActiveSubmittedUserIds(admin);
   if (!eligibleIds.size) return { usersScored: 0 };
 
-  const matches = ctx.matches as unknown as DbMatchWithTeams[];
-  const { data: allPredictions } = await admin
-    .from("predictions")
-    .select(
-      "id, match_id, predicted_home, predicted_away, predicted_is_draw, predicted_advances_team_id, locked, user_id"
-    )
-    .in("user_id", [...eligibleIds]);
-
-  const predsByUser = new Map<string, DbPrediction[]>();
-  for (const p of allPredictions ?? []) {
-    const list = predsByUser.get(p.user_id) ?? [];
-    list.push(p as DbPrediction);
-    predsByUser.set(p.user_id, list);
-  }
-
+  const userBracketCache = await loadUserBracketCache(admin, ctx);
   const officialTeamsByPhase = ctx.officialTeamsByPhase;
   const scoredUserIds: string[] = [];
 
   for (const userId of eligibleIds) {
-    const predictions = predsByUser.get(userId) ?? [];
-    const userResolved = resolveUserKnockoutTeams(ctx, predictions, matches);
+    const userResolved = userBracketCache.get(userId);
+    if (!userResolved) continue;
     const userTeamsByPhase = buildUserTeamsByPhase(ctx, userResolved);
 
     const { userTeamIds, officialTeamIds } = teamsForRoundComparison(

@@ -41,3 +41,13 @@ export async function recalculateUsersTotalPoints(
     await recalculateUserTotalPoints(admin, userId);
   }
 }
+
+/** Recalculate profile totals for all active submitted participants. */
+export async function recalculateAllActiveParticipantTotals(
+  admin: SupabaseClient
+): Promise<number> {
+  const { loadActiveSubmittedUserIds } = await import("@/lib/scoring/scoring-eligibility");
+  const ids = await loadActiveSubmittedUserIds(admin);
+  await recalculateUsersTotalPoints(admin, [...ids]);
+  return ids.size;
+}

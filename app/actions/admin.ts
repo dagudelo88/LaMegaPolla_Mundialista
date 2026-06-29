@@ -272,13 +272,27 @@ export async function setMatchResult(
 
   await syncAllSubmittedPredictionLocks(admin);
 
+  if (isKnockout) {
+    await resolveOfficialBracket(admin);
+  }
+
+  const { data: matchAfterBracket, error: refetchErr } = await admin
+    .from("matches")
+    .select("home_team_id, away_team_id")
+    .eq("id", matchId)
+    .single();
+
+  if (refetchErr || !matchAfterBracket) {
+    throw new Error(refetchErr?.message ?? "No se pudo recargar el partido");
+  }
+
   const { usersScored, eligibleCount } = await processMatchResult(admin, {
     matchId,
     phase: existing.phase as MatchPhase,
     homeScore: home,
     awayScore: away,
-    homeTeamId: existing.home_team_id,
-    awayTeamId: existing.away_team_id,
+    homeTeamId: matchAfterBracket.home_team_id,
+    awayTeamId: matchAfterBracket.away_team_id,
     resultAdvancesTeamId: resultAdvancesTeamId,
   });
 
@@ -294,6 +308,11 @@ export async function setMatchResult(
   const roundAdvancement = await processCompletedRoundAdvancementBonuses(admin, bracketCtx);
 
   const bracket = await resolveOfficialBracket(admin);
+
+  const { recalculateAllActiveParticipantTotals } = await import(
+    "@/lib/scoring/recalculate-total-points"
+  );
+  await recalculateAllActiveParticipantTotals(admin);
 
   await admin.from("admin_actions").insert({
     admin_id: user.id,
@@ -682,6 +701,11 @@ export async function recalculateAllPlayerPoints() {
 
   await recalculateAllFinishedMatches(admin);
   await recalculateAllJornadaBonuses(admin);
+
+  const { recalculateAllActiveParticipantTotals } = await import(
+    "@/lib/scoring/recalculate-total-points"
+  );
+  await recalculateAllActiveParticipantTotals(admin);
 
   revalidatePublicPaths();
   revalidatePath("/admin/puntos");

@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { AdvancementBonusSection } from "@/components/dashboard/advancement-bonus-section";
+import { GatedMatchesSection } from "@/components/dashboard/gated-matches-section";
 import { TeamWithFlag } from "@/components/predictions/team-flag";
 import { ChangeAvailabilityBanner } from "@/components/predictions/change-availability-banner";
 import type { ChangeAvailability } from "@/lib/changes/load-change-availability";
@@ -16,35 +18,41 @@ interface MyPollSummaryProps {
 export function MyPollSummary({ totalPoints, data, changeAvailability }: MyPollSummaryProps) {
   return (
     <div className="space-y-8">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-6 text-center">
-          <p className="text-sm text-[var(--color-muted-foreground)]">{es.dashboard.points}</p>
-          <p className="text-4xl font-bold text-[var(--color-primary)] tabular-nums">
-            {totalPoints}
-          </p>
-        </div>
-        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-6 text-center">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-4 text-center">
           <p className="text-sm text-[var(--color-muted-foreground)]">{es.dashboard.rank}</p>
-          <p className="text-4xl font-bold tabular-nums">
+          <p className="text-3xl font-bold tabular-nums">
             {data.rank != null ? `#${data.rank}` : "—"}
           </p>
         </div>
-        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-6 text-center">
+        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-4 text-center">
           <p className="text-sm text-[var(--color-muted-foreground)]">{es.dashboard.scoredMatches}</p>
-          <p className="text-4xl font-bold tabular-nums">{data.matchPoints.length}</p>
+          <p className="text-3xl font-bold tabular-nums">{data.matchPoints.length}</p>
         </div>
-        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-6 text-center">
-          <p className="text-sm text-[var(--color-muted-foreground)]">
-            {es.dashboard.paidChangesSpent}
-          </p>
-          <p className="text-4xl font-bold tabular-nums text-red-500">
-            −{data.totalPointsSpent}
-          </p>
-          <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
-            {data.paidChanges.length} {es.dashboard.paidChangesCountDetail}
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <SummaryCard label={es.dashboard.summaryMatch} value={data.pointsSummary.matchEarned} />
+        <SummaryCard
+          label={es.dashboard.summaryAdvancement}
+          value={data.pointsSummary.advancementBonus}
+        />
+        <SummaryCard label={es.dashboard.summaryJornada} value={data.pointsSummary.jornadaBonus} />
+        <SummaryCard
+          label={es.dashboard.summarySpent}
+          value={-data.pointsSummary.spent}
+          negative
+        />
+        <SummaryCard label={es.dashboard.points} value={data.pointsSummary.profileTotal} />
+        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-4 text-center sm:col-span-2 lg:col-span-1">
+          <p className="text-xs text-[var(--color-muted-foreground)]">
+            {es.dashboard.pointsBreakdownHint}
           </p>
         </div>
       </div>
+
+      <AdvancementBonusSection rows={data.advancementRows} />
+      <GatedMatchesSection rows={data.gatedMatches} />
 
       <ChangeAvailabilityBanner availability={changeAvailability} />
 
@@ -74,6 +82,7 @@ export function MyPollSummary({ totalPoints, data, changeAvailability }: MyPollS
                   <th className="py-2 pr-3">{es.dashboard.actual}</th>
                   <th className="py-2 pr-3 text-right">{es.dashboard.pointsCol}</th>
                   <th className="py-2 pr-3 text-right">{es.dashboard.bonusCol}</th>
+                  <th className="py-2 pr-3 text-right">{es.dashboard.advancementCol}</th>
                   <th className="py-2 text-right">{es.dashboard.totalCol}</th>
                 </tr>
               </thead>
@@ -144,6 +153,17 @@ export function MyPollSummary({ totalPoints, data, changeAvailability }: MyPollS
                       ) : (
                         "—"
                       )}
+                    </td>
+                    <td
+                      className={`py-2 pr-3 text-right font-semibold tabular-nums ${
+                        row.matchAdvancementPoints > 0
+                          ? "text-emerald-600 dark:text-emerald-400"
+                          : ""
+                      }`}
+                    >
+                      {row.matchAdvancementPoints > 0
+                        ? `+${row.matchAdvancementPoints}`
+                        : "—"}
                     </td>
                     <td
                       className={`py-2 text-right font-semibold tabular-nums ${
@@ -220,6 +240,29 @@ export function MyPollSummary({ totalPoints, data, changeAvailability }: MyPollS
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function SummaryCard({
+  label,
+  value,
+  negative,
+}: {
+  label: string;
+  value: number;
+  negative?: boolean;
+}) {
+  return (
+    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-4 text-center">
+      <p className="text-sm text-[var(--color-muted-foreground)]">{label}</p>
+      <p
+        className={`text-3xl font-bold tabular-nums ${
+          negative ? "text-red-500" : "text-[var(--color-primary)]"
+        }`}
+      >
+        {value}
+      </p>
     </div>
   );
 }

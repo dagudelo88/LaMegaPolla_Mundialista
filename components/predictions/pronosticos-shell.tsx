@@ -15,6 +15,7 @@ import { countProgress } from "@/lib/predictions/helpers";
 import { es } from "@/lib/i18n/es";
 import { formatDeadlineWithLocalHint } from "@/lib/matches/format-datetime";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import type { MatchPhase } from "@/types/database";
 
 type Tab = "schedule" | "groups" | "bracket" | "knockout" | "summary";
@@ -60,6 +61,14 @@ export function PronosticosShell({
   const groupComplete = progress.groupDone >= progress.groupTotal && progress.groupTotal > 0;
   const knockoutUnlocked = groupComplete || isViewMode;
   const changesExhausted = data.changesUsedToday >= maxChangesPerDay;
+
+  const scoringGateSummary = useMemo(() => {
+    const gates = Object.values(data.scoringGateByMatchId ?? {});
+    if (!gates.length) return null;
+    const active = gates.filter((g) => g.scorable).length;
+    const blocked = gates.filter((g) => !g.scorable).length;
+    return { active, blocked };
+  }, [data.scoringGateByMatchId]);
 
   const handleSaved = () => router.refresh();
 
@@ -122,6 +131,23 @@ export function PronosticosShell({
         <QualifierAdjustmentBanner
           firstKnockoutKickoff={data.qualifierAdjustment.firstKnockoutKickoff}
         />
+      )}
+
+      {scoringGateSummary && (knockoutUnlocked || data.isSubmitted) && (
+        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-3">
+          <p className="text-sm">
+            {es.pronosticos.scoringGateSummary(
+              scoringGateSummary.active,
+              scoringGateSummary.blocked
+            )}
+          </p>
+          <Link
+            href="/reglas#avance"
+            className="mt-1 inline-block text-sm font-medium text-[var(--color-primary)] hover:underline"
+          >
+            {es.pronosticos.scoringGateLearnMore}
+          </Link>
+        </div>
       )}
 
       {!isViewMode && data.isSubmitted && deadlinePassed && (
@@ -192,6 +218,7 @@ export function PronosticosShell({
           paidChangeBlockReasonByMatchId={data.paidChangeBlockReasonByMatchId}
           changeCosts={changeCosts}
           changesExhausted={changesExhausted}
+          scoringGateByMatchId={data.scoringGateByMatchId}
           onSaved={isViewMode ? undefined : handleSaved}
         />
       )}
@@ -235,6 +262,7 @@ export function PronosticosShell({
           paidChangeBlockReasonByMatchId={data.paidChangeBlockReasonByMatchId}
           changeCosts={changeCosts}
           changesExhausted={changesExhausted}
+          scoringGateByMatchId={data.scoringGateByMatchId}
           onSaved={isViewMode ? undefined : handleSaved}
         />
       )}

@@ -148,8 +148,37 @@ export const es = {
     prediction: "Pronóstico",
     actual: "Resultado",
     pointsCol: "Pts",
-    bonusCol: "Bono",
+    bonusCol: "Bono jornada",
+    advancementCol: "+2 avance",
     totalCol: "Total",
+    pointsBreakdownHint: "Partidos + avance + jornada − cambios pagos (REGLAS §4–§6)",
+    summaryMatch: "Puntos partidos",
+    summaryAdvancement: "Avance +2",
+    summaryJornada: "Bono jornada",
+    summarySpent: "Gastados",
+    advancementTitle: "Bonos por avance (+2)",
+    advancementHint:
+      "Al cerrar cada ronda sumas +2 por cada equipo que acertaste que avanzaría. En eliminatorias, +2 extra si acertaste quién pasa en ese partido.",
+    advancementMatchHint: "Bono por acertar el equipo que avanza en este partido.",
+    advancementRoundSummary: (correct: number, predicted: number, incorrect: number) =>
+      `Acertaste ${correct} de los ${predicted} equipos de tu llave en esta fase${incorrect > 0 ? ` · ${incorrect} no clasificaron en la realidad` : ""}.`,
+    advancementRoundNone:
+      "Ningún equipo de tu llave en esta fase coincidió con los clasificados oficiales.",
+    advancementPendingLiquidation:
+      "Puntos calculados según REGLAS §4; se reflejarán en tu total al completar el recálculo oficial.",
+    advancementShowTeams: (n: number) => `Ver ${n} equipos (+2 c/u)`,
+    advancementHideTeams: "Ocultar equipos",
+    gatedTitle: "Partidos bloqueados en tu llave (§7)",
+    gatedHint:
+      "Estos cruces de eliminatorias no suman puntos: un equipo de tu simulación no llegó a esa fase en el torneo real.",
+    gatedPhase: "Fase",
+    gatedTeams: "Equipos bloqueados",
+    gatedReason: "Motivo",
+    gatedReasonOne: (team: string, phase: string) =>
+      `En tu llave figura ${team}, pero no jugó ${phase} en la realidad.`,
+    gatedReasonMany: (teams: string[]) =>
+      `Ninguno de estos equipos de tu llave juega esta fase en la realidad: ${teams.join(", ")}.`,
+    gatedFinishedNote: "Este partido ya quedó en 0 pts por esta regla.",
     jornadaTopScorerBadge: "Más goleador del día",
     pointsWithJornadaBonus: "{match} pts partido + {bonus} pts bonus jornada",
     noScoredYet:
@@ -237,6 +266,19 @@ export const es = {
     paidChangeSameDayBlocked: "No puedes cambiar partidos que se juegan hoy.",
     paidChangeLocked: "El plazo para cambiar este partido ya cerró.",
     paidChangeNotScheduled: "Este partido ya no admite cambios pagos.",
+    scoringGateActive: "Suma puntos",
+    scoringGateBlocked: "No suma puntos · §7",
+    scoringGateBlockedExplainOne: (team: string, phase: string) =>
+      `No sumarás puntos en este cruce: en tu llave figura ${team}, pero ese equipo no llegó a ${phase} en el torneo real (REGLAS §7).`,
+    scoringGateBlockedExplainMany: (teams: string[]) =>
+      `No sumarás puntos: ninguno de estos equipos de tu llave juega esta fase en la realidad: ${teams.join(", ")}.`,
+    scoringGateFinishedNote:
+      "Este partido ya terminó y quedó en 0 pts aunque acertaras el marcador.",
+    scoringGateSummary: (active: number, blocked: number) =>
+      `Tu llave: ${active} cruces suman puntos · ${blocked} bloqueados (§7)`,
+    scoringGateLearnMore: "Ver regla de avance",
+    scoringGateCanStillEdit: "Aún puedes cambiar este pronóstico con un cambio pago.",
+    scoringGateReadOnly: "Solo lectura en este partido.",
     paidChangeConfirm: "¿Gastar {cost} pts para cambiar {before} → {after}?",
     paidChangeStart: "Cambiar marcador",
     paidChangeApply: "Confirmar cambio pagado",
@@ -505,6 +547,8 @@ export const es = {
       scoringMismatch: "partidos con conteo irregular",
       matchDiscrepancies: "Discrepancias por partido",
       advancementDiscrepancies: "Discrepancias avance +2",
+      advancementMatchDiscrepancies: "Avance +2 por partido (match:*)",
+      advancementRoundDiscrepancies: "Avance +2 por ronda (round:*)",
       totalDiscrepancies: "Totales desbalanceados",
       player: "Jugador",
       prediction: "Pronóstico",
@@ -662,6 +706,42 @@ export const es = {
       ],
       footer:
         "Los demás participantes del partido #1 ya tenían sus puntos correctos y no requirieron ajuste.",
+    },
+    advancementCorrectionNotice: {
+      intro:
+        "Detectamos errores técnicos en la liquidación de los bonos +2 por avance (REGLAS §4). Afectó a todos los participantes con polla enviada, no solo a algunos jugadores.",
+      whatHappened:
+        "Había dos fallos: (1) al cerrar la fase de grupos no se registraba el bono +2 por cada país de tu llave que sí clasificó a dieciseisavos; (2) en algunos partidos de eliminatorias no se guardaba el +2 por acertar quién avanza, y el total del perfil podía quedar desactualizado.",
+      impactedHeading: "Alcance del recálculo (29 jun 2026)",
+      impactedGroups: [
+        {
+          label: "Bono +2 por países clasificados (todos los 32 participantes)",
+          players:
+            "Entre +42 y +54 pts según cuántos de los 32 equipos de tu llave acertaste (mín. @Murcilui_EL_Oraculo 21 países, máx. @Boomergamer / @Martinator_Gonzalez / @Nicopz9 con 27 países)",
+        },
+        {
+          label: "+2 pts extra por avance en partido #73 (eliminatorias)",
+          players: "@Martin_Monsalve29, @Nicostradamus_Gonzalez, @Yuls",
+        },
+        {
+          label: "Total de perfil alineado con tablas de puntos",
+          players: "Los 32 participantes activos — sin diferencias entre perfil y suma registrada",
+        },
+      ],
+      fixHeading: "Qué hicimos",
+      fixes: [
+        "Creamos la tabla de bonos por avance y corregimos el motor para liquidar +2 al cargar resultados.",
+        "Recalculamos el bono de fase de grupos (round:group_stage) para los 32 participantes activos.",
+        "Recalculamos partidos terminados, bonos de jornada y totales de perfil de todos los jugadores.",
+      ],
+      uxHeading: "Mejoras para que entiendas tus puntos",
+      uxImprovements: [
+        "En Mi polla: desglose por partidos, avance +2, bonos de jornada y gastos; lista de equipos que sumaron +2; partidos bloqueados por §7.",
+        "En Mis pronósticos: cada cruce de eliminatorias indica si suma puntos o está bloqueado, con explicación de qué equipo de tu llave ya no avanzó.",
+        "En Transparencia: este aviso público con el detalle del incidente.",
+      ],
+      footer:
+        "Cada jugador verá su desglose en Mi polla (tarjeta Avance +2 y lista de países). Si algo no cuadra tras refrescar la página, repórtalo por el canal de bugs.",
     },
   },
   errors: {

@@ -12,6 +12,8 @@ import {
   recalculateAllFinishedMatches,
 } from "@/lib/scoring/recalculate-all-finished-matches";
 import { recalculateAllJornadaBonuses } from "@/lib/scoring/recalculate-all-jornada-bonuses";
+import { recalculateAllActiveParticipantTotals } from "@/lib/scoring/recalculate-total-points";
+import { resolveOfficialBracket } from "@/lib/bracket/resolve-official-bracket";
 
 function loadEnvLocal() {
   const path = resolve(process.cwd(), ".env.local");
@@ -44,6 +46,17 @@ async function main() {
   const usersBackfilled = await backfillLockedSubmissions(admin);
   console.log(`Locked predictions for ${usersBackfilled} participant(s).`);
 
+  await resolveOfficialBracket(admin);
+  console.log("Official bracket resolved.");
+
+  const { data: finishedMatches } = await admin
+    .from("matches")
+    .select("id")
+    .eq("status", "finished")
+    .not("home_score", "is", null)
+    .not("away_score", "is", null);
+  console.log(`Recalculating ${finishedMatches?.length ?? 0} finished match(es)...`);
+
   const result = await recalculateAllFinishedMatches(admin);
   console.log(
     `Recalculated ${result.matchesProcessed} finished match(es), ${result.scoringPasses} scoring pass(es).`
@@ -53,6 +66,9 @@ async function main() {
   console.log(
     `Jornada bonuses: ${jornadaResult.jornadasProcessed} jornada(s), ${jornadaResult.usersScored} user score(s).`
   );
+
+  const totalsUpdated = await recalculateAllActiveParticipantTotals(admin);
+  console.log(`Profile totals recalculated for ${totalsUpdated} participant(s).`);
 
   const { data: top } = await admin
     .from("profiles")

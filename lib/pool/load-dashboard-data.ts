@@ -11,6 +11,12 @@ import {
   type MatchPhase,
 } from "@/lib/scoring/calculate-match-points";
 import { loadScoringConfig } from "@/lib/scoring/load-scoring-config";
+import { loadPlayerPointsBreakdown } from "@/lib/scoring/load-player-points-summary";
+import type {
+  PlayerAdvancementBonusRow,
+  PlayerGatedMatchRow,
+  PlayerPointsSummary,
+} from "@/lib/scoring/load-player-points-summary";
 import { createClient } from "@/lib/supabase/server";
 import { PHASE_LABELS } from "@/types/database";
 
@@ -30,6 +36,7 @@ export interface UserMatchPointRow {
   points: number;
   isJornadaTopScorerPick: boolean;
   jornadaTopScorerGoals: number | null;
+  matchAdvancementPoints: number;
 }
 
 export interface PaidChangeRow {
@@ -49,6 +56,9 @@ export interface DashboardData {
   netTotal: number;
   paidChanges: PaidChangeRow[];
   totalPointsSpent: number;
+  pointsSummary: PlayerPointsSummary;
+  advancementRows: PlayerAdvancementBonusRow[];
+  gatedMatches: PlayerGatedMatchRow[];
 }
 
 function formatScore(home: number | null | undefined, away: number | null | undefined): string {
@@ -157,7 +167,10 @@ export async function loadDashboardData(
   const supabase = await createClient();
   const { leaderboard } = await loadHomeDashboardData();
   const rank = getLeaderboardRank(leaderboard, username);
-  const { paidChanges, totalPointsSpent } = await loadPaidChanges(supabase, userId);
+  const [{ paidChanges, totalPointsSpent }, pointsBreakdown] = await Promise.all([
+    loadPaidChanges(supabase, userId),
+    loadPlayerPointsBreakdown(supabase, userId),
+  ]);
 
   const { data: umpRows } = await supabase
     .from("user_match_points")
@@ -169,10 +182,25 @@ export async function loadDashboardData(
       rank,
       matchPoints: [],
       earnedTotal: 0,
-      netTotal: -totalPointsSpent,
+      netTotal: pointsBreakdown.summary.profileTotal,
       paidChanges,
       totalPointsSpent,
+      pointsSummary: pointsBreakdown.summary,
+      advancementRows: pointsBreakdown.advancementRows,
+      gatedMatches: pointsBreakdown.gatedMatches,
     };
+  }
+
+  const { data: matchAdvancementPts } = await supabase
+    .from("user_advancement_bonus_points")
+    .select("bonus_key, points")
+    .eq("user_id", userId)
+    .like("bonus_key", "match:%");
+
+  const matchAdvancementByMatchId = new Map<string, number>();
+  for (const row of matchAdvancementPts ?? []) {
+    const matchId = row.bonus_key.replace(/^match:/, "");
+    matchAdvancementByMatchId.set(matchId, row.points);
   }
 
   const matchIds = umpRows.map((r) => r.match_id);
@@ -305,13 +333,14 @@ export async function loadDashboardData(
         points: baseMatchPoints + jornadaBonusPoints,
         isJornadaTopScorerPick: jornadaInfo?.isTopScorerPick ?? false,
         jornadaTopScorerGoals: jornadaInfo?.predictedTotalGoals ?? null,
+        matchAdvancementPoints: matchAdvancementByMatchId.get(m.id) ?? 0,
       };
     })
     .filter((row): row is UserMatchPointRow => row != null)
     .sort((a, b) => a.matchNumber - b.matchNumber);
 
   const earnedTotal = matchPoints.reduce((sum, row) => sum + row.points, 0);
-  const netTotal = earnedTotal - totalPointsSpent;
+  const netTotal = pointsBreakdown.summary.profileTotal;
 
   return {
     rank,
@@ -320,5 +349,8 @@ export async function loadDashboardData(
     netTotal,
     paidChanges,
     totalPointsSpent,
+    pointsSummary: pointsBreakdown.summary,
+    advancementRows: pointsBreakdown.advancementRows,
+    gatedMatches: pointsBreakdown.gatedMatches,
   };
 }

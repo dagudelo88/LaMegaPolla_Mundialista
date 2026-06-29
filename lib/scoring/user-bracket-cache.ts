@@ -5,6 +5,7 @@ import {
 } from "@/lib/scoring/bracket-context";
 import type { DbMatchWithTeams, DbPrediction } from "@/lib/predictions/helpers";
 import { loadActiveSubmittedUserIds } from "@/lib/scoring/scoring-eligibility";
+import { fetchAllPages } from "@/lib/supabase/fetch-all-pages";
 
 export type UserResolvedMap = Map<
   string,
@@ -19,13 +20,18 @@ export async function loadUserBracketCache(
   if (!eligibleIds.size) return new Map();
 
   const matches = ctx.matches as unknown as DbMatchWithTeams[];
-  const { data: predictions } = await admin
-    .from("predictions")
-    .select("id, match_id, predicted_home, predicted_away, predicted_is_draw, predicted_advances_team_id, locked, user_id")
-    .in("user_id", [...eligibleIds]);
+  const predictions = await fetchAllPages<DbPrediction & { user_id: string }>(({ from, to }) =>
+    admin
+      .from("predictions")
+      .select(
+        "id, match_id, predicted_home, predicted_away, predicted_is_draw, predicted_advances_team_id, locked, user_id"
+      )
+      .in("user_id", [...eligibleIds])
+      .range(from, to)
+  );
 
   const predsByUser = new Map<string, DbPrediction[]>();
-  for (const p of predictions ?? []) {
+  for (const p of predictions) {
     const list = predsByUser.get(p.user_id) ?? [];
     list.push(p as DbPrediction);
     predsByUser.set(p.user_id, list);

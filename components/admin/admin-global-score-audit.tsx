@@ -6,6 +6,13 @@ interface AdminGlobalScoreAuditProps {
 }
 
 export function AdminGlobalScoreAudit({ audit }: AdminGlobalScoreAuditProps) {
+  const matchAdvancementDiscrepancies = audit.advancementDiscrepancies.filter((d) =>
+    d.bonusKey.startsWith("match:")
+  );
+  const roundAdvancementDiscrepancies = audit.advancementDiscrepancies.filter((d) =>
+    d.bonusKey.startsWith("round:")
+  );
+
   const hasIssues =
     audit.matchDiscrepancies.length > 0 ||
     audit.advancementDiscrepancies.length > 0 ||
@@ -80,9 +87,11 @@ export function AdminGlobalScoreAudit({ audit }: AdminGlobalScoreAuditProps) {
         </div>
       )}
 
-      {audit.advancementDiscrepancies.length > 0 && (
+      {matchAdvancementDiscrepancies.length > 0 && (
         <div className="mt-4 overflow-x-auto">
-          <h3 className="mb-2 text-sm font-semibold">{es.admin.pointsAudit.advancementDiscrepancies}</h3>
+          <h3 className="mb-2 text-sm font-semibold">
+            {es.admin.pointsAudit.advancementMatchDiscrepancies}
+          </h3>
           <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-[var(--color-border)] text-[var(--color-muted-foreground)]">
@@ -97,7 +106,39 @@ export function AdminGlobalScoreAudit({ audit }: AdminGlobalScoreAuditProps) {
               </tr>
             </thead>
             <tbody>
-              {audit.advancementDiscrepancies.slice(0, 30).map((d) => (
+              {matchAdvancementDiscrepancies.slice(0, 30).map((d) => (
+                <tr key={`${d.userId}-${d.bonusKey}`} className="border-b border-[var(--color-border)]">
+                  <td className="py-2 pr-2">@{d.username}</td>
+                  <td className="py-2 pr-2 font-mono text-xs">{d.bonusKey}</td>
+                  <td className="py-2 pr-2 text-right tabular-nums">{d.storedPoints ?? "—"}</td>
+                  <td className="py-2 text-right tabular-nums text-red-500">{d.expectedPoints}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {roundAdvancementDiscrepancies.length > 0 && (
+        <div className="mt-4 overflow-x-auto">
+          <h3 className="mb-2 text-sm font-semibold">
+            {es.admin.pointsAudit.advancementRoundDiscrepancies}
+          </h3>
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="border-b border-[var(--color-border)] text-[var(--color-muted-foreground)]">
+                <th className="py-2 pr-2">{es.admin.pointsAudit.player}</th>
+                <th className="py-2 pr-2">Key</th>
+                <th className="py-2 pr-2 text-right" title={es.admin.pointsAudit.storedHint}>
+                  {es.admin.pointsAudit.stored}
+                </th>
+                <th className="py-2 text-right" title={es.admin.pointsAudit.expectedHint}>
+                  {es.admin.pointsAudit.expected}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {roundAdvancementDiscrepancies.slice(0, 30).map((d) => (
                 <tr key={`${d.userId}-${d.bonusKey}`} className="border-b border-[var(--color-border)]">
                   <td className="py-2 pr-2">@{d.username}</td>
                   <td className="py-2 pr-2 font-mono text-xs">{d.bonusKey}</td>

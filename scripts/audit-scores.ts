@@ -41,7 +41,9 @@ async function main() {
   console.log(formatAuditReport(result));
 
   const hasIssues =
-    result.matchDiscrepancies.length > 0 || result.totalDiscrepancies.length > 0;
+    result.matchDiscrepancies.length > 0 ||
+    result.advancementDiscrepancies.length > 0 ||
+    result.totalDiscrepancies.length > 0;
 
   process.exit(hasIssues ? 1 : 0);
 }

@@ -8,6 +8,9 @@ import {
 import { TeamWithFlag } from "@/components/predictions/team-flag";
 import { ScoreChangeDisplay } from "@/components/transparency/score-change-display";
 import { ScoringCorrectionCardBody } from "@/components/transparency/scoring-correction-card-body";
+import { AdvancementCorrectionCardBody } from "@/components/transparency/advancement-correction-card-body";
+import { ADVANCEMENT_CORRECTION_ENTRY_ID } from "@/lib/transparency/build-advancement-correction-entry";
+import { SCORING_CORRECTION_ENTRY_ID } from "@/lib/transparency/build-scoring-correction-entry";
 import { es } from "@/lib/i18n/es";
 import { formatAppDateTime } from "@/lib/matches/format-datetime";
 import type { TransparencyEntry } from "@/types/database";
@@ -25,6 +28,16 @@ function kindLabel(kind: TransparencyEntry["kind"]): string {
   if (kind === "admin_prediction") return es.transparency.typeAdmin;
   if (kind === "scoring_correction") return es.transparency.typeScoringCorrection;
   return es.transparency.typeResult;
+}
+
+function ScoringCorrectionBody({ entryId }: { entryId: string }) {
+  if (entryId === ADVANCEMENT_CORRECTION_ENTRY_ID) {
+    return <AdvancementCorrectionCardBody />;
+  }
+  if (entryId === SCORING_CORRECTION_ENTRY_ID) {
+    return <ScoringCorrectionCardBody />;
+  }
+  return <ScoringCorrectionCardBody />;
 }
 
 function kindBadgeClass(kind: TransparencyEntry["kind"]): string {
@@ -151,7 +164,7 @@ export function CorrectionsHistory({
               <MatchHeader entry={entry} />
 
               {entry.kind === "scoring_correction" ? (
-                <ScoringCorrectionCardBody />
+                <ScoringCorrectionBody entryId={entry.id} />
               ) : (
                 <ScoreChangeDisplay
                   homeTeam={entry.homeTeam}

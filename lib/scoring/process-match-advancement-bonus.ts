@@ -26,8 +26,8 @@ export async function processMatchAdvancementBonus(
   ctx: BracketContext,
   userResolvedByUserId: Map<string, Map<number, { homeTeamId: number | null; awayTeamId: number | null }>>,
   input: ProcessMatchAdvancementInput
-): Promise<number> {
-  if (input.phase === "group_stage") return 0;
+): Promise<{ usersProcessed: number; userIds: string[] }> {
+  if (input.phase === "group_stage") return { usersProcessed: 0, userIds: [] };
 
   const bonusPerTeam = await loadAdvancementBonusPerTeam(admin);
   const eligibleIds = await loadActiveSubmittedUserIds(admin);
@@ -38,7 +38,7 @@ export async function processMatchAdvancementBonus(
     .eq("match_id", input.matchId)
     .in("user_id", [...eligibleIds]);
 
-  let scored = 0;
+  const userIds: string[] = [];
 
   for (const pred of predictions ?? []) {
     if (!eligibleIds.has(pred.user_id)) continue;
@@ -100,8 +100,8 @@ export async function processMatchAdvancementBonus(
     );
 
     if (error) throw new Error(error.message);
-    scored += 1;
+    userIds.push(pred.user_id);
   }
 
-  return scored;
+  return { usersProcessed: userIds.length, userIds };
 }

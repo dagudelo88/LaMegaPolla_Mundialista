@@ -6,6 +6,7 @@ import {
 import { loadBracketContext } from "@/lib/scoring/bracket-context";
 import { loadScoringConfig } from "@/lib/scoring/load-scoring-config";
 import { processMatchAdvancementBonus } from "@/lib/scoring/process-match-advancement-bonus";
+import { resolveOfficialMatchTeamIds } from "@/lib/scoring/resolve-match-team-ids";
 import { recalculateUsersTotalPoints } from "@/lib/scoring/recalculate-total-points";
 import {
   countScorableMatchPredictions,
@@ -49,10 +50,13 @@ export async function processMatchResult(
     eligibilityOpts
   );
   const scoredUserIds: string[] = [];
+  const usersToRecalculate = new Set<string>();
 
   const matchRow = bracketCtx.matchById.get(input.matchId);
-  const homeTeamId = input.homeTeamId ?? matchRow?.home_team_id;
-  const awayTeamId = input.awayTeamId ?? matchRow?.away_team_id;
+  const { homeTeamId, awayTeamId } = resolveOfficialMatchTeamIds(bracketCtx, input.matchId, {
+    homeTeamId: input.homeTeamId ?? matchRow?.home_team_id,
+    awayTeamId: input.awayTeamId ?? matchRow?.away_team_id,
+  });
   const resultAdvancesTeamId =
     input.resultAdvancesTeamId ?? matchRow?.result_advances_team_id ?? null;
 
@@ -94,9 +98,9 @@ export async function processMatchResult(
 
     if (upsertErr) throw new Error(upsertErr.message);
     scoredUserIds.push(pred.userId);
+    usersToRecalculate.add(pred.userId);
   }
 
-  // Zero out gated users who have predictions but weren't in scorable list
   const eligibleIds = new Set(predictions.map((p) => p.userId));
   const { data: allPreds } = await admin
     .from("predictions")
@@ -127,6 +131,7 @@ export async function processMatchResult(
         },
         { onConflict: "user_id,match_id" }
       );
+      usersToRecalculate.add(row.user_id);
     }
   }
 
@@ -135,18 +140,24 @@ export async function processMatchResult(
     homeTeamId != null &&
     awayTeamId != null
   ) {
-    await processMatchAdvancementBonus(admin, bracketCtx, userBracketCache, {
-      matchId: input.matchId,
-      phase: input.phase,
-      homeTeamId,
-      awayTeamId,
-      homeScore: input.homeScore,
-      awayScore: input.awayScore,
-      resultAdvancesTeamId,
-    });
+    const { userIds: advancementUserIds } = await processMatchAdvancementBonus(
+      admin,
+      bracketCtx,
+      userBracketCache,
+      {
+        matchId: input.matchId,
+        phase: input.phase,
+        homeTeamId,
+        awayTeamId,
+        homeScore: input.homeScore,
+        awayScore: input.awayScore,
+        resultAdvancesTeamId,
+      }
+    );
+    for (const id of advancementUserIds) usersToRecalculate.add(id);
   }
 
-  await recalculateUsersTotalPoints(admin, scoredUserIds);
+  await recalculateUsersTotalPoints(admin, [...usersToRecalculate]);
   const eligibleCount = await countScorableMatchPredictions(
     admin,
     input.matchId,

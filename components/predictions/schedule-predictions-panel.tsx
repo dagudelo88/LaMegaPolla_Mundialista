@@ -36,6 +36,7 @@ interface MatchRow {
   away_source: unknown;
   home_team?: { id: number; fifa_code: string; name_es: string; flag_emoji: string | null } | null;
   away_team?: { id: number; fifa_code: string; name_es: string; flag_emoji: string | null } | null;
+  status?: string;
 }
 
 interface PredictionRow {
@@ -64,6 +65,15 @@ interface SchedulePredictionsPanelProps {
   paidChangeBlockReasonByMatchId?: Record<string, PaidChangeBlockReason>;
   changeCosts?: Partial<Record<MatchPhase, number>>;
   changesExhausted?: boolean;
+  scoringGateByMatchId?: Record<
+    string,
+    {
+      scorable: boolean;
+      blockedTeamIds: number[];
+      blockedTeamNames: string[];
+      phase: MatchPhase;
+    }
+  >;
   onSaved?: () => void;
 }
 
@@ -84,6 +94,7 @@ export function SchedulePredictionsPanel({
   paidChangeBlockReasonByMatchId,
   changeCosts,
   changesExhausted,
+  scoringGateByMatchId,
   onSaved,
 }: SchedulePredictionsPanelProps) {
   const teamMap = useMemo(() => new Map(teams.map((t) => [t.id, t])), [teams]);
@@ -249,6 +260,8 @@ export function SchedulePredictionsPanel({
                     changeCost={changeCosts?.[m.phase]}
                     adminOverridden={pred?.admin_overridden}
                     jornadaTopScorerGoals={topScorerGoals}
+                    scoringGate={isKnockout ? scoringGateByMatchId?.[m.id] : undefined}
+                    matchFinished={m.status === "finished"}
                     onSaved={onSaved}
                   />
                 );

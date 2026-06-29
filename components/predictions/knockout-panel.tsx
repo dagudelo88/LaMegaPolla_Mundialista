@@ -28,6 +28,14 @@ interface MatchRow {
   venue: string | null;
   home_source: unknown;
   away_source: unknown;
+  status?: string;
+}
+
+interface ScoringGateInfo {
+  scorable: boolean;
+  blockedTeamIds: number[];
+  blockedTeamNames: string[];
+  phase: MatchPhase;
 }
 
 interface PredictionRow {
@@ -55,6 +63,7 @@ interface KnockoutPanelProps {
   paidChangeBlockReasonByMatchId?: Record<string, PaidChangeBlockReason>;
   changeCosts?: Partial<Record<MatchPhase, number>>;
   changesExhausted?: boolean;
+  scoringGateByMatchId?: Record<string, ScoringGateInfo>;
   onSaved?: () => void;
 }
 
@@ -74,6 +83,7 @@ export function KnockoutPanel({
   paidChangeBlockReasonByMatchId,
   changeCosts,
   changesExhausted,
+  scoringGateByMatchId,
   onSaved,
 }: KnockoutPanelProps) {
   const teamMap = useMemo(() => new Map(teams.map((t) => [t.id, t])), [teams]);
@@ -187,6 +197,8 @@ export function KnockoutPanel({
                     changesExhausted={changesExhausted}
                     changeCost={changeCosts?.[phase]}
                     adminOverridden={pred?.admin_overridden}
+                    scoringGate={scoringGateByMatchId?.[m.id]}
+                    matchFinished={m.status === "finished"}
                     onSaved={onSaved}
                   />
                 );

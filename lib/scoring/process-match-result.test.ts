@@ -70,6 +70,7 @@ function createMockAdmin(overrides?: {
     chain.or = vi.fn(builder);
     chain.is = vi.fn(builder);
     chain.order = vi.fn(builder);
+    chain.range = vi.fn(builder);
     chain.upsert = vi.fn(async (row: { user_id: string; match_id: string; points: number }) => {
       if (table === "user_match_points") upsertedPoints.push(row);
       return { error: null };
@@ -140,6 +141,7 @@ function createMockAdmin(overrides?: {
       sel.or = vi.fn(() => sel);
       sel.is = vi.fn(() => sel);
       sel.order = vi.fn(() => sel);
+      sel.range = vi.fn(() => sel);
       sel.single = exec;
       sel.maybeSingle = exec;
       Object.assign(sel, { then: (resolve: (v: unknown) => void) => exec().then(resolve) });

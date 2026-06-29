@@ -43,6 +43,12 @@ export interface MatchCardProps {
   adminOverridden?: boolean;
   /** Highlight as jornada's predicted top-scorer (schedule tab) */
   jornadaTopScorerGoals?: number | null;
+  scoringGate?: {
+    scorable: boolean;
+    blockedTeamNames: string[];
+    phase: MatchPhase;
+  };
+  matchFinished?: boolean;
   onSaved?: () => void;
 }
 
@@ -240,6 +246,8 @@ export function MatchPredictionCard({
   changeCost,
   adminOverridden,
   jornadaTopScorerGoals,
+  scoringGate,
+  matchFinished,
   onSaved,
 }: MatchCardProps) {
   const [homeScore, setHomeScore] = useState<string>(() => displayScore(initialHome));
@@ -433,11 +441,14 @@ export function MatchPredictionCard({
     );
 
   const isJornadaTopScorer = jornadaTopScorerGoals != null;
+  const gateBlocked = isKnockout && scoringGate && !scoringGate.scorable;
 
   return (
     <article
       className={`rounded-lg border px-3 py-2.5 ${
-        qualifierAdjustmentMode
+        gateBlocked
+          ? "border-amber-500/40 bg-amber-500/[0.06]"
+          : qualifierAdjustmentMode
           ? "border-emerald-500/45 bg-emerald-500/[0.08] shadow-sm shadow-emerald-500/10"
           : isJornadaTopScorer
             ? "border-emerald-500/45 bg-emerald-500/[0.08] shadow-sm shadow-emerald-500/10"
@@ -473,6 +484,19 @@ export function MatchPredictionCard({
             >
               {es.pronosticos.adminOverriddenBadge}
             </Link>
+          )}
+          {isKnockout && scoringGate && (
+            <span
+              className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                scoringGate.scorable
+                  ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+                  : "bg-amber-500/20 text-amber-900 dark:text-amber-200"
+              }`}
+            >
+              {scoringGate.scorable
+                ? es.pronosticos.scoringGateActive
+                : es.pronosticos.scoringGateBlocked}
+            </span>
           )}
         </span>
         <span className="rounded-full bg-[var(--color-muted)] px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-muted-foreground)]">
@@ -513,6 +537,25 @@ export function MatchPredictionCard({
       {venue && (
         <p className="mt-2 text-center text-xs text-[var(--color-muted-foreground)] sm:text-sm">
           {venue}
+        </p>
+      )}
+
+      {gateBlocked && scoringGate && (
+        <p className="mt-2 text-xs text-amber-800 dark:text-amber-200">
+          {scoringGate.blockedTeamNames.length === 1
+            ? es.pronosticos.scoringGateBlockedExplainOne(
+                scoringGate.blockedTeamNames[0]!,
+                PHASE_LABELS[scoringGate.phase] ?? scoringGate.phase
+              )
+            : es.pronosticos.scoringGateBlockedExplainMany(scoringGate.blockedTeamNames)}
+          {matchFinished && (
+            <span className="mt-1 block">{es.pronosticos.scoringGateFinishedNote}</span>
+          )}
+          {paidChangeMode && paidChangeEligible && !changesExhausted && (
+            <span className="mt-1 block text-[var(--color-muted-foreground)]">
+              {es.pronosticos.scoringGateCanStillEdit}
+            </span>
+          )}
         </p>
       )}
 

@@ -340,52 +340,13 @@ export async function loadAdminPlayerPointsAudit(
         delta: 0,
         sortKey: `${m.kickoff_at ?? ""}-gate-${m.fifa_match_number}`,
       });
-    } else if (expectedPoints > 0 || storedPoints != null) {
+    } else if ((storedPoints ?? 0) > 0 || stored != null) {
       ledgerParts.push({
         timestamp: m.kickoff_at ?? "",
         type: "match",
         label: `#${m.fifa_match_number} ${homeTeam.name_es} vs ${awayTeam.name_es}`,
-        delta: expectedPoints,
+        delta: storedPoints ?? 0,
         sortKey: `${m.kickoff_at ?? ""}-match-${m.fifa_match_number}`,
-      });
-    }
-
-    if (phase !== "group_stage" && m.home_team_id && m.away_team_id) {
-      const expectedAdv = gate.scorable
-        ? calculateMatchAdvancementBonus(
-            {
-              phase,
-              homeTeamId: m.home_team_id,
-              awayTeamId: m.away_team_id,
-              predictedHome: pred.predicted_home,
-              predictedAway: pred.predicted_away,
-              predictedAdvancesTeamId: pred.predicted_advances_team_id,
-              actualHome: m.home_score!,
-              actualAway: m.away_score!,
-              resultAdvancesTeamId: m.result_advances_team_id,
-            },
-            bonusPerTeam
-          )
-        : 0;
-
-      if (expectedAdv > 0) {
-        ledgerParts.push({
-          timestamp: m.kickoff_at ?? "",
-          type: "match_advancement",
-          label: `#${m.fifa_match_number} Avance +${expectedAdv}`,
-          delta: expectedAdv,
-          sortKey: `${m.kickoff_at ?? ""}-adv-match-${m.fifa_match_number}`,
-        });
-      }
-    }
-
-    if (jornadaBonusPoints > 0) {
-      ledgerParts.push({
-        timestamp: m.kickoff_at ?? "",
-        type: "jornada_bonus",
-        label: `#${m.fifa_match_number} Bono jornada +${jornadaBonusPoints}`,
-        delta: jornadaBonusPoints,
-        sortKey: `${m.kickoff_at ?? ""}-jornada-${m.fifa_match_number}`,
       });
     }
   }
@@ -438,12 +399,12 @@ export async function loadAdminPlayerPointsAudit(
         breakdown: (stored?.breakdown as Record<string, unknown>) ?? null,
       });
 
-      if (expected.points > 0) {
+      if ((storedBonus ?? 0) > 0) {
         ledgerParts.push({
           timestamp: stored?.created_at ?? roundKey,
           type: "round_advancement",
-          label: `Avance ronda ${roundKey} +${expected.points}`,
-          delta: expected.points,
+          label: `Avance ronda ${roundKey} +${storedBonus}`,
+          delta: storedBonus!,
           sortKey: `round-${roundKey}`,
         });
       }
@@ -497,6 +458,16 @@ export async function loadAdminPlayerPointsAudit(
         breakdown: (stored?.breakdown as Record<string, unknown>) ?? null,
       });
     }
+
+    if ((stored?.points ?? 0) > 0) {
+      ledgerParts.push({
+        timestamp: m.kickoff_at ?? "",
+        type: "match_advancement",
+        label: `#${m.fifa_match_number} Avance +${stored!.points}`,
+        delta: stored!.points,
+        sortKey: `${m.kickoff_at ?? ""}-adv-match-${m.fifa_match_number}`,
+      });
+    }
   }
 
   const jornadaRows: JornadaAuditRow[] = [];
@@ -516,6 +487,18 @@ export async function loadAdminPlayerPointsAudit(
         storedBonus,
         expectedBonus,
         delta: (storedBonus ?? 0) - expectedBonus,
+      });
+    }
+  }
+
+  for (const [key, points] of storedJornadaByKey) {
+    if (points > 0) {
+      ledgerParts.push({
+        timestamp: key,
+        type: "jornada_bonus",
+        label: `Bono jornada ${key} +${points}`,
+        delta: points,
+        sortKey: `jornada-${key}`,
       });
     }
   }
