@@ -46,6 +46,7 @@ export interface MatchCardProps {
   scoringGate?: {
     scorable: boolean;
     blockedTeamNames: string[];
+    blockedTeamReasons?: string[];
     phase: MatchPhase;
   };
   matchFinished?: boolean;
@@ -542,12 +543,16 @@ export function MatchPredictionCard({
 
       {gateBlocked && scoringGate && (
         <p className="mt-2 text-xs text-amber-800 dark:text-amber-200">
-          {scoringGate.blockedTeamNames.length === 1
-            ? es.pronosticos.scoringGateBlockedExplainOne(
-                scoringGate.blockedTeamNames[0]!,
-                PHASE_LABELS[scoringGate.phase] ?? scoringGate.phase
-              )
-            : es.pronosticos.scoringGateBlockedExplainMany(scoringGate.blockedTeamNames)}
+          {es.pronosticos.scoringGateBlockedExplain(
+            scoringGate.blockedTeamReasons?.length
+              ? scoringGate.blockedTeamReasons
+              : scoringGate.blockedTeamNames.map((name) =>
+                  es.gateBlocked.notInKnockout(
+                    name,
+                    PHASE_LABELS[scoringGate.phase] ?? scoringGate.phase
+                  )
+                )
+          )}
           {matchFinished && (
             <span className="mt-1 block">{es.pronosticos.scoringGateFinishedNote}</span>
           )}

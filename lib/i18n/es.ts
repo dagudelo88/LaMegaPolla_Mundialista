@@ -4,6 +4,17 @@ export const es = {
   common: {
     loading: "Cargando…",
   },
+  gateBlocked: {
+    hint:
+      "Según §7 solo puntuas si ambos equipos de tu simulación llegaron a esa fase en el cuadro oficial. Solo mostramos bloqueos hasta la ronda cuyo cuadro anterior ya está definido (p. ej. octavos cuando terminen todos los dieciseisavos).",
+    notInKnockout: (team: string, phase: string) =>
+      `En tu llave aparece ${team} en ${phase}, pero no está entre los clasificados oficiales a esa ronda. Suele deberse a un orden distinto en grupos o en los mejores terceros en tu simulación (§7), no a que el país no juegue el Mundial.`,
+    eliminatedBefore: (team: string, phase: string, lastPhase: string) =>
+      `${team} sí llegó a ${lastPhase} en el cuadro oficial, pero fue eliminado antes de ${phase}; este cruce de tu llave no suma puntos.`,
+    finishedNote:
+      "Este partido ya terminó y quedó en 0 pts aunque acertaras el marcador.",
+    canStillEdit: "Aún puedes cambiar este pronóstico con un cambio pago.",
+  },
   nav: {
     home: "Inicio",
     rules: "Reglas",
@@ -161,7 +172,7 @@ export const es = {
       "Al cerrar cada ronda sumas +2 por cada equipo que acertaste que avanzaría. En eliminatorias, +2 extra si acertaste quién pasa en ese partido.",
     advancementMatchHint: "Bono por acertar el equipo que avanza en este partido.",
     advancementRoundSummary: (correct: number, predicted: number, incorrect: number) =>
-      `Acertaste ${correct} de los ${predicted} equipos de tu llave en esta fase${incorrect > 0 ? ` · ${incorrect} no clasificaron en la realidad` : ""}.`,
+      `Acertaste ${correct} de los ${predicted} equipos de tu llave en esta fase${incorrect > 0 ? ` · ${incorrect} no coincidieron con los clasificados oficiales a esa ronda` : ""}.`,
     advancementRoundNone:
       "Ningún equipo de tu llave en esta fase coincidió con los clasificados oficiales.",
     advancementPendingLiquidation:
@@ -170,14 +181,10 @@ export const es = {
     advancementHideTeams: "Ocultar equipos",
     gatedTitle: "Partidos bloqueados en tu llave (§7)",
     gatedHint:
-      "Estos cruces de eliminatorias no suman puntos: un equipo de tu simulación no llegó a esa fase en el torneo real.",
+      "Estos cruces de eliminatorias no suman puntos según la regla de avance (§7). Ver el motivo de cada equipo: puede tratarse de una eliminación previa o de una llave distinta al cuadro oficial.",
     gatedPhase: "Fase",
     gatedTeams: "Equipos bloqueados",
     gatedReason: "Motivo",
-    gatedReasonOne: (team: string, phase: string) =>
-      `En tu llave figura ${team}, pero no jugó ${phase} en la realidad.`,
-    gatedReasonMany: (teams: string[]) =>
-      `Ninguno de estos equipos de tu llave juega esta fase en la realidad: ${teams.join(", ")}.`,
     gatedFinishedNote: "Este partido ya quedó en 0 pts por esta regla.",
     jornadaTopScorerBadge: "Más goleador del día",
     pointsWithJornadaBonus: "{match} pts partido + {bonus} pts bonus jornada",
@@ -268,17 +275,13 @@ export const es = {
     paidChangeNotScheduled: "Este partido ya no admite cambios pagos.",
     scoringGateActive: "Suma puntos",
     scoringGateBlocked: "No suma puntos · §7",
-    scoringGateBlockedExplainOne: (team: string, phase: string) =>
-      `No sumarás puntos en este cruce: en tu llave figura ${team}, pero ese equipo no llegó a ${phase} en el torneo real (REGLAS §7).`,
-    scoringGateBlockedExplainMany: (teams: string[]) =>
-      `No sumarás puntos: ninguno de estos equipos de tu llave juega esta fase en la realidad: ${teams.join(", ")}.`,
+    scoringGateBlockedExplain: (reasons: string[]) => reasons.join(" "),
     scoringGateFinishedNote:
       "Este partido ya terminó y quedó en 0 pts aunque acertaras el marcador.",
     scoringGateSummary: (active: number, blocked: number) =>
       `Tu llave: ${active} cruces suman puntos · ${blocked} bloqueados (§7)`,
     scoringGateLearnMore: "Ver regla de avance",
     scoringGateCanStillEdit: "Aún puedes cambiar este pronóstico con un cambio pago.",
-    scoringGateReadOnly: "Solo lectura en este partido.",
     paidChangeConfirm: "¿Gastar {cost} pts para cambiar {before} → {after}?",
     paidChangeStart: "Cambiar marcador",
     paidChangeApply: "Confirmar cambio pagado",

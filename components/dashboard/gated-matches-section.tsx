@@ -13,7 +13,7 @@ export function GatedMatchesSection({ rows }: GatedMatchesSectionProps) {
     <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-6">
       <h2 className="text-lg font-semibold">{es.dashboard.gatedTitle}</h2>
       <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
-        {es.dashboard.gatedHint}
+        {es.gateBlocked.hint}
       </p>
 
       <div className="mt-4 overflow-x-auto">
@@ -50,12 +50,14 @@ export function GatedMatchesSection({ rows }: GatedMatchesSectionProps) {
                   </div>
                 </td>
                 <td className="py-2 text-[var(--color-muted-foreground)]">
-                  {row.blockedTeamNames.length === 1
-                    ? es.dashboard.gatedReasonOne(
-                        row.blockedTeamNames[0]!,
-                        row.phaseLabel
-                      )
-                    : es.dashboard.gatedReasonMany(row.blockedTeamNames)}
+                  <div className="space-y-2">
+                    {(row.blockedTeamReasons.length
+                      ? row.blockedTeamReasons
+                      : row.blockedTeamNames
+                    ).map((reason, index) => (
+                      <p key={`${row.matchId}-reason-${index}`}>{reason}</p>
+                    ))}
+                  </div>
                   {row.isFinished && (
                     <span className="mt-1 block text-amber-700 dark:text-amber-400">
                       {es.dashboard.gatedFinishedNote}

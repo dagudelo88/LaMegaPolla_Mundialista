@@ -14,6 +14,8 @@ import { loadAdvancementBonusPerTeam } from "@/lib/scoring/load-advancement-bonu
 import { KNOCKOUT_PHASES } from "@/lib/scoring/knockout-phase-order";
 import { nextKnockoutPhaseAfterRound } from "@/lib/scoring/knockout-phase-order";
 import { isKnockoutMatchScorableForUserByMatchNumber } from "@/lib/scoring/bracket-gate";
+import { isGateDisplayEligibleForPhase } from "@/lib/scoring/gate-display-eligibility";
+import { formatGateBlockedReasons } from "@/lib/scoring/format-gate-blocked-reasons";
 import type { DbMatchWithTeams, DbPrediction } from "@/lib/predictions/helpers";
 import type { MatchPhase } from "@/lib/scoring/calculate-match-points";
 import { PHASE_LABELS } from "@/types/database";
@@ -52,6 +54,7 @@ export interface PlayerGatedMatchRow {
   blockedTeamIds: number[];
   blockedTeamNames: string[];
   blockedTeamCodes: string[];
+  blockedTeamReasons: string[];
   predictedHome: number;
   predictedAway: number;
   isFinished: boolean;
@@ -263,13 +266,15 @@ export async function loadPlayerPointsBreakdown(
   for (const m of bracketCtx.matches) {
     if (m.phase === "group_stage" || !predByMatch.has(m.id)) continue;
 
+    const phase = m.phase as MatchPhase;
+    if (!isGateDisplayEligibleForPhase(bracketCtx, phase)) continue;
+
     const gate = isKnockoutMatchScorableForUserByMatchNumber(bracketCtx, userResolved, m.id);
     if (gate.scorable) continue;
 
     const pred = predByMatch.get(m.id)!;
     for (const id of gate.blockedTeams ?? []) blockedIds.add(id);
 
-    const phase = m.phase as MatchPhase;
     gatedMatches.push({
       matchId: m.id,
       matchNumber: m.fifa_match_number,
@@ -279,6 +284,7 @@ export async function loadPlayerPointsBreakdown(
       blockedTeamIds: gate.blockedTeams ?? [],
       blockedTeamNames: [],
       blockedTeamCodes: [],
+      blockedTeamReasons: [],
       predictedHome: pred.predicted_home,
       predictedAway: pred.predicted_away,
       isFinished: m.status === "finished",
@@ -291,6 +297,9 @@ export async function loadPlayerPointsBreakdown(
       .select("id, name_es, fifa_code")
       .in("id", [...blockedIds]);
     const blockedById = new Map((blockedTeams ?? []).map((t) => [t.id, t]));
+    const teamNameById = new Map(
+      (blockedTeams ?? []).map((t) => [t.id, t.name_es] as const)
+    );
     for (const row of gatedMatches) {
       row.blockedTeamNames = row.blockedTeamIds
         .map((id) => blockedById.get(id)?.name_es)
@@ -298,6 +307,12 @@ export async function loadPlayerPointsBreakdown(
       row.blockedTeamCodes = row.blockedTeamIds
         .map((id) => blockedById.get(id)?.fifa_code)
         .filter((c): c is string => Boolean(c));
+      row.blockedTeamReasons = formatGateBlockedReasons(
+        bracketCtx,
+        row.blockedTeamIds,
+        teamNameById,
+        row.phase as MatchPhase
+      );
     }
   }
 

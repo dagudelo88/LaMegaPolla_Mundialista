@@ -1,5 +1,3 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-
 const PAGE_SIZE = 1000;
 
 type QueryResult<T> = { data: T[] | null; error: { message: string } | null };
@@ -21,18 +19,4 @@ export async function fetchAllPages<T>(
   }
 
   return rows;
-}
-
-/** Convenience wrapper for simple filtered table reads. */
-export async function fetchAllFromTable<T extends Record<string, unknown>>(
-  admin: SupabaseClient,
-  table: string,
-  select: string,
-  applyFilters: (
-    query: ReturnType<SupabaseClient["from"]>
-  ) => ReturnType<SupabaseClient["from"]>
-): Promise<T[]> {
-  return fetchAllPages<T>((range) =>
-    applyFilters(admin.from(table).select(select)).range(range.from, range.to)
-  );
 }

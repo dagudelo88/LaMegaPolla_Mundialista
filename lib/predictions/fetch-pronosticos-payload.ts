@@ -118,18 +118,14 @@ export async function fetchPronosticosPayload(supabase: SupabaseClient, userId: 
     ? officialAdvancingThirdGroupsForWindow(teams ?? [], groupMatchesOfficial)
     : predictedAdvancingThirdGroups;
 
+  const teamNameById = new Map((teams ?? []).map((t) => [t.id, t.name_es]));
+
   const scoringGateByMatchId = await loadScoringGateByMatchId(
     supabase,
     userId,
-    (predictions ?? []) as DbPrediction[]
+    (predictions ?? []) as DbPrediction[],
+    teamNameById
   );
-
-  const blockedTeamIds = [
-    ...new Set(
-      Object.values(scoringGateByMatchId).flatMap((g) => g.blockedTeamIds)
-    ),
-  ];
-  const teamNameById = new Map((teams ?? []).map((t) => [t.id, t.name_es]));
 
   const scoringGateByMatchIdWithNames = Object.fromEntries(
     Object.entries(scoringGateByMatchId).map(([matchId, gate]) => [

@@ -15,7 +15,7 @@ interface MyPollSummaryProps {
   changeAvailability: ChangeAvailability;
 }
 
-export function MyPollSummary({ totalPoints, data, changeAvailability }: MyPollSummaryProps) {
+export function MyPollSummary({ data, changeAvailability }: MyPollSummaryProps) {
   return (
     <div className="space-y-8">
       <div className="grid gap-4 sm:grid-cols-2">

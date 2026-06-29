@@ -141,6 +141,9 @@ export function PronosticosShell({
               scoringGateSummary.blocked
             )}
           </p>
+          <p className="mt-2 text-xs text-[var(--color-muted-foreground)]">
+            {es.gateBlocked.hint}
+          </p>
           <Link
             href="/reglas#avance"
             className="mt-1 inline-block text-sm font-medium text-[var(--color-primary)] hover:underline"

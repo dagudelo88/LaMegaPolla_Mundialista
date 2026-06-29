@@ -112,7 +112,7 @@ export async function auditScores(admin: SupabaseClient): Promise<ScoreAuditResu
       .not("away_score", "is", null)
       .order("fifa_match_number"),
     eligibleIdList.length
-      ? fetchAllPages<Array<DbPrediction & { user_id: string }>>(({ from, to }) =>
+      ? fetchAllPages<DbPrediction & { user_id: string }>(({ from, to }) =>
           admin
             .from("predictions")
             .select(
