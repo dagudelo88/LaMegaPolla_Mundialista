@@ -47,7 +47,7 @@ export function formatSlotMismatchReasons(
   officialHomeName: string | null,
   officialAwayName: string | null
 ): string[] {
-  const reasons = [es.gateBlocked.slotMismatch];
+  const reasons: string[] = [es.gateBlocked.slotMismatch];
   if (officialHomeName && officialAwayName) {
     reasons.push(es.gateBlocked.officialPairing(officialHomeName, officialAwayName));
   }
