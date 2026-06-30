@@ -1,12 +1,15 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
-  calculateMatchPoints,
   type MatchPhase,
   type ScoringConfig,
 } from "@/lib/scoring/calculate-match-points";
 import { loadBracketContext, type BracketContext } from "@/lib/scoring/bracket-context";
 import { loadScoringConfig } from "@/lib/scoring/load-scoring-config";
 import { processMatchAdvancementBonus } from "@/lib/scoring/process-match-advancement-bonus";
+import {
+  persistGatedZeroMatchPoints,
+  persistUserMatchPoints,
+} from "@/lib/scoring/persist-user-match-points";
 import { resolveOfficialMatchTeamIds } from "@/lib/scoring/resolve-match-team-ids";
 import { recalculateUsersTotalPoints } from "@/lib/scoring/recalculate-total-points";
 import {
@@ -71,43 +74,23 @@ export async function processMatchResult(
   const resultAdvancesTeamId =
     input.resultAdvancesTeamId ?? matchRow?.result_advances_team_id ?? null;
 
+  const actual = { home: input.homeScore, away: input.awayScore };
+  const persistOpts = { bracketCtx, config };
+
   for (const pred of predictions) {
-    const actual = { home: input.homeScore, away: input.awayScore };
-    const points = calculateMatchPoints(
-      input.phase,
-      actual,
-      { home: pred.predictedHome, away: pred.predictedAway },
-      config
-    );
-
     const userResolved = userBracketCache.get(pred.userId);
-    const gate = userResolved
-      ? isKnockoutMatchScorableForUserByMatchNumber(
-          bracketCtx,
-          userResolved,
-          input.matchId
-        )
-      : { scorable: true };
-
-    const { error: upsertErr } = await admin.from("user_match_points").upsert(
+    await persistUserMatchPoints(
+      admin,
       {
-        user_id: pred.userId,
-        match_id: input.matchId,
-        points: gate.scorable ? points : 0,
-        breakdown: {
-          phase: input.phase,
-          actual,
-          predicted: { home: pred.predictedHome, away: pred.predictedAway },
-          gated: !gate.scorable,
-          gateReason: gate.reason,
-          blockedTeams: gate.blockedTeams,
-          rawPoints: points,
-        },
+        userId: pred.userId,
+        matchId: input.matchId,
+        phase: input.phase,
+        actual,
+        predicted: { home: pred.predictedHome, away: pred.predictedAway },
       },
-      { onConflict: "user_id,match_id" }
+      { ...persistOpts, userResolved }
     );
 
-    if (upsertErr) throw new Error(upsertErr.message);
     scoredUserIds.push(pred.userId);
     usersToRecalculate.add(pred.userId);
   }
@@ -128,20 +111,13 @@ export async function processMatchResult(
       input.matchId
     );
     if (!gate.scorable) {
-      await admin.from("user_match_points").upsert(
-        {
-          user_id: row.user_id,
-          match_id: input.matchId,
-          points: 0,
-          breakdown: {
-            phase: input.phase,
-            gated: true,
-            gateReason: gate.reason,
-            blockedTeams: gate.blockedTeams,
-          },
-        },
-        { onConflict: "user_id,match_id" }
-      );
+      await persistGatedZeroMatchPoints(admin, {
+        userId: row.user_id,
+        matchId: input.matchId,
+        phase: input.phase,
+        gateReason: gate.reason,
+        blockedTeams: gate.blockedTeams,
+      });
       usersToRecalculate.add(row.user_id);
     }
   }

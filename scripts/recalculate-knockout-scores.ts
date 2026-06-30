@@ -1,5 +1,6 @@
 /**
  * Recalculate points for finished knockout matches only (§7 slot gate fix).
+ * Persists a transparency snapshot of impacted players when points are corrected.
  *
  * Usage: npm run recalculate-knockout-scores
  */
@@ -8,6 +9,11 @@ import { createClient } from "@supabase/supabase-js";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { resolveOfficialBracket } from "@/lib/bracket/resolve-official-bracket";
+import { auditScores, formatAuditReport } from "@/lib/scoring/audit-scores";
+import {
+  BRACKET_GATE_CORRECTION_ACTION,
+  buildBracketGateImpactSnapshot,
+} from "@/lib/scoring/build-bracket-gate-impact-snapshot";
 import { KNOCKOUT_PHASES } from "@/lib/scoring/knockout-phase-order";
 import { recalculateFinishedKnockoutMatches } from "@/lib/scoring/recalculate-all-finished-matches";
 import { recalculateAllActiveParticipantTotals } from "@/lib/scoring/recalculate-total-points";
@@ -40,6 +46,11 @@ async function main() {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
+  const beforeAudit = await auditScores(admin);
+  const impactBefore = buildBracketGateImpactSnapshot(beforeAudit);
+  console.log("Pre-recalculation audit:");
+  console.log(formatAuditReport(beforeAudit));
+
   await resolveOfficialBracket(admin);
   console.log("Official bracket resolved.");
 
@@ -63,6 +74,45 @@ async function main() {
 
   const totalsUpdated = await recalculateAllActiveParticipantTotals(admin);
   console.log(`Profile totals recalculated for ${totalsUpdated} participant(s).`);
+
+  if (impactBefore.impactedPlayers.length > 0) {
+    const { data: adminProfile } = await admin
+      .from("profiles")
+      .select("id")
+      .eq("is_admin", true)
+      .limit(1)
+      .maybeSingle();
+
+    if (adminProfile?.id) {
+      const { error: logErr } = await admin.from("admin_actions").insert({
+        admin_id: adminProfile.id,
+        action: BRACKET_GATE_CORRECTION_ACTION,
+        target_type: "scoring",
+        target_id: "knockout-bracket-gate",
+        details: {
+          impact: impactBefore,
+          matchesProcessed: result.matchesProcessed,
+          scoringPasses: result.scoringPasses,
+        },
+      });
+      if (logErr) throw new Error(logErr.message);
+      console.log(
+        `Transparency snapshot saved for ${impactBefore.impactedPlayers.length} player(s).`
+      );
+    }
+  }
+
+  const afterAudit = await auditScores(admin);
+  console.log("\nPost-recalculation audit:");
+  console.log(formatAuditReport(afterAudit));
+
+  const hasIssues =
+    afterAudit.matchDiscrepancies.length > 0 ||
+    afterAudit.gatedDiscrepancies.length > 0 ||
+    afterAudit.advancementDiscrepancies.length > 0 ||
+    afterAudit.totalDiscrepancies.length > 0;
+
+  process.exit(hasIssues ? 1 : 0);
 }
 
 main().catch((err) => {

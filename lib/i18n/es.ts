@@ -553,6 +553,9 @@ export const es = {
       globalIssues: "Hay discrepancias",
       finishedMatches: "Partidos terminados",
       scoringMismatch: "partidos con conteo irregular",
+      gatedDiscrepancies: "Plenos indebidos §7 (llave incompleta)",
+      gatedOverAwarded: "Pts de más",
+      gatedPlayersAffected: "jugadores afectados",
       matchDiscrepancies: "Discrepancias por partido",
       advancementDiscrepancies: "Discrepancias avance +2",
       advancementMatchDiscrepancies: "Avance +2 por partido (match:*)",
@@ -752,6 +755,21 @@ export const es = {
       ],
       footer:
         "Cada jugador verá su desglose en Mi polla (tarjeta Avance +2 y lista de países). Si algo no cuadra tras refrescar la página, repórtalo por el canal de bugs.",
+    },
+    bracketGateCorrectionNotice: {
+      intro:
+        "En eliminatorias solo suman puntos de partido si en tu llave aparecen los dos equipos que jugaron el partido real. A algunos jugadores el sistema les sumó puntos (incluso pleno) aunque uno de sus equipos no estaba en ese cruce — por ejemplo, tenían Alemania–Turquía pero el partido oficial fue Alemania–Paraguay.",
+      rule:
+        "Regla correcta (§7): sin la llave completa ese partido queda en 0 pts, aunque acertes el marcador. Si solo coincide un equipo y acertaste quién avanza, puedes ganar +2 de avance.",
+      fix:
+        "Corregimos el motor de puntuación, unificamos todas las rutas que guardan puntos y recalculamos los partidos de eliminatoria ya jugados.",
+      impactedHeading: "Jugadores ajustados",
+      colPlayer: "Jugador",
+      colMatch: "Partido",
+      colRemoved: "Pts restados",
+      noImpacted: "Ningún jugador requirió ajuste por esta regla.",
+      footer:
+        "Si tu apodo no aparece en la tabla, no fuiste afectado. Refresca Mi polla para ver tus puntos actualizados.",
     },
   },
   errors: {

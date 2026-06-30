@@ -105,3 +105,45 @@ describe("slot mismatch scoring — M76 Brasil vs Japón", () => {
     expect(points).toBe(2);
   });
 });
+
+describe("bracket gate — M74 Alemania vs Turquía (jofego case)", () => {
+  const GER = 10;
+  const TUR = 11;
+  const PAR = 12;
+  const officialPair = { homeTeamId: GER, awayTeamId: PAR };
+  const userPair = { homeTeamId: GER, awayTeamId: TUR };
+  const officialTeams = new Map([["round_of_32", new Set([GER, PAR])]]);
+
+  const ctx = {
+    teams: [],
+    matches: [],
+    knockoutDefs: [],
+    matchById: new Map(),
+    matchByNumber: new Map(),
+    officialGroupResults: [],
+    officialKnockoutResolved: new Map([[74, officialPair]]),
+    officialTeamsByPhase: officialTeams as never,
+    officialQualifiedToKnockout: new Set([GER, PAR]),
+  };
+
+  it("blocks pleno when Turkey is not in the official round slot", () => {
+    const gate = isKnockoutMatchScorableForUser(
+      ctx,
+      "round_of_32",
+      userPair.homeTeamId,
+      userPair.awayTeamId,
+      officialPair
+    );
+    expect(gate.scorable).toBe(false);
+    expect(gate.reason).toBe("bracket_gate");
+    expect(gate.blockedTeams).toContain(TUR);
+
+    const rawPoints = calculateMatchPoints(
+      "round_of_32",
+      { home: 1, away: 1 },
+      { home: 1, away: 1 }
+    );
+    expect(rawPoints).toBe(20);
+    expect(gate.scorable ? rawPoints : 0).toBe(0);
+  });
+});

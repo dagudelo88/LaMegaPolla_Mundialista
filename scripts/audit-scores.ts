@@ -42,6 +42,7 @@ async function main() {
 
   const hasIssues =
     result.matchDiscrepancies.length > 0 ||
+    result.gatedDiscrepancies.length > 0 ||
     result.advancementDiscrepancies.length > 0 ||
     result.totalDiscrepancies.length > 0;
 

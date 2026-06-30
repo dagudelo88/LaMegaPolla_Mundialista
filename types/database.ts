@@ -150,6 +150,21 @@ export interface TransparencyEntry {
   scoreChange: TransparencyScoreChange;
   pointsSpent?: number;
   reason?: string;
+  bracketGateImpact?: BracketGateCorrectionImpact;
+}
+
+export interface BracketGateCorrectionImpact {
+  impactedPlayers: Array<{
+    username: string;
+    userId: string;
+    totalPointsRemoved: number;
+    matches: Array<{
+      fifaMatchNumber: number | null;
+      storedPoints: number;
+      expectedPoints: number;
+      gateReason?: string;
+    }>;
+  }>;
 }
 
 export interface BracketPick {

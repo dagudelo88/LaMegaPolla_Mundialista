@@ -47,7 +47,8 @@ function outcome(h: number, a: number): "home" | "away" | "draw" {
 }
 
 /**
- * Points for a single match prediction vs actual result (REGLAS §4 table).
+ * Raw §4 table points (marcador vs resultado). For knockouts, always combine with
+ * `computeGatedMatchPoints` / REGLAS §7 before persisting or showing final points.
  */
 export function calculateMatchPoints(
   phase: MatchPhase,

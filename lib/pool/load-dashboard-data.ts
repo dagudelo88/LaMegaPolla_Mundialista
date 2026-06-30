@@ -6,12 +6,9 @@ import { getJornadaKey } from "@/lib/jornada/helpers";
 import { loadHomeDashboardData } from "@/lib/pool/load-home-data";
 import { getLeaderboardRank } from "@/lib/pool/load-leaderboard";
 import { DEFAULT_JORNADA_BONUS_CONFIG } from "@/lib/scoring/calculate-jornada-bonus";
-import {
-  calculateMatchPoints,
-  type MatchPhase,
-} from "@/lib/scoring/calculate-match-points";
-import { loadScoringConfig } from "@/lib/scoring/load-scoring-config";
+import { loadBracketContext, resolveUserKnockoutTeams } from "@/lib/scoring/bracket-context";
 import { loadPlayerPointsBreakdown } from "@/lib/scoring/load-player-points-summary";
+import type { DbMatchWithTeams, DbPrediction } from "@/lib/predictions/helpers";
 import type {
   PlayerAdvancementBonusRow,
   PlayerGatedMatchRow,
@@ -37,6 +34,7 @@ export interface UserMatchPointRow {
   isJornadaTopScorerPick: boolean;
   jornadaTopScorerGoals: number | null;
   matchAdvancementPoints: number;
+  gated: boolean;
 }
 
 export interface PaidChangeRow {
@@ -204,8 +202,10 @@ export async function loadDashboardData(
   }
 
   const matchIds = umpRows.map((r) => r.match_id);
+  const storedPointsByMatchId = new Map(umpRows.map((r) => [r.match_id, r.points]));
+  const gatedMatchIds = new Set(pointsBreakdown.gatedMatches.map((g) => g.matchId));
 
-  const [{ data: scoredMatches }, { data: allPredictions }] = await Promise.all([
+  const [{ data: scoredMatches }, { data: allPredictions }, bracketCtx] = await Promise.all([
     supabase
       .from("matches")
       .select(
@@ -216,7 +216,14 @@ export async function loadDashboardData(
       .from("predictions")
       .select("match_id, predicted_home, predicted_away")
       .eq("user_id", userId),
+    loadBracketContext(supabase),
   ]);
+
+  const userResolved = resolveUserKnockoutTeams(
+    bracketCtx,
+    (allPredictions ?? []) as DbPrediction[],
+    (bracketCtx.matches as unknown as DbMatchWithTeams[])
+  );
 
   const jornadaKeys = collectJornadaKeysFromMatches(scoredMatches ?? []);
 
@@ -243,13 +250,10 @@ export async function loadDashboardData(
     console.warn("jornada_results unavailable:", jornadaResultsErr.message);
   }
 
-  const [scoringConfig, { data: jornadaBonusConfigRows }] = await Promise.all([
-    loadScoringConfig(supabase),
-    supabase
-      .from("app_config")
-      .select("key, value")
-      .in("key", ["scoring.jornada_bonus.match", "scoring.jornada_bonus.exact"]),
-  ]);
+  const { data: jornadaBonusConfigRows } = await supabase
+    .from("app_config")
+    .select("key, value")
+    .in("key", ["scoring.jornada_bonus.match", "scoring.jornada_bonus.exact"]);
 
   const jornadaConfigByKey = new Map(
     (jornadaBonusConfigRows ?? []).map((r) => [r.key, r.value])
@@ -280,10 +284,19 @@ export async function loadDashboardData(
 
   const predictions = (allPredictions ?? []).filter((p) => matchIds.includes(p.match_id));
 
+  const userTeamIds = new Set<number>();
+  for (const m of scoredMatches ?? []) {
+    if (m.phase === "group_stage" || m.fifa_match_number == null) continue;
+    const userTeams = userResolved.get(m.fifa_match_number);
+    if (userTeams?.homeTeamId != null) userTeamIds.add(userTeams.homeTeamId);
+    if (userTeams?.awayTeamId != null) userTeamIds.add(userTeams.awayTeamId);
+  }
+
   const teamIds = [
-    ...new Set(
-      (scoredMatches ?? []).flatMap((m) => [m.home_team_id, m.away_team_id].filter(Boolean))
-    ),
+    ...new Set([
+      ...(scoredMatches ?? []).flatMap((m) => [m.home_team_id, m.away_team_id].filter(Boolean)),
+      ...userTeamIds,
+    ]),
   ] as number[];
 
   const { data: teams } = teamIds.length
@@ -294,29 +307,34 @@ export async function loadDashboardData(
 
   const predByMatch = new Map(predictions.map((p) => [p.match_id, p]));
 
-  const matchPoints: UserMatchPointRow[] = (scoredMatches ?? [])
+  const matchPoints = (scoredMatches ?? [])
     .map((m) => {
       const pred = predByMatch.get(m.id);
-      const homeTeam = m.home_team_id ? teamById.get(m.home_team_id) : undefined;
-      const awayTeam = m.away_team_id ? teamById.get(m.away_team_id) : undefined;
       if (
         pred == null ||
         m.home_score == null ||
         m.away_score == null ||
-        m.fifa_match_number == null ||
-        !homeTeam ||
-        !awayTeam
+        m.fifa_match_number == null
       ) {
         return null;
       }
-      const baseMatchPoints = calculateMatchPoints(
-        m.phase as MatchPhase,
-        { home: m.home_score, away: m.away_score },
-        { home: pred.predicted_home, away: pred.predicted_away },
-        scoringConfig
-      );
+
+      let displayHomeId = m.home_team_id;
+      let displayAwayId = m.away_team_id;
+      if (m.phase !== "group_stage") {
+        const userTeams = userResolved.get(m.fifa_match_number);
+        if (userTeams?.homeTeamId != null) displayHomeId = userTeams.homeTeamId;
+        if (userTeams?.awayTeamId != null) displayAwayId = userTeams.awayTeamId;
+      }
+
+      const homeTeam = displayHomeId ? teamById.get(displayHomeId) : undefined;
+      const awayTeam = displayAwayId ? teamById.get(displayAwayId) : undefined;
+      if (!homeTeam || !awayTeam) return null;
+
+      const baseMatchPoints = storedPointsByMatchId.get(m.id) ?? 0;
       const jornadaInfo = jornadaBonusByMatch.get(m.id);
       const jornadaBonusPoints = jornadaInfo?.bonus ?? 0;
+      const gated = gatedMatchIds.has(m.id);
       return {
         matchNumber: m.fifa_match_number,
         phase: m.phase,
@@ -334,6 +352,7 @@ export async function loadDashboardData(
         isJornadaTopScorerPick: jornadaInfo?.isTopScorerPick ?? false,
         jornadaTopScorerGoals: jornadaInfo?.predictedTotalGoals ?? null,
         matchAdvancementPoints: matchAdvancementByMatchId.get(m.id) ?? 0,
+        gated,
       };
     })
     .filter((row): row is UserMatchPointRow => row != null)

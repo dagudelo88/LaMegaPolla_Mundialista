@@ -1,10 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import {
-  calculateMatchPoints,
-  type MatchPhase,
-} from "@/lib/scoring/calculate-match-points";
-import { loadScoringConfig } from "@/lib/scoring/load-scoring-config";
-import { recalculateUsersTotalPoints } from "@/lib/scoring/recalculate-total-points";
+import type { MatchPhase } from "@/lib/scoring/calculate-match-points";
+import { processMatchResult } from "@/lib/scoring/process-match-result";
 
 export interface RecalculateUserMatchPointsInput {
   userId: string;
@@ -14,49 +10,36 @@ export interface RecalculateUserMatchPointsInput {
   awayScore: number;
 }
 
+/** Re-score one user via the shared match engine (REGLAS §7 gate included). */
 export async function recalculateUserMatchPoints(
   admin: SupabaseClient,
   input: RecalculateUserMatchPointsInput
 ): Promise<{ points: number }> {
-  const config = await loadScoringConfig(admin);
+  const { data: match, error: matchErr } = await admin
+    .from("matches")
+    .select("home_team_id, away_team_id, result_advances_team_id")
+    .eq("id", input.matchId)
+    .maybeSingle();
 
-  const { data: prediction, error: predErr } = await admin
-    .from("predictions")
-    .select("predicted_home, predicted_away")
+  if (matchErr) throw new Error(matchErr.message);
+
+  await processMatchResult(admin, {
+    matchId: input.matchId,
+    phase: input.phase,
+    homeScore: input.homeScore,
+    awayScore: input.awayScore,
+    homeTeamId: match?.home_team_id,
+    awayTeamId: match?.away_team_id,
+    resultAdvancesTeamId: match?.result_advances_team_id,
+  });
+
+  const { data: row, error: ptsErr } = await admin
+    .from("user_match_points")
+    .select("points")
     .eq("user_id", input.userId)
     .eq("match_id", input.matchId)
     .maybeSingle();
 
-  if (predErr) throw new Error(predErr.message);
-  if (!prediction) return { points: 0 };
-
-  const actual = { home: input.homeScore, away: input.awayScore };
-  const points = calculateMatchPoints(
-    input.phase,
-    actual,
-    { home: prediction.predicted_home, away: prediction.predicted_away },
-    config
-  );
-
-  const { error: upsertErr } = await admin.from("user_match_points").upsert(
-    {
-      user_id: input.userId,
-      match_id: input.matchId,
-      points,
-      breakdown: {
-        phase: input.phase,
-        actual,
-        predicted: {
-          home: prediction.predicted_home,
-          away: prediction.predicted_away,
-        },
-      },
-    },
-    { onConflict: "user_id,match_id" }
-  );
-
-  if (upsertErr) throw new Error(upsertErr.message);
-
-  await recalculateUsersTotalPoints(admin, [input.userId]);
-  return { points };
+  if (ptsErr) throw new Error(ptsErr.message);
+  return { points: row?.points ?? 0 };
 }

@@ -2,8 +2,9 @@
 
 import { requireUser } from "@/lib/auth/require-admin";
 import { createClient } from "@/lib/supabase/server";
-import { buildScoringCorrectionEntry } from "@/lib/transparency/build-scoring-correction-entry";
 import { buildAdvancementCorrectionEntry } from "@/lib/transparency/build-advancement-correction-entry";
+import { buildBracketGateCorrectionEntry } from "@/lib/transparency/build-bracket-gate-correction-entry";
+import { buildScoringCorrectionEntry } from "@/lib/transparency/build-scoring-correction-entry";
 import type {
   TransparencyEntry,
   TransparencyEntryKind,
@@ -246,6 +247,7 @@ export async function loadTransparencyHistory(options?: {
     const correctionEntries = await Promise.all([
       buildScoringCorrectionEntry(supabase),
       buildAdvancementCorrectionEntry(supabase),
+      buildBracketGateCorrectionEntry(supabase),
     ]);
     for (const correctionEntry of correctionEntries) {
       if (correctionEntry && !entries.some((e) => e.id === correctionEntry.id)) {

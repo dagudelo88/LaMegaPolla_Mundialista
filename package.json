@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "vitest run",
+    "test": "vitest run && npm run check:scoring",
     "test:watch": "vitest",
     "make-admin": "tsx scripts/make-first-admin.ts",
     "seed-fifa": "tsx scripts/seed-fifa-2026.ts",
@@ -17,6 +17,7 @@
     "recalculate-knockout-scores": "tsx scripts/recalculate-knockout-scores.ts",
     "recalculate-round-advancement": "tsx scripts/recalculate-round-advancement.ts",
     "audit-scores": "tsx scripts/audit-scores.ts",
+    "check:scoring": "tsx scripts/check-scoring-invariants.ts",
     "generate-fifa-json": "tsx scripts/generate-fifa-json.ts",
     "verify-fifa-kickoffs": "tsx scripts/verify-fifa-kickoffs.ts",
     "verify-fifa-schedule-days": "tsx scripts/verify-fifa-schedule-days.ts"
