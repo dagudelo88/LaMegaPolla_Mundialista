@@ -108,22 +108,14 @@ export async function resolveOfficialBracket(
       { requireOfficialGroupCompletion: true, thirdPlaceTeamByMatch }
     );
 
+    // Persist known slots even when only one side is resolved (e.g. one semi
+    // finished → final shows that finalist + TBD). Still count as unresolved
+    // so predictions stay locked until both sides exist.
     if (resolved.unresolved) {
       unresolvedMatches += 1;
-      if (row.home_team_id != null || row.away_team_id != null) {
-        const { error } = await admin
-          .from("matches")
-          .update({
-            home_team_id: null,
-            away_team_id: null,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", row.id);
+    }
 
-        if (error) throw new Error(error.message);
-        updatedMatches += 1;
-      }
-    } else if (
+    if (
       row.home_team_id !== resolved.homeTeamId ||
       row.away_team_id !== resolved.awayTeamId
     ) {
@@ -138,6 +130,8 @@ export async function resolveOfficialBracket(
 
       if (error) throw new Error(error.message);
       updatedMatches += 1;
+      row.home_team_id = resolved.homeTeamId;
+      row.away_team_id = resolved.awayTeamId;
     }
 
     const finished = finishedByNumber.get(def.fifaMatchNumber);

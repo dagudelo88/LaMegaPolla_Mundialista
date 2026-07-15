@@ -105,6 +105,27 @@ describe("third place advancement", () => {
 });
 
 describe("resolveKnockoutMatch (official)", () => {
+  it("returns partial teams for the final when only one semi has a winner", () => {
+    const winners = new Map<number, number>([[101, 10]]);
+    const resolved = resolveKnockoutMatch(
+      {
+        fifaMatchNumber: 104,
+        phase: "final",
+        homeSource: { type: "match_winner", match_number: 101 },
+        awaySource: { type: "match_winner", match_number: 102 },
+      },
+      [],
+      [],
+      [],
+      winners,
+      new Map()
+    );
+
+    expect(resolved.homeTeamId).toBe(10);
+    expect(resolved.awayTeamId).toBeNull();
+    expect(resolved.unresolved).toBe(true);
+  });
+
   it("keeps round of 32 unresolved when group stage has no official results", () => {
     const teams: TeamRef[] = [
       ...teamsA,
