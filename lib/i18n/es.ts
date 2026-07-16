@@ -771,6 +771,21 @@ export const es = {
       footer:
         "Si tu apodo no aparece en la tabla, no fuiste afectado. Refresca Mi polla para ver tus puntos actualizados.",
     },
+    semiFinalRoundCorrectionNotice: {
+      intro:
+        "Al cerrar las semifinales, el bono de +2 por avance de ronda (quién iba a la final y al tercer puesto) se calculó bien para unos jugadores y para otros quedó en 0 por un fallo técnico al leer sus pronósticos.",
+      rule:
+        "Regla correcta (REGLAS §4): al terminar las dos semifinales sumas +2 por cada equipo de tu llave que sí quedó en la final o en el partido de tercer puesto oficiales (máx. 8 pts).",
+      fix:
+        "Recalculamos el bono de semifinales, corregimos la lectura de pronósticos del motor y actualizamos los totales de perfil.",
+      impactedHeading: "Jugadores ajustados",
+      colPlayer: "Jugador",
+      colConcept: "Concepto",
+      colAdded: "Pts sumados",
+      noImpacted: "Ningún jugador requirió ajuste por este bono.",
+      footer:
+        "Si tu apodo no aparece en la tabla, no fuiste afectado. Refresca Mi polla para ver tus puntos actualizados.",
+    },
   },
   errors: {
     generic: "Algo salió mal. Inténtalo de nuevo.",

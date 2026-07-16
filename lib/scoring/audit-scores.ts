@@ -133,6 +133,7 @@ export async function auditScores(admin: SupabaseClient): Promise<ScoreAuditResu
               "id, match_id, predicted_home, predicted_away, predicted_is_draw, predicted_advances_team_id, locked, user_id"
             )
             .in("user_id", eligibleIdList)
+            .order("id")
             .range(from, to)
         )
       : Promise.resolve([] as Array<DbPrediction & { user_id: string }>),
@@ -142,6 +143,8 @@ export async function auditScores(admin: SupabaseClient): Promise<ScoreAuditResu
             .from("user_advancement_bonus_points")
             .select("user_id, bonus_key, points")
             .in("user_id", eligibleIdList)
+            .order("user_id")
+            .order("bonus_key")
             .range(from, to)
         )
       : Promise.resolve([] as { user_id: string; bonus_key: string; points: number }[]),
@@ -156,6 +159,8 @@ export async function auditScores(admin: SupabaseClient): Promise<ScoreAuditResu
           .from("user_match_points")
           .select("user_id, match_id, points")
           .in("match_id", finishedMatchIds)
+          .order("user_id")
+          .order("match_id")
           .range(from, to)
       )
     : [];
@@ -488,6 +493,7 @@ export async function auditScores(admin: SupabaseClient): Promise<ScoreAuditResu
             .from("user_jornada_bonus_points")
             .select("user_id, points")
             .in("user_id", eligibleIdList)
+            .order("user_id")
             .range(from, to)
         )
       : Promise.resolve([] as { user_id: string; points: number }[]),
@@ -497,6 +503,7 @@ export async function auditScores(admin: SupabaseClient): Promise<ScoreAuditResu
             .from("prediction_changes")
             .select("user_id, points_spent")
             .in("user_id", eligibleIdList)
+            .order("user_id")
             .range(from, to)
         )
       : Promise.resolve([] as { user_id: string; points_spent: number }[]),

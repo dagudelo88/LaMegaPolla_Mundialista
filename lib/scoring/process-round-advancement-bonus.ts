@@ -17,7 +17,10 @@ import {
 } from "@/lib/scoring/knockout-phase-order";
 import { loadActiveSubmittedUserIds } from "@/lib/scoring/scoring-eligibility";
 import { recalculateUsersTotalPoints } from "@/lib/scoring/recalculate-total-points";
-import { loadUserBracketCache } from "@/lib/scoring/user-bracket-cache";
+import {
+  loadUserBracketCache,
+  type UserResolvedMap,
+} from "@/lib/scoring/user-bracket-cache";
 
 function buildUserTeamsByPhase(
   ctx: BracketContext,
@@ -30,24 +33,38 @@ function buildUserTeamsByPhase(
   return map;
 }
 
+/** True when official next-round teams exist but the user bracket resolved none (likely incomplete preds). */
+export function shouldSkipEmptyUserRoundBonus(
+  userTeamIds: number[],
+  officialTeamIds: number[]
+): boolean {
+  return officialTeamIds.length > 0 && userTeamIds.length === 0;
+}
+
 export async function processRoundAdvancementBonus(
   admin: SupabaseClient,
   ctx: BracketContext,
   roundKey: string,
-  options?: { skipTotalRecalc?: boolean }
-): Promise<{ usersScored: number }> {
+  options?: {
+    skipTotalRecalc?: boolean;
+    userBracketCache?: UserResolvedMap;
+    throwOnEmptyUserTeams?: boolean;
+  }
+): Promise<{ usersScored: number; skippedEmptyBrackets: number }> {
   if (!isRoundComplete(ctx, roundKey)) {
-    return { usersScored: 0 };
+    return { usersScored: 0, skippedEmptyBrackets: 0 };
   }
 
   const nextPhase = nextKnockoutPhaseAfterRound(roundKey);
   const bonusPerTeam = await loadAdvancementBonusPerTeam(admin);
   const eligibleIds = await loadActiveSubmittedUserIds(admin);
-  if (!eligibleIds.size) return { usersScored: 0 };
+  if (!eligibleIds.size) return { usersScored: 0, skippedEmptyBrackets: 0 };
 
-  const userBracketCache = await loadUserBracketCache(admin, ctx);
+  const userBracketCache =
+    options?.userBracketCache ?? (await loadUserBracketCache(admin, ctx));
   const officialTeamsByPhase = ctx.officialTeamsByPhase;
   const scoredUserIds: string[] = [];
+  const skippedUserIds: string[] = [];
 
   for (const userId of eligibleIds) {
     const userResolved = userBracketCache.get(userId);
@@ -60,6 +77,14 @@ export async function processRoundAdvancementBonus(
       userTeamsByPhase,
       officialTeamsByPhase
     );
+
+    if (shouldSkipEmptyUserRoundBonus(userTeamIds, officialTeamIds)) {
+      console.warn(
+        `[round-advancement] Skipping upsert for user ${userId} on ${roundKey}: empty userTeamIds with ${officialTeamIds.length} official team(s)`
+      );
+      skippedUserIds.push(userId);
+      continue;
+    }
 
     const result = calculateRoundAdvancementBonus(userTeamIds, officialTeamIds, bonusPerTeam);
 
@@ -85,11 +110,20 @@ export async function processRoundAdvancementBonus(
     scoredUserIds.push(userId);
   }
 
+  if (options?.throwOnEmptyUserTeams && skippedUserIds.length > 0) {
+    throw new Error(
+      `Error de bono de avance (${roundKey}): ${skippedUserIds.length} participante(s) con llave vacía pese a equipos oficiales. No se escribió 0 falso.`
+    );
+  }
+
   if (!options?.skipTotalRecalc) {
     await recalculateUsersTotalPoints(admin, scoredUserIds);
   }
 
-  return { usersScored: scoredUserIds.length };
+  return {
+    usersScored: scoredUserIds.length,
+    skippedEmptyBrackets: skippedUserIds.length,
+  };
 }
 
 export async function processAllCompletedRoundAdvancementBonuses(
@@ -97,7 +131,8 @@ export async function processAllCompletedRoundAdvancementBonuses(
   ctx?: BracketContext
 ): Promise<{ roundsProcessed: number; usersScored: number }> {
   const { loadBracketContext } = await import("@/lib/scoring/bracket-context");
-  const bracketCtx = ctx ?? await loadBracketContext(admin);
+  const bracketCtx = ctx ?? (await loadBracketContext(admin));
+  const userBracketCache = await loadUserBracketCache(admin, bracketCtx);
 
   const roundKeys = [
     "group_stage",
@@ -116,6 +151,7 @@ export async function processAllCompletedRoundAdvancementBonuses(
     if (!isRoundComplete(bracketCtx, roundKey)) continue;
     const result = await processRoundAdvancementBonus(admin, bracketCtx, roundKey, {
       skipTotalRecalc: true,
+      userBracketCache,
     });
     roundsProcessed += 1;
     if (result.usersScored > 0) {

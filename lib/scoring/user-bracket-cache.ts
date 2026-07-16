@@ -27,6 +27,7 @@ export async function loadUserBracketCache(
         "id, match_id, predicted_home, predicted_away, predicted_is_draw, predicted_advances_team_id, locked, user_id"
       )
       .in("user_id", [...eligibleIds])
+      .order("id")
       .range(from, to)
   );
 

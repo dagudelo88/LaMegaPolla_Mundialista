@@ -2,7 +2,11 @@ const PAGE_SIZE = 1000;
 
 type QueryResult<T> = { data: T[] | null; error: { message: string } | null };
 
-/** Fetch all rows from a Supabase query, paginating past the default 1000-row limit. */
+/**
+ * Fetch all rows from a Supabase query, paginating past the default 1000-row limit.
+ * Callers MUST apply a stable `.order(...)` (e.g. `.order("id")`) before `.range`,
+ * otherwise pages can skip or duplicate rows.
+ */
 export async function fetchAllPages<T>(
   runQuery: (range: { from: number; to: number }) => PromiseLike<QueryResult<T>>
 ): Promise<T[]> {

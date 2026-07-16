@@ -151,6 +151,7 @@ export interface TransparencyEntry {
   pointsSpent?: number;
   reason?: string;
   bracketGateImpact?: BracketGateCorrectionImpact;
+  semiFinalRoundImpact?: SemiFinalRoundCorrectionImpact;
 }
 
 export interface BracketGateCorrectionImpact {
@@ -164,6 +165,14 @@ export interface BracketGateCorrectionImpact {
       expectedPoints: number;
       gateReason?: string;
     }>;
+  }>;
+}
+
+export interface SemiFinalRoundCorrectionImpact {
+  impactedPlayers: Array<{
+    username: string;
+    pointsAdded: number;
+    label: string;
   }>;
 }
 
