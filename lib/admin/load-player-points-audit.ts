@@ -411,7 +411,7 @@ export async function loadAdminPlayerPointsAudit(
 
       if ((storedBonus ?? 0) > 0) {
         ledgerParts.push({
-          timestamp: stored?.created_at ?? roundKey,
+          timestamp: stored?.created_at ?? "",
           type: "round_advancement",
           label: `Avance ronda ${roundKey} +${storedBonus}`,
           delta: storedBonus!,

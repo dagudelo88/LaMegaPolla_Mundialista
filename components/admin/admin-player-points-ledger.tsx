@@ -1,6 +1,6 @@
 import type { PointsLedgerEntry } from "@/lib/admin/load-player-points-audit";
 import { es } from "@/lib/i18n/es";
-import { formatAppDateTime } from "@/lib/matches/format-datetime";
+import { formatAppDateTime, isParseableInstant } from "@/lib/matches/format-datetime";
 
 interface AdminPlayerPointsLedgerProps {
   ledger: PointsLedgerEntry[];
@@ -43,7 +43,7 @@ export function AdminPlayerPointsLedger({ ledger }: AdminPlayerPointsLedgerProps
               {ledger.map((row, idx) => (
                 <tr key={`${row.sortKey}-${idx}`} className="border-b border-[var(--color-border)]">
                   <td className="py-2 pr-3 whitespace-nowrap text-[var(--color-muted-foreground)]">
-                    {row.timestamp && !row.timestamp.startsWith("round-")
+                    {isParseableInstant(row.timestamp)
                       ? formatAppDateTime(row.timestamp)
                       : "—"}
                   </td>
